@@ -1,0 +1,105 @@
+%----------------------------------------------------------------------------------------
+%   USEFUL COMMANDS
+%----------------------------------------------------------------------------------------
+
+\newcommand{\dipartimento}{Dipartimento di Matematica ``Tullio Levi-Civita''}
+
+%----------------------------------------------------------------------------------------
+% 	USER DATA
+%----------------------------------------------------------------------------------------
+
+% Data di approvazione del piano da parte del tutor interno; nel formato GG Mese AAAA
+% compilare inserendo al posto di GG 2 cifre per il giorno, e al posto di 
+% AAAA 4 cifre per l'anno
+\newcommand{\dataApprovazione}{Data}
+
+% Dati dello Studente
+\newcommand{\nomeStudente}{Lorenzo}
+\newcommand{\cognomeStudente}{Soligo}
+\newcommand{\matricolaStudente}{2101057}
+\newcommand{\emailStudente}{lorenzo.soligo@studenti.unipd.it}
+\newcommand{\telStudente}{+ 39 377 523 1777}
+
+% Dati del Tutor Aziendale
+\newcommand{\nomeTutorAziendale}{Gregorio}
+\newcommand{\cognomeTutorAziendale}{Piccoli}
+\newcommand{\emailTutorAziendale}{gregorio.piccoli@mail.it}
+\newcommand{\telTutorAziendale}{+ 39 0371 59 457 24}
+\newcommand{\ruoloTutorAziendale}{}
+
+% Dati dell'Azienda
+\newcommand{\ragioneSocAzienda}{Zucchetti S.p.A}
+\newcommand{\indirizzoAzienda}{Viale della Navigazione Interna 91, Noventa Padovana (PD)}
+\newcommand{\sitoAzienda}{http://zucchetti.it/}
+\newcommand{\emailAzienda}{info@zucchetti.it}
+\newcommand{\partitaIVAAzienda}{P.IVA 12345678999}
+
+% Dati del Tutor Interno (Docente)
+\newcommand{\titoloTutorInterno}{Prof.}
+\newcommand{\nomeTutorInterno}{Michele}
+\newcommand{\cognomeTutorInterno}{Scquizzato}
+
+\newcommand{\prospettoSettimanale}{
+     % Personalizzare indicando in lista, i vari task settimana per settimana
+     % sostituire a 40 il totale ore della settimana
+    \begin{itemize}
+        \item \textbf{Prima Settimana - Primo batch di analisi (40 ore)}\\
+        Analisi dei seguenti algoritmi di Machine Learning:
+        \begin{itemize}
+            \item Linear Regression
+            \item Logistic Regression
+            \item Support Vector Machine
+        \end{itemize}
+        \item \textbf{Seconda Settimana - Secondo batch di analisi (40 ore)} 
+        \\ Analisi dei seguenti algoritmi di Machine Learning:
+        \begin{itemize}
+            \item Decision Tree
+            \item Random Forest
+            \item XGBoost
+        \end{itemize}
+        \item \textbf{Terza Settimana - Prompt Engineering sugli algoritmi (40 ore)} 
+        \\ Preparazione dei prompt per LLM per i primi 6 algoritmi analizzati al fine di rendere spiegabili i risultati ottenuti da questi algoritmi.
+    
+        \item \textbf{Quarta Settimana - Test e documentazione (40 ore)} 
+        \\ Elaborazione dei risultati ottenuti e documentazione dei progressi fino a questo punto.
+
+        \item \textbf{Quinta Settimana - Terzo batch di analisi (40 ore)} 
+        \\Analisi dei seguenti \textit{ensemble} di algoritmi di Machine Learning:
+        \begin{itemize}
+            \item RuleFit
+            \item Approfondimento sul Random Forest
+        \end{itemize}
+        \item \textbf{Sesta Settimana - Quarto batch di analisi (40 ore)} 
+        \\Analisi dei seguenti \textit{ensemble} di algoritmi di Machine Learning:
+        \begin{itemize}
+            \item Symbolic Regression
+        \end{itemize}
+        \item \textbf{Settima Settimana - Prompt Engineering sugli ensemble di algoritmi (40 ore)} 
+        \\ Preparazione dei prompt per LLM per i 3 \textit{ensemble} di algoritmi analizzati, con particolare attenzione a come l'unione di eterogenea o omogenea possa influenzare i risultati e la spiegabilità.
+
+        \item \textbf{Ottava Settimana - Test e documentazione (40 ore)} 
+        \\ Elaborazione dei risultati ottenuti e documentazione dei progressi fino a questo punto.
+
+    \end{itemize}
+}
+
+% Indicare il totale complessivo (deve essere compreso tra le 300 e le 320 ore)
+\newcommand{\totaleOre}{320}
+
+\newcommand{\obiettiviObbligatori}{
+	 \item \underline{\textit{O01}}: Comprensione profonda degli algoritmi scelti;
+	 \item \underline{\textit{O02}}: Comprensione delle tecniche di interpretabilità e spiegabilità dei modelli di Machine Learning;
+	 \item \underline{\textit{O03}}: Comprensione delle tecniche di design di algoritmi;
+	 \item \underline{\textit{O04}}: Preparazione di prompt per LLM per migliorare la comprensione e l'interpretabilità dei risultati ottenuti dagli algoritmi analizzati.
+	 \item \underline{\textit{O05}}: Applicazione principi di Prompt Engineering
+}
+
+\newcommand{\obiettiviDesiderabili}{
+    \item \underline{\textit{D01}}: Creazione di una metrica per valutare l'efficacia dei prompt elaborati in termini di miglioramento della comprensione e dell'interpretabilità dei risultati ottenuti dagli algoritmi analizzati;
+    \item \underline{\textit{D02}}: Automatizzazione dell'elaborazione dei risultati ottenuti dagli algoritmi e passaggio all'LLM.
+}
+
+\newcommand{\obiettiviFacoltativi}{
+	\item \underline{\textit{F01}}: Applicazione in ambiti reali dei principi di interpretabilità e spiegabilità dei modelli di Machine Learning;
+    \item \underline{\textit{F02}}: Studio della spiegabilità in ambito di algoritmi di semi-supervised learning;
+}
