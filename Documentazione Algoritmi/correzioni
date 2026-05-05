@@ -1,0 +1,122 @@
+Linear Regression
+Modello
+In un modello di regressione lineare, la previsione è modellata come una somma pesata delle feature in input
+. L'obiettivo è vincolato alla ricerca dei pesi ottimali (coefficienti β) minimizzando l'errore quadratico tra la previsione e la variabile risposta y reale
+.
+Vincoli sui dati
+Sono presenti 6 vincoli fondamentali per garantire la validità teorica del modello
+:
+Linearità: le relazioni tra le feature e il target devono essere lineari e additive
+.
+Normalità dei residui: gli errori (o residui) devono seguire una distribuzione normale, requisito fondamentale per la validità degli intervalli di confidenza
+.
+Omoschedasticità: la varianza dei residui deve essere costante su tutto lo spazio delle feature. Nella realtà, questo vincolo viene spesso violato (eteroschedasticità), ad esempio quando la varianza degli errori aumenta all'aumentare della grandezza predetta
+.
+Indipendenza delle misure: ogni istanza deve essere indipendente dalle altre. Misurazioni ripetute sullo stesso soggetto violano questo vincolo
+.
+Feature fisse: i predittori sono considerati come costanti date, assumendo l'assenza di errori di misurazione al loro interno
+.
+Assenza di multicollinearità: le feature non devono essere fortemente correlate tra loro. Un'alta correlazione rende impossibile separare gli effetti individuali delle variabili sui risultati e destabilizza le stime dei pesi
+.
+Capacità predittive
+I vincoli sui dati mostrano un forte limite. Le previsioni si basano sulla linearità, che se da una parte risulta semplice da spiegare, dall'altra presenta forti limitazioni predittive di fronte a relazioni complesse del mondo reale
+.
+Metriche per la confidenza
+Metriche Pure
+Insieme di metriche calcolabili matematicamente per valutare l'adattamento:
+R 
+2
+ : Misura la frazione della varianza totale spiegata dal modello. Varia da 0 (modello che non spiega nulla) a 1 (modello che spiega perfettamente i dati)
+.
+R
+ˉ
+  
+2
+  (Adjusted R 
+2
+ ): Variazione di R 
+2
+  che penalizza l'inclusione di variabili inutili. Al contrario dell'R 
+2
+  classico che cresce all'aumentare delle feature, la versione corretta tiene conto del numero di variabili (p) e delle istanze (n)
+.
+Feature importance (t-statistic): L'importanza di una feature si ottiene valutando il valore assoluto della sua statistica-t, ovvero il peso scalato dividendo per il suo errore standard. L'importanza cresce al crescere della grandezza del peso e diminuisce all'aumentare dell'incertezza (varianza) della sua stima
+.
+Mallows' C 
+p
+​
+ : Criterio statistico fondamentale per stimare l'errore di test di un modello e selezionare quello ottimale
+. Questa metrica aggiunge una penalità matematica (2d 
+σ
+^
+  
+2
+ ) alla somma dei quadrati dei residui (RSS) di addestramento, compensando così il fatto che l'errore di training tende a sottostimare l'errore di test. Per scegliere il modello migliore tra vari sottoinsiemi, si seleziona quello con il valore di C 
+p
+​
+  più basso
+.
+Analisi dei Plot
+Le visualizzazioni grafiche sono utili per l'analisi diagnostica e la comprensione
+:
+Actual VS Predicted: Utile per vedere se le stime approssimano bene i dati reali
+.
+Istogramma dei residui: Verifica l'assunzione di normalità degli errori
+.
+Q-Q Plot: Rappresentazione grafica che confronta la distribuzione ideale dei residui con quella effettiva per individuare violazioni della normalità
+.
+Residual VS Fitted Values Plot: Grafico fondamentale per rilevare non-linearità o eteroschedasticità. In un modello corretto, i punti non dovrebbero mostrare alcun pattern riconoscibile
+.
+Feature Effect Plot: Grafico a scatola (boxplot) che rappresenta la distribuzione degli effetti (peso moltiplicato per il valore della feature) all'interno dei dati. Più ampio è il range del boxplot, maggiore è il contributo della feature alle variazioni delle previsioni nel dataset
+.
+Weight Plot (Grafico dei Pesi): Visualizza le stime dei pesi come punti singoli e i loro intervalli di confidenza (generalmente al 95%) come linee. Fornisce un colpo d'occhio immediato sulla significatività: se l'intervallo di confidenza interseca la linea dello zero, l'effetto della feature non è statisticamente significativo
+.
+Metriche per la comprensione e spiegabilità dei risultati
+Interpretazione dei Pesi (Coefficienti)
+L'interpretabilità di un modello lineare è garantita dall'additività degli effetti. Tuttavia, l'interpretazione varia in base al tipo di variabile
+:
+Feature Numeriche: Un aumento della feature di un'unità comporta una variazione nella previsione pari all'esatto valore del suo peso (β), assumendo rigorosamente che tutte le altre feature restino fisse
+.
+Gestione delle Variabili Categoriali: I modelli lineari non possono processare testo o classi direttamente. Le feature qualitative devono essere convertite in indicatori numerici binari tramite la creazione di dummy variables (codifica one-hot)
+. Quando si utilizza questo approccio, una categoria viene lasciata fuori e funge da baseline (riferimento). Il peso calcolato per un'altra categoria rappresenta la differenza stimata nella previsione tra quella specifica categoria e la categoria di riferimento
+.
+Superare i Limiti: Interazioni e Non-Linearità
+La formulazione classica del modello lineare assume che l'effetto di ogni variabile sia completamente indipendente dalle altre (additività) e che la relazione sia strettamente lineare. Per aggirare questi limiti
+:
+Termini di Interazione: Nella realtà, l'effetto di una variabile può dipendere dal valore di un'altra. Per consentire al modello di catturare questo fenomeno, si deve aggiungere una nuova feature creata dal prodotto matematico di due variabili (es. X 
+1
+​
+ ×X 
+2
+​
+ )
+. Questo dota la variabile originaria di una "pendenza" (slope) diversa in funzione del livello dell'altra variabile con cui interagisce
+.
+Non-linearità: Se la relazione non segue una retta, si possono introdurre versioni trasformate dei predittori originali, come nel caso della regressione polinomiale, che include potenze di ordine superiore come X 
+2
+  o X 
+3
+ 
+. Alternativamente, si possono applicare trasformazioni come il logaritmo, che però mutano l'interpretazione dei pesi rendendola moltiplicativa invece che additiva
+.
+Confronto con altri algoritmi e versioni alternative
+Quando il numero di feature è troppo alto, l'interpretabilità decade e aumenta il rischio di overfitting. Si possono usare metodi di regolarizzazione o selezione
+:
+Selezione manuale: Affidarsi all'esperienza di dominio di figure competenti per filtrare a priori le variabili rilevanti
+.
+Lasso (Least Absolute Shrinkage and Selection Operator): Tecnica di regolarizzazione che aggiunge il termine di penalità λ∣∣β∣∣ 
+1
+​
+  (L1-norm) alla funzione di perdita
+. Aumentando il parametro di tuning λ, Lasso costringe i pesi delle feature meno importanti ad azzerarsi esattamente, ottenendo così automaticamente una selezione delle variabili e un modello "sparso" altamente interpretabile
+.
+Metodi a step (Stepwise Selection):
+Forward selection: Parte da un modello vuoto (solo l'intercetta) e aggiunge iterativamente una feature alla volta, selezionando sempre la variabile che migliora maggiormente una metrica (es. R 
+2
+  o RSS) fino a raggiungere un criterio di arresto
+.
+Backward selection: Parte dal modello completo con tutte le feature e ad ogni iterazione rimuove la variabile meno utile e statisticamente meno significativa, fino a soddisfare una soglia predefinita
+.
+Come si gestiscono le feature qualitative con il dummy coding?
+Approfondiamo i termini di interazione e la regressione polinomiale
+Cos'è l'effetto Rashomon e come influenza le spiegazioni dei modelli?
