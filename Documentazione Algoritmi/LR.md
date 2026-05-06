@@ -117,7 +117,7 @@ Variazione di $R^2$ che penalizza l'aggiunta di feature non utili. A differenza 
 \displaystyle \bar{R}^2= 1 - (1 - R^2)\frac{n-1}{n-p-1}
 ```
 
-Dove $p$ è il numero di feature e $n$ il numero di istanze.
+Dove $p$ è il numero di feature (*predittori*) e $n$ il numero di istanze.
 
 #### Feature Importance (t-statistic)
 Misura la significatività statistica di ogni coefficiente, calcolata come il peso scalato per il suo errore standard:
