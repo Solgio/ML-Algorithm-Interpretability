@@ -11,7 +11,7 @@ L'obiettivo è vincolato ai pesi $\beta$:
 Viene minimizzato l'errore quadratico tra la previsione e la $y$ reale.
 
 # Vincoli sui dati
-Sono presenti 5 vincoli fondamentali sui dati:
+Sono presenti 6 vincoli fondamentali sui dati:
 - **Linearità dei vincoli:** le relazioni sono lineari e diverse interazioni devono essere applicate manualmente.
 - **Normalità dei residui:** i residui devono seguire una distribuzione normale.
 - **Omoschedasticità:** i residui devono avere varianza costante.
@@ -23,6 +23,7 @@ Molti di questi vincoli risultano non rispettati nella realtà. L'omoschedastici
 
 # Capacità predittive
 I vincoli sui dati mostrano un forte limite. Le previsioni si basano sulla linearità, semplice da spiegare ma con forti limitazioni predittive. 
+Spesso risulta un a forzatura e una semplificazione elevata.
 
 # Metriche per la confidenza
 
@@ -58,7 +59,11 @@ Insieme di metriche calcolabili
   Cresce al crescere del peso, diminuisce all'aumentare della varianza.
 
   ### Mallows' Cp
-  Criterio di scelta di modelli che confronta 
+  Criterio di scelta di modelli che confronta il numero di feature con la varianza spiegata. Un modello ideale ha $Cp=p+1$.
+  ```math
+    \displaystyle Cp=\frac{SSE}{\hat{\sigma}^2}-n+2p
+  ```
+  Dove $\hat{\sigma}^2$ è la stima della varianza dei residui del modello completo.
 
  ## Analisi dei Plot
  Insieme di tipologie di plot e loro interpretazioni
@@ -75,22 +80,19 @@ Insieme di metriche calcolabili
  ### Residual VS Fitted Values Plot
  Utilizzato per riconoscerere eteroschedasticità e/o non linearità. I grafici, x-fitted y-residual, non dovrebbero mostrare pattern.
 
+# Metriche per la comprensione e spiegabilità dei risultati
  ### Feature Effect
  Rappresentazione dell'*effect*, contentente i valori nei quartili tra il 25%  e il 75% calcolato come:
   ```math
     \displaystyle effect_{j}^{(i)}=w_{j}x_{j}^{(i)}
   ```
   Maggiore l'importanza di una specifica feature, maggiore l'estensione dei box nel grafico. 
-
-
-# Metriche per la comprensione e spiegabilità dei risultati
-
 # Limiti di predizione
 
 # Limiti di spiegabilità
 - Se vi è non-linearità il modello diventa meno veritiero.
 - Negli altri casi però, la linearità permette di identificare in modo semplice le relazioni e i pesi delle diverse feature.
-- La selettività può essere raggiunta applicando scegliendo a priori un numero minore di metriche oppure sfruttando modelli *sparse
+- La selettività può essere raggiunta applicando scegliendo a priori un numero minore di metriche oppure sfruttando modelli *sparse*, come il Lasso, che limitano il numero di feature a quelle più rilevanti.
 
 # Confronto con altri algoritmi e versioni alternative
 
@@ -108,7 +110,7 @@ Selezione automatica delle feature che superano una certa soglia del coefficient
   ```
 
 ## Metodi a step
-- **Forward selection:**Aggiunta passo passo di feature selezionando man mano il modello con metrica di controllo, $R^2$ per esempio, migliore.
-- **Backward selection**Approccio simile può essere applicato partendo da un modello con tutte le feature e andando a sottrarre man mano un feature.
+- **Forward selection:** Aggiunta passo passo di feature selezionando man mano il modello con metrica di controllo, $R^2$ per esempio, migliore.
+- **Backward selection:** Approccio simile può essere applicato partendo da un modello con tutte le feature e andando a sottrarre man mano un feature.
 
 # Prompt
