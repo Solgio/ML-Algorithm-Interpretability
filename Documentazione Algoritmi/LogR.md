@@ -26,7 +26,7 @@ Il calcolo dei pesi $\beta$ è basato sulla funzione detta di *likelihood*, non 
 ```math
 \displaystyle L(\beta, Y, X )= \prod_{y_j =1} p(x_j)\prod_{y_i =0} p(1-x_i)
 ```
-masimizzando questa funzione.
+massimizzando questa funzione.
 
 # Vincoli sui dati
 La trasformazione della funzione logistica porta a una diversa interpretazione dei pesi.
@@ -79,7 +79,7 @@ Le ROC curves sono rappresentazioni delle metriche di True Positive Rate (TPR=Re
 L'AUC (Area Under the Curve) quantifica la capacità del modello di distinguere tra le classi, con valori vicini a 1 che indicano ottime prestazioni, vicine a 0.5 per un modello casuale.
 
 ### Z-statistic e p-value
-Un ruolo simile a quello della t-statistic nei modelli lineari è svolto dalla z-statistic (il peso del coefficiente diviso per il suo errore standard). Valori assoluti grandi della z-statistic indicano che c'è una forte evidenza per rifiutare l'ipotesi nulla, suggerendo che la feature è statisticamente significativa per variare la probabilità della classe.
+Un ruolo simile a quello della t-statistic nei modelli lineari è svolto dalla z-statistic $Z = \frac{\beta_j}{SE(\beta_j)}$(il peso del coefficiente diviso per il suo errore standard). Valori assoluti grandi della z-statistic indicano che c'è una forte evidenza per rifiutare l'ipotesi nulla, suggerendo che la feature è statisticamente significativa per variare la probabilità della classe.
 
 # Metriche per la comprensione e spiegabilità dei risultati
 ## Effect Plot e Weight Plot
