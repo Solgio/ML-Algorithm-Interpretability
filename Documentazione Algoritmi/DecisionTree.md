@@ -1,8 +1,3 @@
----
-header-includes:
-- \usepackage{algorithm2e}
----
-
 # Decision Tree (Albero di Decisione)
 
 ## Modello
