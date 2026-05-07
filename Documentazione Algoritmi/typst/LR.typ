@@ -7,7 +7,7 @@ $ y = sum_(i = 0) beta_i x_i forall i in F $
 Dove F è l\'insieme degli input per le feature. L\'obiettivo è vincolato
 ai pesi $beta$:
 
-$ hat(beta) = a r g m i n_(beta_0 . . . beta_p) sum_(i = 1)^n \( y^(\( i \)) - \( beta_0 + sum_(j = 1)^p beta_j x_j \) \)^2 $
+$ hat(beta) = "argmin"_(beta_0 . . . beta_p) sum_(i = 1)^n \( y^(\( i \)) - \( beta_0 + sum_(j = 1)^p beta_j x_j \) \)^2 $
 
 Viene minimizzato l\'errore quadratico tra la previsione e la $y$ reale
 attraverso la soluzione analitica (forma chiusa):
