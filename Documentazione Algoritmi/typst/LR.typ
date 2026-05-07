@@ -115,6 +115,13 @@ fondamentali]:
   numerica durante l\'inversione di $X^T X$ e pesi inflazionati in
   valore assoluto ma con segni incerti
 
+=== Preprocessing per i vincoli
+<preprocessing-per-i-vincoli>
++ #strong[Identificazione multicollinearità:] calcolo della matrice di correlazione tra feature o VIF (Variance Inflation Factor) per identificare feature altamente correlate.
+ $ "VIF"_j = frac(1, 1 - R_j^2)$
+Dove $R_j^2$ è il coefficiente di determinazione del modello di regressione della feature $j$ sui restanti predictor.
+
++ #strong[Matrice di correlazione:] calcolo della matrice di correlazione per identificare coppie di feature altamente correlate con il coefficiente di Pearson  (correlazione > 0.8 o < -0.8).
 
 
 == Capacità Predittive
