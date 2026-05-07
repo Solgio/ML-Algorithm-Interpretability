@@ -35,7 +35,7 @@ Dove $p_i$ è la proporzione di istanze appartenenti alla classe $i$ nel nodo.
 ```math
 \displaystyle \text{IG} = \text{Gini}(\text{padre}) - \sum_{\text{figlio}} \frac{|D_{\text{figlio}}|}{|D|} \text{Gini}(\text{figlio})
 ```
-
+Questo criterio è usato nelle prime implementazioni di Decision Tree (CART).
 #### Entropia (Classificazione)
 Misura l'**incertezza informativa** di un nodo:
 

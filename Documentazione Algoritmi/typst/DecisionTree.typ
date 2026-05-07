@@ -61,7 +61,7 @@ entropia:
 $ upright("IG") = upright("Entropia") \( upright("padre") \) - sum_(upright("figlio")) frac(\| D_(upright("figlio")) \|, \| D \|) upright("Entropia") \( upright("figlio") \) $
 
 #strong[Nota:] Gini e Entropia producono risultati simili in pratica;
-Gini è computazionalmente più efficiente.
+Gini è computazionalmente più efficiente. L'Information Gain è usato nelle prime implementazioni di Decision Tree (CART).
 
 ==== Mean Squared Error (MSE) - Regressione
 <mean-squared-error-mse---regressione>
