@@ -394,7 +394,7 @@ If x1 <= 5: ...
 
 Mentre un modello lineare cattura la relazione con due coefficienti.
 
-#strong[Risultato:] error più alto, overfitting per compensare
+#strong[Risultato:] errore più alto, overfitting per compensare
 
 === Multicollinearità
 <multicollinearità>

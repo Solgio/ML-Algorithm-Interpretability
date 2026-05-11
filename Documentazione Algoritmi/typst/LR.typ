@@ -224,7 +224,7 @@ $ R M S E = sqrt(frac(S S E, n)) $
 <mae-mean-absolute-error>
 Alternativa a RMSE, meno sensibile agli outlier:
 
-$ M A E = 1 / n sum_(i = 1)^n \| y_i - hat(y)_i \| $
+$ "MAE" = 1 / n sum_(i = 1)^n \| y_i - hat(y)_i \| $
 
 === Analisi dei Plot
 <analisi-dei-plot>
