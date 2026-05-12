@@ -11,13 +11,14 @@ PROJECT_NAME="LR_Salary"
 PLOT_DIR = os.path.join("output", PROJECT_NAME)
 os.makedirs(PLOT_DIR, exist_ok=True)
 
-dataset_dir = kh.dataset_download("amaymishra11/student-placement-and-salary-dataset-skills-based")
-file_path = os.path.join(dataset_dir, "student_placement_salary_elite_v2.csv")
-df = pd.read_csv(file_path)
+#dataset_dir = kh.dataset_download("amaymishra11/student-placement-and-salary-dataset-skills-based")
+dataset_path = "C:\\Users\\SOLLOR\\Documents\\ML-Algorithm-Interpretability\\src\\data\\student-salary\\student_placement_salary_elite_v2.csv"
+#file_path = os.path.join(dataset_dir, "student_placement_salary_elite_v2.csv")
+df = pd.read_csv(dataset_path)
 
 df_placed = df[df['placed'] == 1].copy()
 y = df_placed['salary_lpa']
-X = df_placed.drop(columns=['salary_lpa', 'placed', 'student_id', 'company_type'])
+X = df_placed.drop(columns=['salary_lpa', 'placed', 'student_id', 'company_type']) #, 'company_type'
 
 boolean=['dsa_skill', 'ml_skill', 'web_dev_skill' ]
 X = pd.get_dummies(X, drop_first=True).astype(float)
@@ -40,7 +41,7 @@ shap_values = explainer(X100)
 
 
 if __name__ == "__main__":
-    print("Dataset loaded successfully from:\n", file_path)
+    print("Dataset loaded successfully from:\n", dataset_path)
     
     # CONTROLLI sui VINCOLI
     plt.figure(figsize=(16, 16))
@@ -51,25 +52,14 @@ if __name__ == "__main__":
     plt.close()
     
     plt.figure()
-    #sns.residplot(x=model.predict(X), y=y - model.predict(X), lowess=True, hue="company_type_Startup")
-    sns.scatterplot(data=X, x=model.predict(X), y=y - model.predict(X), hue="coding_score")
+    sns.residplot(x=model.predict(X), y=y - model.predict(X), lowess=True, color='blue', line_kws={'color': 'red', 'lw': 1})
+    #sns.scatterplot(data=X, x=model.predict(X), y=y - model.predict(X), hue="coding_score")
     plt.xlabel('Predicted Values (Fitted Values)')
     plt.ylabel('Residuals')
     plt.title('Residual vs Fitted Values')
     resid_path = os.path.join(PLOT_DIR, "residual_plot.png")
     plt.savefig(resid_path)
     plt.close()
-    
-   
-    #plt.figure()
-    #sns.residplot( x=X.columns, y=y, data=X)
-    #plt.xlabel('Index')
-    #plt.ylabel('Residuals')
-    #plt.title('Residuals')
-    #resid_path = os.path.join(PLOT_DIR, "residual_plot.png")
-    #plt.savefig(resid_path)
-    #plt.close()
-    
     
     plt.figure(figsize=(8,6))
     sns.histplot(y - model.predict(X), kde=True, bins=30, color='purple')
@@ -120,3 +110,20 @@ if __name__ == "__main__":
     shap.plots.heatmap(shap_values, show=False)
     heatmap_path = os.path.join(PLOT_DIR, "shap_heatmap.png")
     plt.savefig(heatmap_path)
+    
+import json
+
+coef_df = pd.DataFrame({'Feature': X.columns, 'Coefficiente': model.coef_})
+coef_csv_path = os.path.join(PLOT_DIR, 'coefficienti.csv')
+coef_df.to_csv(coef_csv_path, index=False)
+
+metriche = {
+    "R_squared": r_squared,
+    "MAE": mae,
+    "RMSE": root_mean_squared_error
+}
+metriche_json_path = os.path.join(PLOT_DIR, 'metriche.json')
+with open(metriche_json_path, 'w') as f:
+    json.dump(metriche, f)
+
+print(f"Dati esportati con successo in: {PLOT_DIR}")
