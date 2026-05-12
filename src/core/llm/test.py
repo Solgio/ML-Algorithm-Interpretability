@@ -1,0 +1,96 @@
+import os
+import base64
+from pathlib import Path
+import pandas as pd
+import json
+from openai import OpenAI
+from dotenv import load_dotenv
+import logging
+
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+load_dotenv()
+
+client = OpenAI(
+    base_url=os.getenv("BASE_URL", "https://llm.padova.zucchettitest.it/"),
+    api_key=os.getenv("OPENAI_API_KEY")
+)
+
+def load_metrics(file_path):
+    path = Path(file_path)
+    if path.suffix == '.json':
+        with open(path, 'r') as f:
+            return json.dumps(json.load(f), indent=2)
+    elif path.suffix == '.csv':
+        df = pd.read_csv(path)
+        return df.to_string(index=False)
+    return "Nessuna metrica testuale disponibile."
+
+def load_coefficients(file_path):
+    path = Path(file_path)
+    if path.suffix == '.json':
+        with open(path, 'r') as f:
+            return json.dumps(json.load(f), indent=2)
+    elif path.suffix == '.csv':
+        df = pd.read_csv(path)
+        return df.to_string(index=False)
+    return "Nessun coefficiente testuale disponibile."
+
+def encode_image(image_path):
+    logging.info(f"Start encoding image at path: {image_path}")
+    """Codifica l'immagine in base64 gestendo i percorsi in modo sicuro."""
+    path = Path(image_path)
+    if not path.exists():
+        raise FileNotFoundError(f"File non trovato: {image_path}")
+        
+    with open(path, "rb") as image_file:
+        return base64.b64encode(image_file.read()).decode("utf-8")
+
+def analyze_statistics(metrics_path, coefficients_path, image_path):
+    logging.info(f"Caricamento metriche da: {metrics_path}")
+    raw_metrics = load_metrics(metrics_path)
+    logging.info("Metriche caricate e formattate correttamente.")
+    raw_coefficients = load_coefficients(coefficients_path)
+    logging.info(f"Start analyzing statistics for image: {image_path}")
+    base64_image = encode_image(image_path)
+    logging.info("Image encoded successfully, preparing prompt for LLM.")
+
+    prompt_text = (
+        f"Analizza i seguenti risultati di una regressione lineare:\n\n"
+        f"DATI NUMERICI:\n{raw_metrics}\n\n"
+        f"COEFFICIENTI: \n{raw_coefficients}\n\n"
+        f"ISTRUZIONI:\n"
+        f"1. Interpreta i coefficienti e gli indici di fit forniti.\n"
+        f"2. Commenta la qualità della predizione basandoti sui valori di errore.\n"
+        f"3. Valuta la concordanza tra i valori osservati e quelli predetti."
+        f"4. Fornisci una spiegazione alle scelte effettuate dall'algoritmo di regressione lineare che siano comprensibili a personale non tecnico."
+    )
+
+    try:
+        logging.info("Sending request to LLM API. This is the prompt being sent:\n" + prompt_text)
+        response = client.chat.completions.create(
+            model="gemma4:e4b",
+            messages=[
+                {
+                    "role": "user",
+                    "content": [
+                        {"type": "text", "text": prompt_text},
+                        {
+                            "type": "image_url",
+                            "image_url": {"url": f"data:image/jpeg;base64,{base64_image}"},
+                        },
+                    ],
+                }
+            ],
+        )
+        logging.info("API call successful, processing response.")
+        return response.choices[0].message.content
+    except Exception as e:
+        logging.exception(f"Errore durante la chiamata API: {e}")
+        return f"Errore durante la chiamata API: {e}"
+
+if __name__ == "__main__":
+    IMAGE_PATH = Path(r"C:\Users\SOLLOR\Documents\ML-Algorithm-Interpretability\src\output\LR_Salary\correlation_matrix.png")
+    METRICS_PATH = Path(r"C:\Users\SOLLOR\Documents\ML-Algorithm-Interpretability\src\output\LR_Salary\metriche.json")
+    COEFFICIENTS_PATH = Path(r"C:\Users\SOLLOR\Documents\ML-Algorithm-Interpretability\src\output\LR_Salary\coefficienti.csv")
+    risultato = analyze_statistics(METRICS_PATH, COEFFICIENTS_PATH, IMAGE_PATH)
+    print("\nRISPOSTA:\n", risultato)
