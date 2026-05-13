@@ -1,7 +1,6 @@
 import os
 import base64
 from pathlib import Path
-import concurrent
 import pandas as pd
 import json
 from openai import OpenAI
@@ -46,43 +45,12 @@ def encode_image(image_path):
         
     with open(path, "rb") as image_file:
         return base64.b64encode(image_file.read()).decode("utf-8")
-    
-def fetch_model_response(model, role_sistem, prompt_text, base64_image):
-    """Funzione helper per eseguire la singola chiamata API."""
-    logging.info(f"Testing model with image support: {model}")
-    try:
-        response = client.chat.completions.create(
-            model=model,
-            messages=[
-                {
-                    "role": "system",
-                    "content": role_sistem
-                },
-                {
-                    "role": "user",
-                    "content": [
-                        {"type": "text", "text": prompt_text},
-                        #{
-                        #    "type": "image_url",
-                        #    "image_url": {"url": f"data:image/jpeg;base64,{base64_image}"},
-                        #},
-                    ],
-                }
-            ],
-        )
-        logging.info(f"API call successful for model: {model}-------------------------------------------------------------------------------------")
-        return model, response.choices[0].message.content
-    except Exception as e:
-        logging.exception(f"Errore durante la chiamata API per {model}-------------------------------------------------------------------------------------: {e}")
-        return model, f"Errore: {str(e)}"
-    
+
 def analyze_statistics(metrics_path, coefficients_path, image_path):
     logging.info(f"Caricamento metriche da: {metrics_path}")
     raw_metrics = load_metrics(metrics_path)
     logging.info("Metriche caricate e formattate correttamente.")
-    
     raw_coefficients = load_coefficients(coefficients_path)
-    
     logging.info(f"Start analyzing statistics for image: {image_path}")
     base64_image = encode_image(image_path)
     logging.info("Image encoded successfully, preparing prompt for LLM.")
@@ -96,9 +64,9 @@ def analyze_statistics(metrics_path, coefficients_path, image_path):
         "qwen3.5:2b",
     ]
     
-    model_list = [
+    model_list_text_only = [
+        "iodose/nuextract-v1.5:3.8b-q8_0",    
         "deepseek-r1:8b",
-        "iodose/nuextract-v1.5:3.8b-q8_0",
         "deepseek-coder-v2:latest",
         "llama3.2:3b",
         "nomic-embed-text:latest",
@@ -123,27 +91,36 @@ def analyze_statistics(metrics_path, coefficients_path, image_path):
         f"4. Fornisci una spiegazione alle scelte effettuate dall'algoritmo di regressione lineare che siano comprensibili a personale non tecnico.\n"
         f"5. Analizza la matrice di correlazione (immagine allegata) e commenta eventuali pattern o anomalie evidenti."
     )
-    
-    results = {}
-    
-    with concurrent.futures.ThreadPoolExecutor() as executor:
-        futures = executor.map(
-            lambda m: fetch_model_response(m, role_sistem, prompt_text, base64_image),
-            model_list
+    try:
+        logging.info("Sending request to LLM API. This is the prompt being sent:\n" + '''prompt_text''')
+        response = client.chat.completions.create(
+            model="deepseek-r1:8b",
+            messages=[
+                {
+                    "role": "system",
+                    "content": role_sistem
+                },
+                {
+                    "role": "user",
+                    "content": [
+                        {"type": "text", "text": prompt_text},
+                        {
+                            "type": "image_url",
+                            "image_url": {"url": f"data:image/jpeg;base64,{base64_image}"},
+                        },
+                    ],
+                }
+            ],
         )
-        
-        for model_name, content in futures:
-            results[model_name] = content
-
-    return results
+        logging.info("API call successful, processing response.")
+        return response.choices[0].message.content
+    except Exception as e:
+        logging.exception(f"Errore durante la chiamata API: {e}")
+        return "Si è verificato un errore durante l'analisi. Per favore, controlla i log per maggiori dettagli."
 
 if __name__ == "__main__":
     IMAGE_PATH = Path(r"C:\Users\SOLLOR\Documents\ML-Algorithm-Interpretability\src\output\LR_Salary\correlation_matrix.png")
     METRICS_PATH = Path(r"C:\Users\SOLLOR\Documents\ML-Algorithm-Interpretability\src\output\LR_Salary\metriche.json")
     COEFFICIENTS_PATH = Path(r"C:\Users\SOLLOR\Documents\ML-Algorithm-Interpretability\src\output\LR_Salary\coefficienti.csv")
-    
-    risultati = analyze_statistics(METRICS_PATH, COEFFICIENTS_PATH, IMAGE_PATH)
-    
-    print("\n--- RISULTATI DEL TESTING ---")
-    for modello, risposta in risultati.items():
-        print(f"\n[{modello}]\n{risposta}\n{'-'*50}")
+    risultato = analyze_statistics(METRICS_PATH, COEFFICIENTS_PATH, IMAGE_PATH)
+    print("\nRISPOSTA:\n", risultato)
