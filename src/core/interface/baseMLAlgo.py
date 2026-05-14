@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 import os
 import pandas as pd
+from sklearn.model_selection import train_test_split
 
 class BaseMLAlgo(ABC):
     @abstractmethod
@@ -13,7 +14,7 @@ class BaseMLAlgo(ABC):
         os.makedirs(self.PLOT_DIR, exist_ok=True)
         
     @abstractmethod
-    def import_data(self, dataset_path: str, drop_columns: list, objective_column: str):
+    def import_data(self, dataset_path: str, drop_columns: list, objective_column: str,  test_size: float = 0.2, random_state: int = 42):
         self.df = pd.read_csv(dataset_path)
         y = self.df[objective_column]
         self.df = self.df.drop(columns=drop_columns)
