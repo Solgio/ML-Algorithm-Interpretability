@@ -55,10 +55,6 @@ def fetch_model_response(model, role_sistem, prompt_text, base64_image):
             model=model,
             messages=[
                 {
-                    "role": "system",
-                    "content": role_sistem
-                },
-                {
                     "role": "user",
                     "content": [
                         {"type": "text", "text": prompt_text},
@@ -70,6 +66,7 @@ def fetch_model_response(model, role_sistem, prompt_text, base64_image):
                 }
             ],
         )
+        print(response)
         logging.info(f"API call successful for model: {model}-------------------------------------------------------------------------------------")
         return model, response.choices[0].message.content
     except Exception as e:

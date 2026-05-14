@@ -6,7 +6,8 @@ DATASETS = {
         "path": "C:\\Users\\SOLLOR\\Documents\\ML-Algorithm-Interpretability\\src\\data\\student-salary\\student_placement_salary_elite_v2.csv",
         "drop_columns": ['salary_lpa', 'placed', 'student_id'],
         "objective_column": "salary_lpa",
-        "binary_categorical_features": ['student_id', 'branch', 'company_type', 'job_role', 'dsa_skill', 'ml_skill', 'web_dev_skill', 'placed']
+        "binary_categorical_features": ['student_id', 'branch', 'company_type', 'job_role', 'dsa_skill', 'ml_skill', 'web_dev_skill', 'placed'],
+        "shap_dependence_variable": ["cgpa"]
     }
     
 }
