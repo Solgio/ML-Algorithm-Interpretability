@@ -3,10 +3,10 @@ from baseMLAlgo import BaseMLAlgo
 
 class ClassificationAlgo(BaseMLAlgo):
     @abstractmethod
-    def __init__(self, model_name: str, task_type: str):
+    def __init__(self, model_name: str, dataset: str):
         self.model_name = model_name
-        super().__init__(model_name=model_name, task_type="classification")
-        
+        super().__init__(model_name=model_name, task_type="classification", dataset=dataset)
+
     def import_data(self, file_path: str, drop_columns: list):
         pass
     
