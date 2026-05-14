@@ -9,7 +9,7 @@ ALGORITHMS = {
     "regression": {
         "Linear Regression": {
             "module": "models.LR",
-            "class": "LRModel",
+            "class": "LinearRegression",
             "description": "Regressione lineare OLS (sklearn)",
         },
         "XGBoost":{

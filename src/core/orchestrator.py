@@ -66,8 +66,8 @@ def step_shap(model, dataset_cfg: dict):
         log.warning("    'shap_dependence_variable' non definita nel config — SHAP saltato.")
         return {}
 
-    X_sample = model.X_train.sample(n=min(200, len(model.X_train)), random_state=42)
-    paths = model.SHAP_analysis(X_sample=X_sample, dependence_variable=dependence_var)
+    X_sample = model.X.sample(n=min(200, len(model.X)), random_state=42)
+    paths = model.SHAP_analysis(X_sample=X_sample, dependence_variable=dependence_var[0])
     log.info(f"    SHAP plot salvati: {list(paths.values())}")
     return paths
 
@@ -83,7 +83,7 @@ def step_export(model) -> dict:
 def step_llm(export_results: dict, plot_paths: dict):
     log.info("━━  STEP 6: Analisi LLM")
     try:
-        from test import analyze_statistics
+        from llm.test import analyze_statistics
     except ImportError:
         log.error("    Impossibile importare 'test.py'. Assicurati che sia nella stessa cartella.")
         return {}
@@ -111,6 +111,23 @@ def step_llm(export_results: dict, plot_paths: dict):
     print("═" * 60)
     for modello, risposta in risultati.items():
         print(f"\n[{modello}]\n{risposta}\n{'─' * 60}")
+        
+    output_dir = export_results.get("plot_dir", ".")
+    report_path = Path(output_dir) / "LLM_Analysis_Report.md"
+    
+    try:
+        # Usiamo encoding="utf-8" per evitare problemi con accenti e caratteri speciali
+        with open(report_path, "w", encoding="utf-8") as f:
+            f.write("# Report Analisi Interpretativa LLM\n\n")
+            
+            for modello, risposta in risultati.items():
+                f.write(f"## Modello: `{modello}`\n\n")
+                f.write(f"{risposta}\n\n")
+                f.write("---\n\n") # Linea di separazione tra i modelli
+                
+        log.info(f"    ✔ Report LLM salvato con successo in: {report_path}")
+    except Exception as e:
+        log.error(f"    Errore durante il salvataggio del report LLM: {e}")
 
     return risultati
 

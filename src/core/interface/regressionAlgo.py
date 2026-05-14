@@ -8,13 +8,13 @@ import seaborn as sns
 import shap
 import sklearn
 
-from baseMLAlgo import BaseMLAlgo
+from .baseMLAlgo import BaseMLAlgo
 
 class BaseRegressionAlgo(BaseMLAlgo):
     @abstractmethod
-    def __init__(self, model_name: str, task_type: str):
+    def __init__(self, model_name: str, dataset: str):
         self.model_name = model_name
-        super().__init__(model_name=model_name, task_type="regression")
+        super().__init__(model_name=model_name, task_type="regression", dataset=dataset)
         
     @abstractmethod
     def fit(self, X_train, y_train, X_test, y_test):
@@ -34,13 +34,14 @@ class BaseRegressionAlgo(BaseMLAlgo):
         }
     
     def generate_plots(self, binary_features: list=[]) -> dict:
-        dc=self.df.drop(columns=binary_features)
+        dc=self.df.drop(columns=binary_features, errors='ignore')
         correlation_matrix = dc.corr(method='pearson')
         plt.figure(figsize=(16, 16))
         sns.heatmap(correlation_matrix, annot=True, cmap='coolwarm', linewidths=0.5)
         plt.title('Correlation Matrix')
         corr_path = os.path.join(self.PLOT_DIR, "correlation_matrix.png")
         plt.savefig(corr_path)
+        return {"correlation_matrix": corr_path}
         
     
     def SHAP_analysis(self, X_sample, dependence_variable):
@@ -72,6 +73,12 @@ class BaseRegressionAlgo(BaseMLAlgo):
         shap.plots.heatmap(shap_values, show=False)
         heatmap_path = os.path.join(self.PLOT_DIR, "shap_heatmap.png")
         plt.savefig(heatmap_path)
+        
+        return {
+            "shap_summary": summary_path,
+            "partial_dependence": pdp_path,
+            "shap_heatmap": heatmap_path
+        }
     
     def export_results(self) -> dict:
         metrics=self.calculate_metrics()
@@ -89,3 +96,10 @@ class BaseRegressionAlgo(BaseMLAlgo):
             json.dump(metriche, f)
         
         print(f"Dati esportati con successo in: {self.PLOT_DIR}")
+        
+        return {
+            "metrics": metriche,
+            "plot_dir": self.PLOT_DIR,
+            "metrics_path": metriche_json_path,
+            "coefficients_path": coef_csv_path
+        }

@@ -1,13 +1,13 @@
 from interface.regressionAlgo import BaseRegressionAlgo
-from sklearn.linear_model import LinearRegression
+from sklearn.linear_model import LinearRegression as SklearnLinearRegression
 import config.datasets_config as DATASET
         
 class LinearRegression(BaseRegressionAlgo):
-    def __init__(self, model_name: str):
-        super().__init__(model_name="Linear Regression")
-        
+    def __init__(self, dataset: str):
+        super().__init__(model_name="Linear Regression", dataset=dataset)
+
     def fit(self, X_train, y_train, X_test, y_test):
-        self.model = LinearRegression()
+        self.model = SklearnLinearRegression()
         self.model.fit(X_train, y_train)
         self.X = X_train
         self.y = y_train
