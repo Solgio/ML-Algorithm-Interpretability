@@ -13,12 +13,13 @@ class DecisionTreeC(BaseClassificationAlgo):
         super().__init__(dataset=dataset, model_name="Decision Tree C")
 
     def fit(self, X_train, y_train, X_test, y_test):
-        self.X = X_train
-        self.y = y_train
         
         self.model = SklearnDecisionTreeClassifier(random_state=42)
-        self.model.fit(self.X, self.y)
+        self.model.fit(X_train, y_train)
         
+        self.X = X_test
+        self.y = y_test
+                
     def generate_algorithm_specific_plots(self) -> dict:
         
         plt.figure(figsize=(24, 12)) 
@@ -57,11 +58,12 @@ class DecisionTreeR(BaseRegressionAlgo):
         super().__init__(dataset=dataset, model_name="Decision Tree R")
 
     def fit(self, X_train, y_train, X_test, y_test):
-        self.X = X_train
-        self.y = y_train
-        
+                
         self.model = SklearnDecisionTreeRegressor(random_state=42)
-        self.model.fit(self.X, self.y)
+        self.model.fit(X_train, y_train)
+        
+        self.X = X_test
+        self.y = y_test
         
     def generate_algorithm_specific_plots(self) -> dict:
         

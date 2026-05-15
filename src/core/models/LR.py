@@ -13,11 +13,11 @@ class LinearRegression(BaseRegressionAlgo):
         X_train_scaled = self.scaler.fit_transform(X_train)
         X_test_scaled = self.scaler.transform(X_test)
         
-        self.X = pd.DataFrame(X_train_scaled, columns=X_train.columns)
-        self.y = y_train
-        
         self.model = SklearnLinearRegression()
-        self.model.fit(self.X, self.y)
+        self.model.fit(pd.DataFrame(X_train_scaled, columns=X_train.columns), y_train)
+        
+        self.X = pd.DataFrame(X_test_scaled, columns=X_test.columns)
+        self.y = y_test
         
     def generate_algorithm_specific_plots(self) -> dict:
         return {}
