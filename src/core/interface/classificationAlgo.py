@@ -118,6 +118,8 @@ class BaseClassificationAlgo(BaseMLAlgo):
             explainer = shap.Explainer(self.model.predict, X_sample)
             shap_values = explainer(X_sample)
             
+        if len(shap_values.shape) == 3:
+            shap_values = shap_values[:, :, 1]
         print("\nSHAP values calculated successfully!")
         
         shap.summary_plot(shap_values, X_sample, plot_type="bar", show=False)

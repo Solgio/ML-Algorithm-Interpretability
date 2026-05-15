@@ -12,6 +12,16 @@ ALGORITHMS = {
             "class": "LinearRegression",
             "description": "Regressione lineare OLS (sklearn)",
         },
+        "Decision tree":{
+            "module": "models.DecTree",
+            "class": "DecisionTreeR",
+            "description": "Albero decisionale (sklearn)",
+        },
+        "Random Forest":{
+            "module": "models.RandForest",
+            "class": "RandomForestR",
+            "description": "Random Forest (sklearn)",
+        },
         "XGBoost":{
             "module": "models.XGBoost",
             "class": "XGBoostModel",
@@ -30,13 +40,13 @@ ALGORITHMS = {
             "description": "Support Vector Machine (sklearn.svm.SVC)",
         },
         "Decision tree":{
-            "module": "models.DecisionTree",
-            "class": "DecisionTreeModel",
+            "module": "models.DecTree",
+            "class": "DecisionTreeC",
             "description": "Albero decisionale (sklearn)",
         },
         "Random Forest":{
-            "module": "models.RandomForest",
-            "class": "RandomForestModel",
+            "module": "models.RandForest",
+            "class": "RandomForestC",
             "description": "Random Forest (sklearn)",
         },
         "XGBoost":{
