@@ -41,8 +41,13 @@ class BaseRegressionAlgo(BaseMLAlgo):
         plt.title('Correlation Matrix')
         corr_path = os.path.join(self.PLOT_DIR, "correlation_matrix.png")
         plt.savefig(corr_path)
+        plt.close()
+        
         return {"correlation_matrix": corr_path}
         
+    @abstractmethod
+    def generate_algorithm_specific_plots(self) -> dict:
+        pass
     
     def SHAP_analysis(self, X_sample, dependence_variable):
         
@@ -53,6 +58,7 @@ class BaseRegressionAlgo(BaseMLAlgo):
         shap.summary_plot(shap_values, X_sample, plot_type="bar", show=False)
         summary_path = os.path.join(self.PLOT_DIR, "shap_summary.png")
         plt.savefig(summary_path)
+        plt.close()
         
         sample_ind = 20
         shap.partial_dependence_plot(
@@ -67,12 +73,13 @@ class BaseRegressionAlgo(BaseMLAlgo):
         )
         pdp_path = os.path.join(self.PLOT_DIR, f"partial_dependence_{dependence_variable}_sample_{sample_ind}.png")
         plt.savefig(pdp_path)
-
+        plt.close()
         #shap.plots.beeswarm(shap_values)
         
         shap.plots.heatmap(shap_values, show=False)
         heatmap_path = os.path.join(self.PLOT_DIR, "shap_heatmap.png")
         plt.savefig(heatmap_path)
+        plt.close()
         
         return {
             "shap_summary": summary_path,
@@ -82,8 +89,16 @@ class BaseRegressionAlgo(BaseMLAlgo):
     
     def export_results(self) -> dict:
         metrics=self.calculate_metrics()
-        coef_df = pd.DataFrame({'Feature': self.X.columns, 'Coefficiente': self.model.coef_})
-        coef_csv_path = os.path.join(self.PLOT_DIR, 'coefficienti.csv')
+        
+        if hasattr(self.model, "coef_"):
+            weights = self.model.coef_
+        elif hasattr(self.model, "feature_importances_"):
+            weights = self.model.feature_importances_
+        else:
+            weights = [0] * len(self.X.columns)
+            
+        coef_df = pd.DataFrame({'Feature': self.X.columns, 'Peso/Coefficiente': weights})
+        coef_csv_path = os.path.join(self.PLOT_DIR, 'coefficienti_pesi.csv')
         coef_df.to_csv(coef_csv_path, index=False)
         
         metriche = {

@@ -55,6 +55,8 @@ def step_plots(model, dataset_cfg: dict):
     log.info("━━  STEP 3: Generazione plot")
     binary_features = dataset_cfg.get("binary_categorical_features", [])
     paths = model.generate_plots(binary_features=binary_features)
+    algorithm_specific_paths = model.generate_algorithm_specific_plots()
+    paths.update(algorithm_specific_paths)
     log.info(f"    Plot salvati: {list(paths.values())}")
     return paths
 
