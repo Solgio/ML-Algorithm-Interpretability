@@ -1,8 +1,8 @@
-from sklearn.preprocessing import StandardScaler
 import pandas as pd
+import config.datasets_config as data
+from sklearn.preprocessing import StandardScaler
 from interface.regressionAlgo import BaseRegressionAlgo
 from sklearn.linear_model import LinearRegression as SklearnLinearRegression
-import config.datasets_config as DATASET
         
 class LinearRegression(BaseRegressionAlgo):
     def __init__(self, dataset: str):
@@ -24,10 +24,8 @@ class LinearRegression(BaseRegressionAlgo):
 
 if __name__ == "__main__":
     lr_model = LinearRegression("Student Salary Dataset")
-    dataset_path = DATASET["Student Salary Dataset"]["path"]
-    drop_columns = DATASET["Student Salary Dataset"]["drop_columns"]
-    objective_column = DATASET["Student Salary Dataset"]["objective_column"]
+    dataset_path = data.DATASETS["Student Salary Dataset"]["path"]
+    drop_columns = data.DATASETS["Student Salary Dataset"]["drop_columns"]
+    objective_column = data.DATASETS["Student Salary Dataset"]["objective_column"]
     
-    lr_model.import_data(dataset_path, drop_columns, objective_column)
-    
-    
+    lr_model.import_data(dataset_path, drop_columns, objective_column)    

@@ -111,8 +111,13 @@ class BaseClassificationAlgo(BaseMLAlgo):
         pass
     
     def SHAP_analysis(self, X_sample, dependence_variable):
-        explainer = shap.Explainer(self.model, X_sample)
-        shap_values = explainer(X_sample)
+        try:
+            explainer = shap.Explainer(self.model, X_sample)
+            shap_values = explainer(X_sample)
+        except TypeError:
+            explainer = shap.Explainer(self.model.predict, X_sample)
+            shap_values = explainer(X_sample)
+            
         print("\nSHAP values calculated successfully!")
         
         shap.summary_plot(shap_values, X_sample, plot_type="bar", show=False)
@@ -135,9 +140,11 @@ class BaseClassificationAlgo(BaseMLAlgo):
         plt.savefig(pdp_path)
         plt.close()
         
+        values_to_plot = shap_values.values if hasattr(shap_values, 'values') else shap_values
+        
         shap.dependence_plot(
             dependence_variable,
-            shap_values.values,
+            values_to_plot,
             X_sample,
             show=False
         )
