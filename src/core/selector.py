@@ -20,14 +20,14 @@ ALGORITHMS = {
     },
     "classification": {
         "Logistic Regression": {
-            "module": "models.LogisticRegression",
-            "class": "LogisticRegressionModel",
+            "module": "models.LogR",
+            "class": "LogisticRegression",
             "description": "Regressione logistica (sklearn)",
             },
         "SVM":{
             "module": "models.SVM",
-            "class": "SVMModel",
-            "description": "Support Vector Machine (sklearn)",
+            "class": "SVM",
+            "description": "Support Vector Machine (sklearn.svm.SVC)",
         },
         "Decision tree":{
             "module": "models.DecisionTree",

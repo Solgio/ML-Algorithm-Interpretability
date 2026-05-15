@@ -2,8 +2,8 @@ import os
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
+import config.datasets_config as data
 from sklearn.preprocessing import StandardScaler
-import config.datasets_config as DATASET
 from interface.classificationAlgo import BaseClassificationAlgo
 from sklearn.linear_model import LogisticRegression as SklearnLogisticRegression
         
@@ -50,8 +50,8 @@ class LogisticRegression(BaseClassificationAlgo):
 
 if __name__ == "__main__":
     lr_model = LogisticRegression(dataset="Student Placed-Not Placed Dataset")
-    dataset_path = DATASET["Student Placed-Not Placed Dataset"]["path"]
-    drop_columns = DATASET["Student Placed-Not Placed Dataset"]["drop_columns"]
-    objective_column = DATASET["Student Placed-Not Placed Dataset"]["objective_column"]
+    dataset_path = data.DATASETS["Student Placed-Not Placed Dataset"]["path"]
+    drop_columns = data.DATASETS["Student Placed-Not Placed Dataset"]["drop_columns"]
+    objective_column = data.DATASETS["Student Placed-Not Placed Dataset"]["objective_column"]
 
     lr_model.import_data(dataset_path, drop_columns, objective_column)
