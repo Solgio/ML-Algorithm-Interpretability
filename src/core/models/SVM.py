@@ -1,10 +1,13 @@
 import os
 import sklearn.svm
 import pandas as pd
+import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
 import config.datasets_config as data
+from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
+from sklearn.inspection import DecisionBoundaryDisplay
 from interface.classificationAlgo import BaseClassificationAlgo
         
 class SVM(BaseClassificationAlgo):
@@ -16,19 +19,57 @@ class SVM(BaseClassificationAlgo):
         X_train_scaled = self.scaler.fit_transform(X_train)
         X_test_scaled = self.scaler.transform(X_test)
         
-        self.model = sklearn.svm.SVC(kernel='rbf', C=1.0, gamma='scale')
+        self.model = sklearn.svm.SVC(kernel='sigmoid', C=1.0, gamma='scale')
         self.model.fit(pd.DataFrame(X_train_scaled, columns=X_train.columns), y_train)
         
         self.X = pd.DataFrame(X_test_scaled, columns=X_test.columns)
         self.y = y_test
     
     def generate_algorithm_specific_plots(self) -> dict:
-        decision_function = self.model.decision_function(self.X)
+        
         plt.figure(figsize=(10, 6))
-        plt.savefig(os.path.join(self.PLOT_DIR, "svm_decision_function.png"))
+        
+        if self.X.shape[1] > 2:
+            pca = PCA(n_components=2)
+            X_vis = pca.fit_transform(self.X)
+            
+            model_vis = sklearn.svm.SVC(kernel='rbf', C=1.0, gamma='scale')
+            model_vis.fit(X_vis, self.y)
+            title = "SVM Decision Boundary (Proiezione 2D via PCA)"
+        else:
+            X_vis = self.X.values
+            model_vis = self.model
+            title = "SVM Decision Boundary"
+
+        ax = plt.gca()
+        DecisionBoundaryDisplay.from_estimator(
+            model_vis,
+            X_vis,
+            response_method="predict",
+            cmap=plt.cm.coolwarm,
+            alpha=0.6,
+            ax=ax
+        )
+        
+        scatter = ax.scatter(
+            X_vis[:, 0], 
+            X_vis[:, 1], 
+            c=self.y, 
+            edgecolors='k', 
+            cmap=plt.cm.coolwarm,
+            s=50
+        )
+        
+        plt.title(title)
+        plt.xlabel("Componente 1" if self.X.shape[1] > 2 else self.X.columns[0])
+        plt.ylabel("Componente 2" if self.X.shape[1] > 2 else self.X.columns[1])
+        
+        plot_path = os.path.join(self.PLOT_DIR, "svm_decision_function.png")
+        plt.savefig(plot_path, bbox_inches="tight")
         plt.close()
+        
         return {
-            "svm_decision_function": os.path.join(self.PLOT_DIR, "svm_decision_function.png")
+            "svm_decision_function": plot_path
         }
 
 if __name__ == "__main__":

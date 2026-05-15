@@ -24,7 +24,7 @@ ALGORITHMS = {
         },
         "XGBoost":{
             "module": "models.XGBoost",
-            "class": "XGBoostModel",
+            "class": "XGBoostR",
             "description": "XGBoost (xgboost)",
         },
     },
@@ -51,7 +51,7 @@ ALGORITHMS = {
         },
         "XGBoost":{
         "module": "models.XGBoost",
-        "class": "XGBoostModel",
+        "class": "XGBoostC",
         "description": "XGBoost (xgboost)",
         },
     },
