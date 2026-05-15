@@ -37,6 +37,10 @@ class BaseMLAlgo(ABC):
         pass
     
     @abstractmethod
+    def generate_algorithm_specific_plots(self) -> dict:
+        pass
+    
+    @abstractmethod
     def SHAP_analysis(self, X_sample):
         pass
     
