@@ -58,10 +58,10 @@ def fetch_model_response(model, role_sistem, prompt_text, base64_image):
                     "role": "user",
                     "content": [
                         {"type": "text", "text": prompt_text},
-                        #{
-                        #    "type": "image_url",
-                        #    "image_url": {"url": f"data:image/jpeg;base64,{base64_image}"},
-                        #},
+                        {
+                            "type": "image_url",
+                            "image_url": {"url": f"data:image/jpeg;base64,{base64_image}"},
+                        },
                     ],
                 }
             ],
@@ -73,7 +73,7 @@ def fetch_model_response(model, role_sistem, prompt_text, base64_image):
         logging.exception(f"Errore durante la chiamata API per {model}-------------------------------------------------------------------------------------: {e}")
         return model, f"Errore: {str(e)}"
     
-def analyze_statistics(metrics_path, coefficients_path, image_path):
+def analyze_statistics(metrics_path, coefficients_path, image_path, algo_name, algo_type, dataset_description, algo_prompt):
     logging.info(f"Caricamento metriche da: {metrics_path}")
     raw_metrics = load_metrics(metrics_path)
     logging.info("Metriche caricate e formattate correttamente.")
@@ -93,7 +93,7 @@ def analyze_statistics(metrics_path, coefficients_path, image_path):
         "qwen3.5:2b",
     ]
     
-    model_list = [
+    model_list_text = [
         "deepseek-r1:8b",
         "iodose/nuextract-v1.5:3.8b-q8_0",
         "deepseek-coder-v2:latest",
@@ -106,19 +106,33 @@ def analyze_statistics(metrics_path, coefficients_path, image_path):
         "nomic-embed-text-v2-moe:latest",
         "gpt-oss:20b"
     ]
+    
+    model_list = model_list_img_supp + model_list_text
 
-    role_sistem = "Agisci come un divulgatore scientifico esperto ma accessibile. Il tuo pubblico è composto da manager e stakeholder non tecnici. Il tuo obiettivo è spiegare perché un algoritmo ha preso una determinata decisione. Utilizza un linguaggio semplice, esempi concreti e analogie per rendere i concetti complessi comprensibili. Evita il gergo tecnico e focalizzati su come le caratteristiche influenzano le predizioni in modo intuitivo."
+    role_sistem = "Sei un Data Translator e un consulente strategico. Il tuo compito è spiegare i risultati di un modello predittivo a un consiglio di amministrazione. L'obiettivo è generare fiducia nel modello e farne comprendere le logiche."
 
     prompt_text = (
-        f"Analizza i seguenti risultati di una regressione lineare:\n\n"
+        f"Contesto analisi:\n\n"
+        f"ALGORITMO: {algo_name}\n"
+        f"Tipo di algoritmo: {algo_type}\n"
+        f"Descrizione del dataset: {dataset_description}\n"
         f"DATI NUMERICI:\n{raw_metrics}\n\n"
         f"COEFFICIENTI: \n{raw_coefficients}\n\n"
-        f"ISTRUZIONI:\n"
-        f"1. Interpreta i coefficienti e gli indici di fit forniti.\n"
-        f"2. Commenta la qualità della predizione basandoti sui valori di errore.\n"
-        f"3. Valuta la concordanza tra i valori osservati e quelli predetti.\n"
-        f"4. Fornisci una spiegazione alle scelte effettuate dall'algoritmo di regressione lineare che siano comprensibili a personale non tecnico.\n"
-        f"5. Analizza la matrice di correlazione (immagine allegata) e commenta eventuali pattern o anomalie evidenti."
+        f"ISTRUZIONI SPECIFICHE: {algo_prompt}\n"
+        f"REGOLE FERREE DI SPIEGABILITÀ (Linee guida rigorose):\n"
+        f"1. Semplicità e Brevità: Concentrati solo su un numero limitato di cause determinanti (massimo 3-5 feature). Ignora le variabili marginali o non causali.\n"
+        f"2. Fedeltà alla Logica Umana: Usa un linguaggio umano e coerente con il dominio di business, adattando la spiegazione all'audience.\n"
+        f"3. Causalità vs Correlazione: Chiarisci sempre che le feature individuate dal modello indicano correlazioni statistiche, ma non implicano necessariamente una causalità diretta.\n"
+        f"4. Gestione Anomalie e Feature Support: Se noti valori estremi (outlier) o se la predizione sembra basarsi su dati insoliti, segnala che l'affidabilità (supporto) potrebbe essere bassa in quanto ci si allontana dai casi medi.\n"
+        f"5. Spiegazione Contrastiva: Se i dati e l'immagine lo permettono, cerca di spiegare le differenze in modo contrastivo (es. 'perché l'istanza è positiva rispetto a quella negativa').\n\n"
+        f"ISTRUZIONI GENERALI:\n"
+        f"1. Riassumi l'affidabilità generale del modello in pochi passaggi, basandoti sui dati ma senza entrare nei dettagli tecnici.\n"
+        f"2. Spiega in modo intuitivo i fattori (feature) principali che guidano le decisioni.\n"
+        f"3. Analizza i dati e i grafici allegati per confermare se le decisioni del modello sono in linea con il buon senso aziendale."
+        f"VINCOLI:\n"
+        f"- Evita gergo tecnico eccessivo, punta a un linguaggio chiaro e accessibile.\n"
+        f"- Non limitarti a ripetere i dati, ma fornisci un'interpretazione che li renda comprensibili e utili per decisioni strategiche."
+        f"- Niente formulazioni matematiche esplicite."
     )
     
     results = {}
@@ -139,7 +153,15 @@ if __name__ == "__main__":
     METRICS_PATH = Path(r"C:\Users\SOLLOR\Documents\ML-Algorithm-Interpretability\src\output\LR_Salary\metriche.json")
     COEFFICIENTS_PATH = Path(r"C:\Users\SOLLOR\Documents\ML-Algorithm-Interpretability\src\output\LR_Salary\coefficienti.csv")
     
-    risultati = analyze_statistics(METRICS_PATH, COEFFICIENTS_PATH, IMAGE_PATH)
+    risultati = analyze_statistics(
+        METRICS_PATH, 
+        COEFFICIENTS_PATH, 
+        IMAGE_PATH, 
+        algo_name="Linear Regression", 
+        algo_type="Regressione", 
+        dataset_description="Dataset con informazioni su studenti e i loro stipendi dopo la laurea.", 
+        algo_prompt="Fornisci un'interpretazione dettagliata dei risultati della regressione lineare, spiegando l'importanza di ogni coefficiente e la qualità del modello."  
+        )
     
     print("\n--- RISULTATI DEL TESTING ---")
     for modello, risposta in risultati.items():

@@ -15,7 +15,6 @@ import sys
 import traceback
 from pathlib import Path
 
-# ── logging ──────────────────────────────────────────────────────────
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s  %(levelname)-8s  %(message)s",
@@ -82,7 +81,7 @@ def step_export(model) -> dict:
     return results
 
 
-def step_llm(export_results: dict, plot_paths: dict):
+def step_llm(export_results: dict, plot_paths: dict, config: dict):
     log.info("━━  STEP 6: Analisi LLM")
     try:
         from llm.test import analyze_statistics
@@ -95,17 +94,25 @@ def step_llm(export_results: dict, plot_paths: dict):
         log.warning("    Correlation matrix non trovata — analisi LLM saltata.")
         return {}
 
+    algo_name =config["algo_name"]
+    algo_type = config["dataset_cfg"]["task"]
+    dataset_description = config["dataset_cfg"]["description"]
+    algo_prompt = config["algo_info"]["prompt"]
+
     metrics_path      = export_results.get("metrics_path")
     coefficients_path = export_results.get("coefficients_path")
-
     if not metrics_path:
         log.warning("    metrics_path mancante — analisi LLM saltata.")
         return {}
 
     risultati = analyze_statistics(
         metrics_path=metrics_path,
-        coefficients_path=coefficients_path or metrics_path,  # fallback sicuro
+        coefficients_path=coefficients_path or metrics_path, 
         image_path=corr_matrix_path,
+        algo_name=algo_name,
+        algo_type=algo_type,
+        dataset_description=dataset_description,
+        algo_prompt=algo_prompt,        
     )
 
     print("\n" + "═" * 60)
@@ -118,14 +125,13 @@ def step_llm(export_results: dict, plot_paths: dict):
     report_path = Path(output_dir) / "LLM_Analysis_Report.md"
     
     try:
-        # Usiamo encoding="utf-8" per evitare problemi con accenti e caratteri speciali
         with open(report_path, "w", encoding="utf-8") as f:
             f.write("# Report Analisi Interpretativa LLM\n\n")
             
             for modello, risposta in risultati.items():
                 f.write(f"## Modello: `{modello}`\n\n")
                 f.write(f"{risposta}\n\n")
-                f.write("---\n\n") # Linea di separazione tra i modelli
+                f.write("---\n\n")
                 
         log.info(f"    ✔ Report LLM salvato con successo in: {report_path}")
     except Exception as e:
@@ -160,7 +166,6 @@ def run_pipeline(config: dict) -> dict:
     log.info(f"  Pipeline avviata: {config['algo_name']} su '{dataset_name}'")
     log.info("═" * 60)
 
-    # Istanzia il modello dinamicamente
     model = _load_model(algo_info, dataset_name)
 
     # Dati
@@ -184,7 +189,7 @@ def run_pipeline(config: dict) -> dict:
     llm_results = {}
     if run_llm:
         all_plot_paths = {**plot_paths, **shap_paths}
-        llm_results = step_llm(export_res, all_plot_paths)
+        llm_results = step_llm(export_res, all_plot_paths, config)
 
     log.info("═" * 60)
     log.info("  Pipeline completata con successo.")
