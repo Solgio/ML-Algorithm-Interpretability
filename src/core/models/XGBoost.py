@@ -1,0 +1,192 @@
+import os
+import numpy as np
+import xgboost as xgb
+import matplotlib.pyplot as plt
+import shap
+from config.datasets_config import DATASETS as data
+from interface.classificationAlgo import BaseClassificationAlgo
+from interface.regressionAlgo import BaseRegressionAlgo
+
+class XGBoostC(BaseClassificationAlgo):
+    def __init__(self, dataset: str):
+        super().__init__(dataset=dataset, model_name="XGBoost C")
+
+    def fit(self, X_train, y_train, X_test, y_test):
+        self.model = xgb.XGBClassifier(
+            random_state=42,
+            eval_metric="logloss",
+            early_stopping_rounds=10
+        )
+        self.model.fit(
+            X_train, y_train,
+            eval_set=[(X_train, y_train), (X_test, y_test)],
+            verbose=False
+        )
+        
+        self.X = X_test
+        self.y = y_test
+        
+    def generate_algorithm_specific_plots(self) -> dict:
+        plot_paths = {}
+        
+        plt.figure(figsize=(10, 6))
+        xgb.plot_importance(self.model, importance_type='weight', max_num_features=15, title="XGBoost: Feature Importance (Frequency/Weight)")
+        imp_weight_path = os.path.join(self.PLOT_DIR, "xgb_feature_importance_weight.png")
+        plt.savefig(imp_weight_path, bbox_inches='tight')
+        plt.close()
+        plot_paths["feature_importance_weight"] = imp_weight_path
+
+        plt.figure(figsize=(10, 6))
+        xgb.plot_importance(self.model, importance_type='gain', max_num_features=15, title="XGBoost: Feature Importance (Gain)")
+        imp_gain_path = os.path.join(self.PLOT_DIR, "xgb_feature_importance_gain.png")
+        plt.savefig(imp_gain_path, bbox_inches='tight')
+        plt.close()
+        plot_paths["feature_importance_gain"] = imp_gain_path
+        
+        plt.figure(figsize=(10, 6))
+        xgb.plot_importance(self.model, importance_type='cover', max_num_features=15, title="XGBoost: Feature Importance (Cover)")
+        imp_cover_path = os.path.join(self.PLOT_DIR, "xgb_feature_importance_cover.png")
+        plt.savefig(imp_cover_path, bbox_inches='tight')
+        plt.close()
+        plot_paths["feature_importance_cover"] = imp_cover_path
+
+        try:
+            fig, ax = plt.subplots(figsize=(30, 15))
+            xgb.plot_tree(self.model, num_trees=0, ax=ax)
+            tree_path = os.path.join(self.PLOT_DIR, "xgb_tree_0.png")
+            plt.savefig(tree_path, bbox_inches='tight', dpi=300)
+            plt.close()
+            plot_paths["tree_visualization"] = tree_path
+        except Exception as e:
+            print(f"Impossibile generare la visualizzazione dell'albero. Assicurati che graphviz sia installato. Errore: {e}")
+
+        print(f"Plot specifici XGBoost Classificazione salvati in: {self.PLOT_DIR}")
+        return plot_paths
+
+    def SHAP_analysis(self, X_sample, dependence_variable):
+        explainer = shap.TreeExplainer(self.model)
+        shap_values = explainer(X_sample)
+        print("\nSHAP values (TreeExplainer) calcolati con successo!")
+        
+        shap.summary_plot(shap_values, X_sample, show=False)
+        summary_path = os.path.join(self.PLOT_DIR, "shap_summary_xgb.png")
+        plt.savefig(summary_path, bbox_inches='tight')
+        plt.close()
+        
+        sample_ind = 0
+        plt.figure(figsize=(10, 6))
+        if len(shap_values.shape) == 3:
+            shap.plots.waterfall(shap_values[sample_ind, :, 1], show=False)
+        else:
+            shap.plots.waterfall(shap_values[sample_ind], show=False)
+            
+        local_exp_path = os.path.join(self.PLOT_DIR, f"shap_local_explanation_sample_{sample_ind}.png")
+        plt.savefig(local_exp_path, bbox_inches='tight')
+        plt.close()
+
+        return {
+            "shap_summary": summary_path,
+            "local_explanation": local_exp_path
+        }
+
+
+class XGBoostR(BaseRegressionAlgo):
+    def __init__(self, dataset: str):
+        super().__init__(dataset=dataset, model_name="XGBoost R")
+
+    def fit(self, X_train, y_train, X_test, y_test):
+        self.model = xgb.XGBRegressor(
+            random_state=42,
+            eval_metric="rmse",
+            early_stopping_rounds=10
+        )
+        self.model.fit(
+            X_train, y_train,
+            eval_set=[(X_train, y_train), (X_test, y_test)],
+            verbose=False
+        )
+        
+        self.X = X_test
+        self.y = y_test
+        
+    def generate_algorithm_specific_plots(self) -> dict:
+        plot_paths = {}
+        
+        plt.figure(figsize=(10, 6))
+        xgb.plot_importance(self.model, importance_type='weight', max_num_features=15, title="XGBoost Regressor: Feature Importance (Frequency/Weight)")
+        imp_weight_path = os.path.join(self.PLOT_DIR, "xgb_reg_feature_importance_weight.png")
+        plt.savefig(imp_weight_path, bbox_inches='tight')
+        plt.close()
+        plot_paths["feature_importance_weight"] = imp_weight_path
+
+        plt.figure(figsize=(10, 6))
+        xgb.plot_importance(self.model, importance_type='gain', max_num_features=15, title="XGBoost Regressor: Feature Importance (Gain - Riduzione MSE)")
+        imp_gain_path = os.path.join(self.PLOT_DIR, "xgb_reg_feature_importance_gain.png")
+        plt.savefig(imp_gain_path, bbox_inches='tight')
+        plt.close()
+        plot_paths["feature_importance_gain"] = imp_gain_path
+        
+        plt.figure(figsize=(10, 6))
+        xgb.plot_importance(self.model, importance_type='cover', max_num_features=15, title="XGBoost Regressor: Feature Importance (Cover)")
+        imp_cover_path = os.path.join(self.PLOT_DIR, "xgb_reg_feature_importance_cover.png")
+        plt.savefig(imp_cover_path, bbox_inches='tight')
+        plt.close()
+        plot_paths["feature_importance_cover"] = imp_cover_path
+
+        try:
+            fig, ax = plt.subplots(figsize=(30, 15))
+            xgb.plot_tree(self.model, num_trees=0, ax=ax)
+            tree_path = os.path.join(self.PLOT_DIR, "xgb_reg_tree_0.png")
+            plt.savefig(tree_path, bbox_inches='tight', dpi=300)
+            plt.close()
+            plot_paths["tree_visualization"] = tree_path
+        except Exception as e:
+            print(f"Impossibile generare la visualizzazione dell'albero. Assicurati che graphviz sia installato. Errore: {e}")
+
+        print(f"Plot specifici XGBoost Regressione salvati in: {self.PLOT_DIR}")
+        return plot_paths
+
+    def SHAP_analysis(self, X_sample, dependence_variable):
+        explainer = shap.TreeExplainer(self.model)
+        shap_values = explainer(X_sample)
+        print("\nSHAP values (TreeExplainer) calcolati con successo!")
+        
+        shap.summary_plot(shap_values, X_sample, show=False)
+        summary_path = os.path.join(self.PLOT_DIR, "shap_summary_xgb_reg.png")
+        plt.savefig(summary_path, bbox_inches='tight')
+        plt.close()
+        
+        sample_ind = 0
+        plt.figure(figsize=(10, 6))
+        shap.plots.waterfall(shap_values[sample_ind], show=False)
+            
+        local_exp_path = os.path.join(self.PLOT_DIR, f"shap_local_explanation_sample_{sample_ind}_reg.png")
+        plt.savefig(local_exp_path, bbox_inches='tight')
+        plt.close()
+
+        return {
+            "shap_summary": summary_path,
+            "local_explanation": local_exp_path
+        }
+
+
+if __name__ == "__main__":
+    print("--- Test XGBoost Classification ---")
+    dt_model_c = XGBoostC(dataset="Student Placed-Not Placed Dataset")
+    dataset_path_c = data.DATASETS["Student Placed-Not Placed Dataset"]["path"]
+    drop_columns_c = data.DATASETS["Student Placed-Not Placed Dataset"]["drop_columns"]
+    objective_column_c = data.DATASETS["Student Placed-Not Placed Dataset"]["objective_column"]
+
+    dt_model_c.import_data(dataset_path_c, drop_columns_c, objective_column_c)
+    dt_model_c.fit(dt_model_c.X, dt_model_c.y, dt_model_c.X, dt_model_c.y) 
+    dt_model_c.generate_algorithm_specific_plots()
+
+    print("\n--- Test XGBoost Regression ---")
+    dt_model_r = XGBoostR(dataset="Student Salary Dataset")
+    dataset_path_r = data.DATASETS["Student Salary Dataset"]["path"]
+    drop_columns_r = data.DATASETS["Student Salary Dataset"]["drop_columns"]
+    objective_column_r = data.DATASETS["Student Salary Dataset"]["objective_column"]
+
+    dt_model_r.import_data(dataset_path_r, drop_columns_r, objective_column_r)
+    dt_model_r.fit(dt_model_r.X, dt_model_r.y, dt_model_r.X, dt_model_r.y)
+    dt_model_r.generate_algorithm_specific_plots()
