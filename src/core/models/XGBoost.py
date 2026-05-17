@@ -60,6 +60,22 @@ class XGBoostC(BaseClassificationAlgo):
         except Exception as e:
             print(f"Impossibile generare la visualizzazione dell'albero. Assicurati che graphviz sia installato. Errore: {e}")
 
+        results = self.model.evals_result()
+        if results:
+            plt.figure(figsize=(8, 6))
+            epochs = len(results['validation_0']['logloss']) # Usa 'rmse' per la classe XGBoostR
+            x_axis = range(0, epochs)
+            plt.plot(x_axis, results['validation_0']['logloss'], label='Train')
+            plt.plot(x_axis, results['validation_1']['logloss'], label='Test')
+            plt.legend()
+            plt.ylabel('Log Loss')
+            plt.xlabel('Iterazioni (Alberi)')
+            plt.title('XGBoost Learning Curve')
+            lc_path = os.path.join(self.PLOT_DIR, "xgb_learning_curve.png")
+            plt.savefig(lc_path)
+            plt.close()
+            plot_paths["learning_curve"] = lc_path
+            
         print(f"Plot specifici XGBoost Classificazione salvati in: {self.PLOT_DIR}")
         return plot_paths
 

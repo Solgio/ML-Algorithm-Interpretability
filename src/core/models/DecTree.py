@@ -1,5 +1,6 @@
 import os
 import matplotlib.pyplot as plt
+import numpy as np
 from sklearn.tree import plot_tree
 from config.datasets_config import DATASETS as data
 from interface.classificationAlgo import BaseClassificationAlgo
@@ -35,13 +36,25 @@ class DecisionTreeC(BaseClassificationAlgo):
             fontsize=10
         )        
         plt.title("Struttura dell'Albero di Decisione (Classificazione - Primi 3 livelli)")
-        plot_path = os.path.join(self.PLOT_DIR, "decision_tree_structure.png")
-        plt.savefig(plot_path, bbox_inches='tight') 
+        tree_path = os.path.join(self.PLOT_DIR, "decision_tree_structure.png")
+        plt.savefig(tree_path, bbox_inches='tight') 
         plt.close()
         
-        print(f"Plot dell'albero salvato in: {plot_path}")
-        return {"decision_tree_structure": plot_path}
-    
+        print(f"Plot dell'albero salvato in: {tree_path}")
+        
+        plt.figure(figsize=(10, 6))
+        importances = self.model.feature_importances_
+        indices = np.argsort(importances)[::-1]
+        
+        plt.bar(range(len(indices)), importances[indices], color='forestgreen')
+        plt.xticks(range(len(indices)), [feature_names[i] for i in indices], rotation=45, ha='right')
+        plt.title("Decision Tree: Feature Importance")
+        imp_path = os.path.join(self.PLOT_DIR, "dt_feature_importance.png")
+        plt.savefig(imp_path, bbox_inches='tight')
+        plt.close()
+        
+        return {"decision_tree_structure": tree_path, "feature_importance": imp_path}
+
 if __name__ == "__main__":
     dt_model = DecisionTreeC(dataset="Student Placed-Not Placed Dataset")
     dataset_path = data.DATASETS["Student Placed-Not Placed Dataset"]["path"]
@@ -80,12 +93,30 @@ class DecisionTreeR(BaseRegressionAlgo):
             fontsize=10
         )        
         plt.title("Struttura dell'Albero di Decisione (Classificazione - Primi 3 livelli)")
-        plot_path = os.path.join(self.PLOT_DIR, "decision_tree_structure.png")
-        plt.savefig(plot_path, bbox_inches='tight') 
+        tree_path = os.path.join(self.PLOT_DIR, "decision_tree_structure.png")
+        plt.savefig(tree_path, bbox_inches='tight') 
         plt.close()
         
-        print(f"Plot dell'albero salvato in: {plot_path}")
-        return {"decision_tree_structure": plot_path}
+        print(f"Plot dell'albero salvato in: {tree_path}")
+        
+        tree_path = os.path.join(self.PLOT_DIR, "decision_tree_structure.png")
+        plt.savefig(tree_path, bbox_inches='tight') 
+        plt.close()
+        
+        print(f"Plot dell'albero salvato in: {tree_path}")
+        
+        plt.figure(figsize=(10, 6))
+        importances = self.model.feature_importances_
+        indices = np.argsort(importances)[::-1]
+        
+        plt.bar(range(len(indices)), importances[indices], color='forestgreen')
+        plt.xticks(range(len(indices)), [feature_names[i] for i in indices], rotation=45, ha='right')
+        plt.title("Decision Tree: Feature Importance")
+        imp_path = os.path.join(self.PLOT_DIR, "dt_feature_importance.png")
+        plt.savefig(imp_path, bbox_inches='tight')
+        plt.close()
+        
+        return {"decision_tree_structure": tree_path, "feature_importance": imp_path}
 
 if __name__ == "__main__":
     dt_model = DecisionTreeR(dataset="Student Salary Dataset")

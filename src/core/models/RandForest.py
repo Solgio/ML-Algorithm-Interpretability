@@ -14,7 +14,7 @@ class RandomForestC(BaseClassificationAlgo):
 
     def fit(self, X_train, y_train, X_test, y_test):
         
-        self.model = RandomForestClassifier(random_state=42)
+        self.model = RandomForestClassifier(random_state=42, oob_score=True)
         self.model.fit(X_train, y_train)
         
         self.X = X_test
@@ -82,7 +82,7 @@ class RandomForestR(BaseRegressionAlgo):
 
     def fit(self, X_train, y_train, X_test, y_test):
         
-        self.model = RandomForestRegressor(random_state=42)
+        self.model = RandomForestRegressor(random_state=42, oob_score=True)
         self.model.fit(X_train, y_train)
         
         self.X = X_test
