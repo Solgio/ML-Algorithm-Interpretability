@@ -2,6 +2,7 @@
 from abc import abstractmethod
 import json
 import os
+import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -21,16 +22,30 @@ class BaseRegressionAlgo(BaseMLAlgo):
         pass
 
     def calculate_metrics(self) -> dict:
+        y_pred = self.model.predict(self.X)
         r_squared = self.model.score(self.X, self.y)
-        mae = sklearn.metrics.mean_absolute_error(self.y, self.model.predict(self.X))
-        root_mean_squared_error = sklearn.metrics.mean_squared_error(self.y, self.model.predict(self.X))
+        mae = sklearn.metrics.mean_absolute_error(self.y, y_pred)
+        mean_squared_error = sklearn.metrics.mean_squared_error(self.y, y_pred)
+        rmse = np.sqrt(mean_squared_error)
+        
+        n = self.X.shape[0]  # numero di istanze (n)
+        p = self.X.shape[1]  # numero di feature (p)
+        
+        if n > p + 1:
+            adjusted_r_squared = 1 - (1 - r_squared) * (n - 1) / (n - p - 1)
+        else:
+            adjusted_r_squared = float('nan')
+            
         print(f"R-squared: {r_squared:.4f}\n")
         print(f"Mean Absolute Error: {mae:.4f}\n")
-        print(f"Root Mean Squared Error: {root_mean_squared_error:.4f}\n")
+        print(f"Mean Squared Error: {mean_squared_error:.4f}\n")
+        print(f"Root Mean Squared Error: {rmse:.4f}\n")
         return {
             "R_squared": r_squared,
+            "Adjusted_R_squared": adjusted_r_squared,
             "MAE": mae,
-            "RMSE": root_mean_squared_error
+            "MSE": mean_squared_error,
+            "RMSE": rmse
         }
     
     def generate_plots(self, binary_features: list=[]) -> dict:
@@ -67,7 +82,7 @@ class BaseRegressionAlgo(BaseMLAlgo):
             X_sample,
             model_expected_value=True,
             feature_expected_value=True,
-            ice=False,
+            ice=True,
             shap_values=shap_values[sample_ind : sample_ind + 1, :],
             show=False
         )
@@ -103,7 +118,9 @@ class BaseRegressionAlgo(BaseMLAlgo):
         
         metriche = {
             "R_squared": metrics["R_squared"],
+            "Adjusted_R_squared": metrics["Adjusted_R_squared"],
             "MAE": metrics["MAE"],
+            "MSE": metrics["MSE"],
             "RMSE": metrics["RMSE"]
         }
         metriche_json_path = os.path.join(self.PLOT_DIR, 'metriche.json')

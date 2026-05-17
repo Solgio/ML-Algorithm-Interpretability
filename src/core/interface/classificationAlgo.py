@@ -6,6 +6,7 @@ import seaborn as sns
 import shap
 import sklearn
 from abc import ABC, abstractmethod
+from sklearn.metrics import ConfusionMatrixDisplay
 from .baseMLAlgo import BaseMLAlgo
 
 class BaseClassificationAlgo(BaseMLAlgo):
@@ -19,8 +20,12 @@ class BaseClassificationAlgo(BaseMLAlgo):
         pass
 
     def calculate_metrics(self) -> dict:
+        y_pred = self.model.predict(self.X)
         accuracy = self.model.score(self.X, self.y)
-        f1_score = sklearn.metrics.f1_score(self.y, self.model.predict(self.X), average='weighted')
+        f1_score = sklearn.metrics.f1_score(self.y, y_pred, average='weighted')
+        precision = sklearn.metrics.precision_score(self.y, y_pred, average='weighted')
+        recall = sklearn.metrics.recall_score(self.y, y_pred, average='weighted')
+        cm = sklearn.metrics.confusion_matrix(self.y, y_pred)
         
         auc = None
         if hasattr(self.model, "predict_proba"):
@@ -33,15 +38,32 @@ class BaseClassificationAlgo(BaseMLAlgo):
         else:
             print("AUC: Non calcolabile (il modello non supporta predict_proba)")
             
+        specificity = None
+        if len(self.model.classes_) == 2:
+            tn, fp, fn, tp = cm.ravel()
+            specificity = tn / (tn + fp) if (tn + fp) > 0 else 0
+            print(f"Specificity: {specificity:.4f}")
+            
         print(f"Accuracy: {accuracy:.4f}\n")
         print(f"F1 Score: {f1_score:.4f}\n")
         print(f"AUC: {auc:.4f}\n")
+        print(f"Precision: {precision:.4f}\n")
+        print(f"Recall: {recall:.4f}\n")
+        print(f"Confusion Matrix:\n{cm}\n")
         
-        return {
+        metrics_dict = {
             "Accuracy": accuracy,
             "F1_Score": f1_score,
-            "AUC": auc
+            "AUC": auc,
+            "Precision": precision,
+            "Recall": recall,
+            "Confusion_Matrix": cm.tolist()
         }
+        
+        if specificity is not None:
+            metrics_dict["Specificity"] = specificity
+            
+        return metrics_dict
     
     def generate_plots(self, binary_features: list=[]) -> dict:
         import numpy as np
@@ -104,6 +126,16 @@ class BaseClassificationAlgo(BaseMLAlgo):
         plt.close()
         plot_paths["correlation_matrix"] = corr_path
         
+        cm = sklearn.metrics.confusion_matrix(self.y, self.model.predict(self.X))
+        plt.figure(figsize=(10, 6))
+        disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=self.model.classes_)
+        disp.plot(cmap=plt.cm.Blues, values_format='d', ax=plt.gca())
+        plt.title("Confusion Matrix")
+        cm_path = os.path.join(self.PLOT_DIR, "confusion_matrix.png")
+        plt.savefig(cm_path)
+        plt.close()
+        plot_paths["confusion_matrix"] = cm_path
+
         return plot_paths
         
     @abstractmethod
@@ -181,7 +213,10 @@ class BaseClassificationAlgo(BaseMLAlgo):
         metriche = {
             "Accuracy": metrics["Accuracy"],
             "F1_Score": metrics["F1_Score"],
-            "AUC": metrics["AUC"]
+            "AUC": metrics["AUC"],
+            "Precision": metrics["Precision"],
+            "Recall": metrics["Recall"],
+            "Confusion_Matrix": metrics["Confusion_Matrix"]
         }
         metriche_json_path = os.path.join(self.PLOT_DIR, 'metriche.json')
         with open(metriche_json_path, 'w') as f:
