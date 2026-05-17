@@ -41,12 +41,32 @@ class LogisticRegression(BaseClassificationAlgo):
         plt.legend()
         plt.grid(True, alpha=0.3)
         
-        plot_path = os.path.join(self.PLOT_DIR, "logistic_sigmoid_plot.png")
-        plt.savefig(plot_path)
+        plot_paths = {}
+        sigmoid_plot = os.path.join(self.PLOT_DIR, "logistic_sigmoid_plot.png")
+        plot_paths["sigmoid_plot"] = sigmoid_plot
+        plt.savefig(sigmoid_plot)
         plt.close()
+        plt.figure(figsize=(10, 6))
+        coefs = self.model.coef_[0]
+        odds_ratios = np.exp(coefs)
         
-        print(f"Sigmoid plot saved at: {plot_path}")
-        return {"sigmoid_plot": plot_path}
+        feature_names = self.X.columns
+        sorted_idx = np.argsort(np.abs(coefs))
+        
+        plt.barh(range(len(sorted_idx)), coefs[sorted_idx], color='purple')
+        plt.yticks(range(len(sorted_idx)), [feature_names[i] for i in sorted_idx])
+        plt.title('Logistic Regression: Coefficienti (Log-Odds)')
+        
+        print("\n--- Analisi Odds Ratio ---")
+        for i in sorted_idx[::-1]:
+            print(f"{feature_names[i]}: Coefficiente = {coefs[i]:.4f} -> Odds Ratio = {odds_ratios[i]:.4f}")
+            
+        weight_path = os.path.join(self.PLOT_DIR, "logistic_weight_plot.png")
+        plt.savefig(weight_path, bbox_inches='tight')
+        plt.close()
+        plot_paths["weight_plot"] = weight_path
+    
+        return {"sigmoid_plot": sigmoid_plot, "weight_plot": weight_path}
 
 if __name__ == "__main__":
     lr_model = LogisticRegression(dataset="Student Placed-Not Placed Dataset")

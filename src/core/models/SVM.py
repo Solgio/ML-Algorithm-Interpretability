@@ -19,7 +19,7 @@ class SVM(BaseClassificationAlgo):
         X_train_scaled = self.scaler.fit_transform(X_train)
         X_test_scaled = self.scaler.transform(X_test)
         
-        self.model = sklearn.svm.SVC(kernel='sigmoid', C=1.0, gamma='scale')
+        self.model = sklearn.svm.SVC(kernel='sigmoid', C=1.0, gamma='scale', probability=True)
         self.model.fit(pd.DataFrame(X_train_scaled, columns=X_train.columns), y_train)
         
         self.X = pd.DataFrame(X_test_scaled, columns=X_test.columns)
@@ -59,6 +59,14 @@ class SVM(BaseClassificationAlgo):
             cmap=plt.cm.coolwarm,
             s=50
         )
+        support_vectors = model_vis.support_vectors_
+        ax.scatter(
+            support_vectors[:, 0],
+            support_vectors[:, 1],
+            s=100, linewidth=1.5, facecolors='none', edgecolors='k',
+            label='Support Vectors'
+        )
+        plt.legend()
         
         plt.title(title)
         plt.xlabel("Componente 1" if self.X.shape[1] > 2 else self.X.columns[0])
