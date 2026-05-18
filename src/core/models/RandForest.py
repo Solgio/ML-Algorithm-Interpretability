@@ -14,7 +14,11 @@ class RandomForestC(BaseClassificationAlgo):
 
     def fit(self, X_train, y_train, X_test, y_test):
         
-        self.model = RandomForestClassifier(random_state=42, oob_score=True)
+        self.model = RandomForestClassifier(
+            random_state=42, 
+            oob_score=True,
+            min_samples_leaf=1,
+            max_features="sqrt")
         self.model.fit(X_train, y_train)
         
         self.X = X_test
@@ -65,24 +69,18 @@ class RandomForestC(BaseClassificationAlgo):
         print(f"Plot salvati in: {self.PLOT_DIR}")
         return plot_paths
     
-if __name__ == "__main__":
-    dt_model = RandomForestC(dataset="Student Placed-Not Placed Dataset")
-    dataset_path = data.DATASETS["Student Placed-Not Placed Dataset"]["path"]
-    drop_columns = data.DATASETS["Student Placed-Not Placed Dataset"]["drop_columns"]
-    objective_column = data.DATASETS["Student Placed-Not Placed Dataset"]["objective_column"]
-
-    dt_model.import_data(dataset_path, drop_columns, objective_column)
-    dt_model.fit(dt_model.X, dt_model.y, None, None)
-    dt_model.generate_algorithm_specific_plots()
-
-
 class RandomForestR(BaseRegressionAlgo):
     def __init__(self, dataset: str):
         super().__init__(dataset=dataset, model_name="Random Forest R")
 
     def fit(self, X_train, y_train, X_test, y_test):
         
-        self.model = RandomForestRegressor(random_state=42, oob_score=True)
+        self.model = RandomForestRegressor(
+            random_state=42,
+            oob_score=True,
+            min_samples_leaf=1,
+            max_features="sqrt"
+        )
         self.model.fit(X_train, y_train)
         
         self.X = X_test
@@ -132,10 +130,31 @@ class RandomForestR(BaseRegressionAlgo):
         return plot_paths
 
 if __name__ == "__main__":
-    dt_model = RandomForestR(dataset="Student Salary Dataset")
-    dataset_path = data.DATASETS["Student Salary Dataset"]["path"]
-    drop_columns = data.DATASETS["Student Salary Dataset"]["drop_columns"]
-    objective_column = data.DATASETS["Student Salary Dataset"]["objective_column"]
+    
+    print("\n--- Test Random Forest Classification ---")
+    default_dataset = "Student Placed-Not Placed Dataset"
+    rf_model_c = RandomForestC(dataset=default_dataset)
+    dataset_path = data.DATASETS[default_dataset]["path"]
+    drop_columns = data.DATASETS[default_dataset]["drop_columns"]
+    objective_column = data.DATASETS[default_dataset]["objective_column"]
 
-    dt_model.import_data(dataset_path, drop_columns, objective_column)
-    dt_model.fit(dt_model.X, dt_model.y, None, None)
+    rf_model_c.import_data(dataset_path, drop_columns, objective_column)
+    rf_model_c.fit(rf_model_c.X, rf_model_c.y, None, None)
+    rf_model_c.calculate_metrics()
+    rf_model_c.generate_plots()
+    rf_model_c.generate_algorithm_specific_plots()
+    rf_model_c.export_results()
+
+    print("\n--- Test Random Forest Regression ---")
+    default_dataset = "Student Salary Dataset"
+    rf_model_r = RandomForestR(dataset=default_dataset)
+    dataset_path = data.DATASETS[default_dataset]["path"]
+    drop_columns = data.DATASETS[default_dataset]["drop_columns"]
+    objective_column = data.DATASETS[default_dataset]["objective_column"]
+
+    rf_model_r.import_data(dataset_path, drop_columns, objective_column)
+    rf_model_r.fit(rf_model_r.X, rf_model_r.y, None, None)
+    rf_model_r.calculate_metrics()
+    rf_model_r.generate_plots()
+    rf_model_r.generate_algorithm_specific_plots()
+    rf_model_r.export_results()

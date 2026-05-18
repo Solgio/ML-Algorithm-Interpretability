@@ -64,13 +64,13 @@ class BaseRegressionAlgo(BaseMLAlgo):
     def generate_algorithm_specific_plots(self) -> dict:
         pass
     
-    def SHAP_analysis(self, X_sample, dependence_variable):
+    def SHAP_analysis(self, x_sample, dependence_variable):
         
-        explainer = shap.Explainer(self.model, X_sample)
-        shap_values = explainer(X_sample)
+        explainer = shap.Explainer(self.model, x_sample)
+        shap_values = explainer(x_sample)
         print("\nSHAP values calculated successfully!")
         
-        shap.summary_plot(shap_values, X_sample, plot_type="bar", show=False)
+        shap.summary_plot(shap_values, x_sample, plot_type="bar", show=False)
         summary_path = os.path.join(self.PLOT_DIR, "shap_summary.png")
         plt.savefig(summary_path)
         plt.close()
@@ -79,7 +79,7 @@ class BaseRegressionAlgo(BaseMLAlgo):
         shap.partial_dependence_plot(
             dependence_variable,
             self.model.predict,
-            X_sample,
+            x_sample,
             model_expected_value=True,
             feature_expected_value=True,
             ice=True,

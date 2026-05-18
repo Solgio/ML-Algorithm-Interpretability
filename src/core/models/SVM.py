@@ -16,13 +16,13 @@ class SVM(BaseClassificationAlgo):
         self.scaler = StandardScaler()
 
     def fit(self, X_train, y_train, X_test, y_test):
-        X_train_scaled = self.scaler.fit_transform(X_train)
-        X_test_scaled = self.scaler.transform(X_test)
+        x_train_scaled = self.scaler.fit_transform(X_train)
+        x_test_scaled = self.scaler.transform(X_test)
         
-        self.model = sklearn.svm.SVC(kernel='sigmoid', C=1.0, gamma='scale', probability=True)
-        self.model.fit(pd.DataFrame(X_train_scaled, columns=X_train.columns), y_train)
+        self.model = sklearn.svm.SVC(kernel='sigmoid', C=1.0, gamma='scale', probability=True, random_state=42)
+        self.model.fit(pd.DataFrame(x_train_scaled, columns=X_train.columns), y_train)
         
-        self.X = pd.DataFrame(X_test_scaled, columns=X_test.columns)
+        self.X = pd.DataFrame(x_test_scaled, columns=X_test.columns)
         self.y = y_test
     
     def generate_algorithm_specific_plots(self) -> dict:
@@ -31,21 +31,21 @@ class SVM(BaseClassificationAlgo):
         plt.figure(figsize=(10, 6))
         
         if self.X.shape[1] > 2:
-            pca = PCA(n_components=2)
-            X_vis = pca.fit_transform(self.X)
+            pca = PCA(n_components=2, random_state=42)
+            x_vis = pca.fit_transform(self.X)
             
-            model_vis = sklearn.svm.SVC(kernel='rbf', C=1.0, gamma='scale')
-            model_vis.fit(X_vis, self.y)
+            model_vis = sklearn.svm.SVC(kernel='rbf', C=1.0, gamma='scale', random_state=42)
+            model_vis.fit(x_vis, self.y)
             title = "SVM Decision Boundary (Proiezione 2D via PCA)"
         else:
-            X_vis = self.X.values
+            x_vis = self.X.values
             model_vis = self.model
             title = "SVM Decision Boundary"
 
         ax = plt.gca()
         DecisionBoundaryDisplay.from_estimator(
             model_vis,
-            X_vis,
+            x_vis,
             response_method="predict",
             cmap=plt.cm.coolwarm,
             alpha=0.6,
@@ -54,8 +54,8 @@ class SVM(BaseClassificationAlgo):
         y_numeric = pd.Categorical(self.y).codes
         
         scatter = ax.scatter(
-            X_vis[:, 0], 
-            X_vis[:, 1], 
+            x_vis[:, 0], 
+            x_vis[:, 1], 
             c=y_numeric, 
             edgecolors='k', 
             cmap=plt.cm.coolwarm,
@@ -81,9 +81,15 @@ class SVM(BaseClassificationAlgo):
         return plot_paths
 
 if __name__ == "__main__":
-    lr_model = SVM(dataset="Student Placed-Not Placed Dataset")
-    dataset_path = data.DATASETS["Student Placed-Not Placed Dataset"]["path"]
-    drop_columns = data.DATASETS["Student Placed-Not Placed Dataset"]["drop_columns"]
-    objective_column = data.DATASETS["Student Placed-Not Placed Dataset"]["objective_column"]
+    default_dataset = "Student Placed-Not Placed Dataset"
+    svm_model = SVM(dataset=default_dataset)
+    dataset_path = data.DATASETS[default_dataset]["path"]
+    drop_columns = data.DATASETS[default_dataset]["drop_columns"]
+    objective_column = data.DATASETS[default_dataset]["objective_column"]
 
-    lr_model.import_data(dataset_path, drop_columns, objective_column)
+    svm_model.import_data(dataset_path, drop_columns, objective_column)
+    svm_model.fit(svm_model.X, svm_model.y, None, None)
+    svm_model.calculate_metrics()
+    svm_model.generate_plots()
+    svm_model.generate_algorithm_specific_plots()
+    svm_model.export_results()

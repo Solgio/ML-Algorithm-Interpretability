@@ -13,13 +13,13 @@ class LogisticRegression(BaseClassificationAlgo):
         self.scaler = StandardScaler()
 
     def fit(self, X_train, y_train, X_test, y_test):
-        X_train_scaled = self.scaler.fit_transform(X_train)
-        X_test_scaled = self.scaler.transform(X_test)
+        x_train_scaled = self.scaler.fit_transform(X_train)
+        x_test_scaled = self.scaler.transform(X_test)
         
         self.model = SklearnLogisticRegression()
-        self.model.fit(pd.DataFrame(X_train_scaled, columns=X_train.columns), y_train)
+        self.model.fit(pd.DataFrame(x_train_scaled, columns=X_train.columns), y_train)
         
-        self.X = pd.DataFrame(X_test_scaled, columns=X_test.columns)
+        self.X = pd.DataFrame(x_test_scaled, columns=X_test.columns)
         self.y = y_test
     
     def generate_algorithm_specific_plots(self) -> dict:
@@ -67,7 +67,7 @@ class LogisticRegression(BaseClassificationAlgo):
                 print(f"{feature_names[i]}: Coefficiente = {coefs[i]:.4f} -> Odds Ratio = {odds_ratios[i]:.4f}")
 
         else:
-            print(f"Avviso: Curva sigmoide saltata (non supportata visivamente per il multi-classe).")
+            print("Avviso: Curva sigmoide saltata (non supportata visivamente per il multi-classe).")
             
             plt.figure(figsize=(12, 8))
             sns.heatmap(self.model.coef_, xticklabels=self.X.columns, yticklabels=self.model.classes_, cmap='coolwarm', center=0)
@@ -83,9 +83,15 @@ class LogisticRegression(BaseClassificationAlgo):
         return plot_paths
 
 if __name__ == "__main__":
-    lr_model = LogisticRegression(dataset="Student Placed-Not Placed Dataset")
-    dataset_path = data.DATASETS["Student Placed-Not Placed Dataset"]["path"]
-    drop_columns = data.DATASETS["Student Placed-Not Placed Dataset"]["drop_columns"]
-    objective_column = data.DATASETS["Student Placed-Not Placed Dataset"]["objective_column"]
+    default_dataset = "Student Salary Dataset"
+    logr_model = LogisticRegression(dataset=default_dataset)
+    dataset_path = data.DATASETS[default_dataset]["path"]
+    drop_columns = data.DATASETS[default_dataset]["drop_columns"]
+    objective_column = data.DATASETS[default_dataset]["objective_column"]
 
-    lr_model.import_data(dataset_path, drop_columns, objective_column)
+    logr_model.import_data(dataset_path, drop_columns, objective_column)
+    logr_model.fit(logr_model.X, logr_model.y, None, None)
+    logr_model.calculate_metrics()
+    logr_model.generate_plots()
+    logr_model.generate_algorithm_specific_plots()
+    logr_model.export_results()

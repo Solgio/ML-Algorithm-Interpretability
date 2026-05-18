@@ -120,7 +120,6 @@ def load_metrics(project_name):
     
     if not os.path.exists(json_path):
         print(f"Errore: Dati non trovati in {output_dir}. Esegui prima il Notebook per esportare i file.")
-        return
 
 def load_coefficients(project_name):
     output_dir = os.path.join("..\\output", project_name)

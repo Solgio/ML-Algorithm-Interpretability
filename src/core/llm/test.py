@@ -58,10 +58,10 @@ def fetch_model_response(model, role_sistem, prompt_text, base64_image):
                     "role": "user",
                     "content": [
                         {"type": "text", "text": prompt_text},
-                        {
-                            "type": "image_url",
-                            "image_url": {"url": f"data:image/jpeg;base64,{base64_image}"},
-                        },
+                        #{
+                        #    "type": "image_url",
+                        #    "image_url": {"url": f"data:image/jpeg;base64,{base64_image}"},
+                        #},
                     ],
                 }
             ],
@@ -99,7 +99,7 @@ def analyze_statistics(metrics_path, coefficients_path, image_path, algo_name, a
         "deepseek-coder-v2:latest",
         "llama3.2:3b",
         "nomic-embed-text:latest",
-        "qwen3-embedding:0.6b",
+        #"qwen3-embedding:0.6b",
         "devstral:24b",
         "NuExtract-2.0",
         "devstral-small-2:24b",
@@ -140,7 +140,7 @@ def analyze_statistics(metrics_path, coefficients_path, image_path, algo_name, a
     with concurrent.futures.ThreadPoolExecutor() as executor:
         futures = executor.map(
             lambda m: fetch_model_response(m, role_sistem, prompt_text, base64_image),
-            model_list
+            model_list_text
         )
         
         for model_name, content in futures:

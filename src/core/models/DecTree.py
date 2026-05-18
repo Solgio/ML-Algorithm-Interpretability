@@ -15,14 +15,17 @@ class DecisionTreeC(BaseClassificationAlgo):
 
     def fit(self, X_train, y_train, X_test, y_test):
         
-        self.model = SklearnDecisionTreeClassifier(random_state=42)
+        self.model = SklearnDecisionTreeClassifier(
+            random_state=42,
+            ccp_alpha=0.01
+            )   
         self.model.fit(X_train, y_train)
         
         self.X = X_test
         self.y = y_test
                 
     def generate_algorithm_specific_plots(self) -> dict:
-        
+        plot_paths = {}
         plt.figure(figsize=(24, 12)) 
         feature_names = self.X.columns.tolist() if hasattr(self.X, 'columns') else None
         class_names = [str(c) for c in self.model.classes_] if hasattr(self.model, 'classes_') else None
@@ -40,6 +43,7 @@ class DecisionTreeC(BaseClassificationAlgo):
         plt.savefig(tree_path, bbox_inches='tight') 
         plt.close()
         
+        plot_paths["decision_tree_structure"] = tree_path
         print(f"Plot dell'albero salvato in: {tree_path}")
         
         plt.figure(figsize=(10, 6))
@@ -53,18 +57,8 @@ class DecisionTreeC(BaseClassificationAlgo):
         plt.savefig(imp_path, bbox_inches='tight')
         plt.close()
         
-        return {"decision_tree_structure": tree_path, "feature_importance": imp_path}
-
-if __name__ == "__main__":
-    dt_model = DecisionTreeC(dataset="Student Placed-Not Placed Dataset")
-    dataset_path = data.DATASETS["Student Placed-Not Placed Dataset"]["path"]
-    drop_columns = data.DATASETS["Student Placed-Not Placed Dataset"]["drop_columns"]
-    objective_column = data.DATASETS["Student Placed-Not Placed Dataset"]["objective_column"]
-
-    dt_model.import_data(dataset_path, drop_columns, objective_column)
-    dt_model.fit(dt_model.X, dt_model.y, None, None)
-    dt_model.generate_algorithm_specific_plots()
-
+        plot_paths["feature_importance"] = imp_path
+        return plot_paths
 
 class DecisionTreeR(BaseRegressionAlgo):
     def __init__(self, dataset: str):
@@ -72,14 +66,15 @@ class DecisionTreeR(BaseRegressionAlgo):
 
     def fit(self, X_train, y_train, X_test, y_test):
                 
-        self.model = SklearnDecisionTreeRegressor(random_state=42)
+        self.model = SklearnDecisionTreeRegressor(random_state=42, ccp_alpha=0.01)
         self.model.fit(X_train, y_train)
         
         self.X = X_test
         self.y = y_test
         
     def generate_algorithm_specific_plots(self) -> dict:
-        
+        plot_paths = {}
+
         plt.figure(figsize=(24, 12)) 
         feature_names = self.X.columns.tolist() if hasattr(self.X, 'columns') else None
         class_names = [str(c) for c in self.model.classes_] if hasattr(self.model, 'classes_') else None
@@ -99,12 +94,8 @@ class DecisionTreeR(BaseRegressionAlgo):
         
         print(f"Plot dell'albero salvato in: {tree_path}")
         
-        tree_path = os.path.join(self.PLOT_DIR, "decision_tree_structure.png")
-        plt.savefig(tree_path, bbox_inches='tight') 
-        plt.close()
-        
-        print(f"Plot dell'albero salvato in: {tree_path}")
-        
+        plot_paths["decision_tree_structure"] = tree_path
+
         plt.figure(figsize=(10, 6))
         importances = self.model.feature_importances_
         indices = np.argsort(importances)[::-1]
@@ -115,14 +106,33 @@ class DecisionTreeR(BaseRegressionAlgo):
         imp_path = os.path.join(self.PLOT_DIR, "dt_feature_importance.png")
         plt.savefig(imp_path, bbox_inches='tight')
         plt.close()
-        
-        return {"decision_tree_structure": tree_path, "feature_importance": imp_path}
+
+        plot_paths["feature_importance"] = imp_path
+        return plot_paths
 
 if __name__ == "__main__":
-    dt_model = DecisionTreeR(dataset="Student Salary Dataset")
-    dataset_path = data.DATASETS["Student Salary Dataset"]["path"]
-    drop_columns = data.DATASETS["Student Salary Dataset"]["drop_columns"]
-    objective_column = data.DATASETS["Student Salary Dataset"]["objective_column"]
+    
+    print("--- Test Decision Tree Classification ---")
+    default_dataset = "Student Placed-Not Placed Dataset"
+    dt_model = DecisionTreeC(dataset=default_dataset)
+    dataset_path = data.DATASETS[default_dataset]["path"]
+    drop_columns = data.DATASETS[default_dataset]["drop_columns"]
+    objective_column = data.DATASETS[default_dataset]["objective_column"]
 
     dt_model.import_data(dataset_path, drop_columns, objective_column)
     dt_model.fit(dt_model.X, dt_model.y, None, None)
+    dt_model.generate_algorithm_specific_plots()
+    
+    print("\n--- Test Decision Tree Regression ---")
+    default_dataset = "Student Salary Dataset"
+    dt_model = DecisionTreeR(dataset=default_dataset)
+    dataset_path = data.DATASETS[default_dataset]["path"]
+    drop_columns = data.DATASETS[default_dataset]["drop_columns"]
+    objective_column = data.DATASETS[default_dataset]["objective_column"]
+
+    dt_model.import_data(dataset_path, drop_columns, objective_column)
+    dt_model.fit(dt_model.X, dt_model.y, None, None)
+    dt_model.calculate_metrics()
+    dt_model.generate_plots()
+    dt_model.generate_algorithm_specific_plots()
+    dt_model.export_results()

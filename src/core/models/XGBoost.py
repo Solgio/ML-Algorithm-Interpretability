@@ -74,7 +74,7 @@ class XGBoostC(BaseClassificationAlgo):
         results = self.model.evals_result()
         if results:
             plt.figure(figsize=(8, 6))
-            metric_key = list(results['validation_0'].keys())[0]
+            metric_key = next(iter(results['validation_0'].keys()))
             epochs = len(results['validation_0'][metric_key])
             x_axis = range(0, epochs)
             plt.plot(x_axis, results['validation_0'][metric_key], label='Train')
@@ -91,12 +91,12 @@ class XGBoostC(BaseClassificationAlgo):
         print(f"Plot specifici XGBoost Classificazione salvati in: {self.PLOT_DIR}")
         return plot_paths
 
-    def SHAP_analysis(self, X_sample, dependence_variable):
+    def SHAP_analysis(self, x_sample, dependence_variable):
         explainer = shap.TreeExplainer(self.model)
-        shap_values = explainer(X_sample)
+        shap_values = explainer(x_sample)
         print("\nSHAP values (TreeExplainer) calcolati con successo!")
         
-        shap.summary_plot(shap_values, X_sample, show=False)
+        shap.summary_plot(shap_values, x_sample, show=False)
         summary_path = os.path.join(self.PLOT_DIR, "shap_summary_xgb.png")
         plt.savefig(summary_path, bbox_inches='tight')
         plt.close()
@@ -174,12 +174,12 @@ class XGBoostR(BaseRegressionAlgo):
         print(f"Plot specifici XGBoost Regressione salvati in: {self.PLOT_DIR}")
         return plot_paths
 
-    def SHAP_analysis(self, X_sample, dependence_variable):
+    def SHAP_analysis(self, x_sample, dependence_variable):
         explainer = shap.TreeExplainer(self.model)
-        shap_values = explainer(X_sample)
+        shap_values = explainer(x_sample)
         print("\nSHAP values (TreeExplainer) calcolati con successo!")
         
-        shap.summary_plot(shap_values, X_sample, show=False)
+        shap.summary_plot(shap_values, x_sample, show=False)
         summary_path = os.path.join(self.PLOT_DIR, "shap_summary_xgb_reg.png")
         plt.savefig(summary_path, bbox_inches='tight')
         plt.close()
@@ -200,21 +200,29 @@ class XGBoostR(BaseRegressionAlgo):
 
 if __name__ == "__main__":
     print("--- Test XGBoost Classification ---")
-    dt_model_c = XGBoostC(dataset="Student Placed-Not Placed Dataset")
-    dataset_path_c = data.DATASETS["Student Placed-Not Placed Dataset"]["path"]
-    drop_columns_c = data.DATASETS["Student Placed-Not Placed Dataset"]["drop_columns"]
-    objective_column_c = data.DATASETS["Student Placed-Not Placed Dataset"]["objective_column"]
+    default_dataset = "Student Placed-Not Placed Dataset"
+    XGB_model_c = XGBoostC(dataset=default_dataset)
+    dataset_path_c = data.DATASETS[default_dataset]["path"]
+    drop_columns_c = data.DATASETS[default_dataset]["drop_columns"]
+    objective_column_c = data.DATASETS[default_dataset]["objective_column"]
 
-    dt_model_c.import_data(dataset_path_c, drop_columns_c, objective_column_c)
-    dt_model_c.fit(dt_model_c.X, dt_model_c.y, dt_model_c.X, dt_model_c.y) 
-    dt_model_c.generate_algorithm_specific_plots()
+    XGB_model_c.import_data(dataset_path_c, drop_columns_c, objective_column_c)
+    XGB_model_c.fit(XGB_model_c.X, XGB_model_c.y, None, None)
+    XGB_model_c.calculate_metrics()
+    XGB_model_c.generate_plots()
+    XGB_model_c.generate_algorithm_specific_plots()
+    XGB_model_c.export_results()
 
     print("\n--- Test XGBoost Regression ---")
-    dt_model_r = XGBoostR(dataset="Student Salary Dataset")
-    dataset_path_r = data.DATASETS["Student Salary Dataset"]["path"]
-    drop_columns_r = data.DATASETS["Student Salary Dataset"]["drop_columns"]
-    objective_column_r = data.DATASETS["Student Salary Dataset"]["objective_column"]
+    default_dataset = "Student Salary Dataset"
+    XGB_model_r = XGBoostR(dataset=default_dataset)
+    dataset_path_r = data.DATASETS[default_dataset]["path"]
+    drop_columns_r = data.DATASETS[default_dataset]["drop_columns"]
+    objective_column_r = data.DATASETS[default_dataset]["objective_column"]
 
-    dt_model_r.import_data(dataset_path_r, drop_columns_r, objective_column_r)
-    dt_model_r.fit(dt_model_r.X, dt_model_r.y, dt_model_r.X, dt_model_r.y)
-    dt_model_r.generate_algorithm_specific_plots()
+    XGB_model_r.import_data(dataset_path_r, drop_columns_r, objective_column_r)
+    XGB_model_r.fit(XGB_model_r.X, XGB_model_r.y, None, None)
+    XGB_model_r.calculate_metrics()
+    XGB_model_r.generate_plots()
+    XGB_model_r.generate_algorithm_specific_plots()
+    XGB_model_r.export_results()
