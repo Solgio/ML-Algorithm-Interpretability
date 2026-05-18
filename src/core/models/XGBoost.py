@@ -3,6 +3,7 @@ import numpy as np
 import xgboost as xgb
 import matplotlib.pyplot as plt
 import shap
+from sklearn.preprocessing import LabelEncoder
 from config.datasets_config import DATASETS as data
 from interface.classificationAlgo import BaseClassificationAlgo
 from interface.regressionAlgo import BaseRegressionAlgo
@@ -12,19 +13,29 @@ class XGBoostC(BaseClassificationAlgo):
         super().__init__(dataset=dataset, model_name="XGBoost C")
 
     def fit(self, X_train, y_train, X_test, y_test):
+        self.le = LabelEncoder()
+        y_train_encoded = self.le.fit_transform(y_train)
+        y_test_encoded = self.le.transform(y_test)
+        
+        num_classes = len(np.unique(y_train_encoded))
+        current_objective = "mlogloss" if num_classes > 2 else "logloss"
+        
         self.model = xgb.XGBClassifier(
             random_state=42,
-            eval_metric="logloss",
+            eval_metric=current_objective,
             early_stopping_rounds=10
         )
         self.model.fit(
-            X_train, y_train,
-            eval_set=[(X_train, y_train), (X_test, y_test)],
+            X_train, y_train_encoded,
+            eval_set=[(X_train, y_train_encoded), (X_test, y_test_encoded)],
             verbose=False
         )
         
         self.X = X_test
-        self.y = y_test
+        self.y = y_test_encoded
+        
+        mapping = dict(zip(range(len(self.le.classes_)), self.le.classes_))
+        print(f"\n  [INFO XGBoost] Legenda classi per i plot: {mapping}")
         
     def generate_algorithm_specific_plots(self) -> dict:
         plot_paths = {}
@@ -63,12 +74,13 @@ class XGBoostC(BaseClassificationAlgo):
         results = self.model.evals_result()
         if results:
             plt.figure(figsize=(8, 6))
-            epochs = len(results['validation_0']['logloss']) # Usa 'rmse' per la classe XGBoostR
+            metric_key = list(results['validation_0'].keys())[0]
+            epochs = len(results['validation_0'][metric_key])
             x_axis = range(0, epochs)
-            plt.plot(x_axis, results['validation_0']['logloss'], label='Train')
-            plt.plot(x_axis, results['validation_1']['logloss'], label='Test')
+            plt.plot(x_axis, results['validation_0'][metric_key], label='Train')
+            plt.plot(x_axis, results['validation_1'][metric_key], label='Test')
             plt.legend()
-            plt.ylabel('Log Loss')
+            plt.ylabel('Log Loss' if metric_key == 'logloss' else 'Multi-Class Log Loss')
             plt.xlabel('Iterazioni (Alberi)')
             plt.title('XGBoost Learning Curve')
             lc_path = os.path.join(self.PLOT_DIR, "xgb_learning_curve.png")

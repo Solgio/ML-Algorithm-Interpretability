@@ -15,6 +15,7 @@ class BaseMLAlgo(ABC):
         
     def import_data(self, dataset_path: str, drop_columns: list, objective_column: str,  test_size: float = 0.2, random_state: int = 42):
         self.df = pd.read_csv(dataset_path)
+        self.df = self.df.dropna()
         y = self.df[objective_column]
         self.df = self.df.drop(columns=drop_columns)
         X = pd.get_dummies(self.df, drop_first=True).astype(float)
