@@ -15,12 +15,16 @@ class BaseMLAlgo(ABC):
         
     def import_data(self, dataset_path: str, drop_columns: list, objective_column: str,  test_size: float = 0.2, random_state: int = 42):
         self.df = pd.read_csv(dataset_path)
-        self.df = self.df.dropna()
-        y = self.df[objective_column]
-        self.df = self.df.drop(columns=drop_columns)
-        X = pd.get_dummies(self.df, drop_first=True).astype(float)
+        y_full = self.df[objective_column]
+        x_full = self.df.drop(columns=drop_columns)
         
-        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_size, random_state=random_state)
+        df_clean = pd.concat([x_full, y_full], axis=1).dropna()
+        y = df_clean[objective_column]
+        X = df_clean.drop(columns=[objective_column])
+        
+        X = pd.get_dummies(X, drop_first=True).astype(float)
+        
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_size, random_state=random_state, stratify=y)
         
         return X_train, X_test, y_train, y_test
         
