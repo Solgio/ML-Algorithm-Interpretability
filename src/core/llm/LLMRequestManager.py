@@ -7,6 +7,7 @@ import json
 from openai import OpenAI
 from dotenv import load_dotenv
 import logging
+from LLMDataWarehouse import role_sistem, general_prompt, model_list_img_supp, model_list_text
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 load_dotenv()
@@ -96,33 +97,6 @@ def analyze_statistics(metrics_path, coefficients_path, image_path, algo_name, a
     base64_image = encode_image(image_path)
     logging.info("Image encoded successfully, preparing prompt for LLM.")
 
-    model_list_img_supp = [
-        "gemma4:e4b",
-        "gemma3:1b",
-        "qwen3.6:27b",
-        "gemma3:27b",
-        "gemma4:26b",
-        "qwen3.5:2b",
-    ]
-    
-    model_list_text = [
-        "deepseek-r1:8b",
-        "iodose/nuextract-v1.5:3.8b-q8_0",
-        #"deepseek-coder-v2:latest",
-        "llama3.2:3b",
-        "nomic-embed-text:latest",
-        #"qwen3-embedding:0.6b",
-        "devstral:24b",
-        "NuExtract-2.0",
-        "devstral-small-2:24b",
-        "nomic-embed-text-v2-moe:latest",
-        "gpt-oss:20b"
-    ]
-    
-    model_list = model_list_img_supp + model_list_text
-
-    role_sistem = "Sei un Data Translator e un consulente strategico. Il tuo compito è spiegare i risultati di un modello predittivo a un consiglio di amministrazione. L'obiettivo è generare fiducia nel modello e farne comprendere le logiche."
-
     prompt_text = (
         f"Contesto analisi:\n\n"
         f"ALGORITMO: {algo_name}\n"
@@ -131,20 +105,7 @@ def analyze_statistics(metrics_path, coefficients_path, image_path, algo_name, a
         f"DATI NUMERICI:\n{raw_metrics}\n\n"
         f"COEFFICIENTI: \n{raw_coefficients}\n\n"
         f"ISTRUZIONI SPECIFICHE: {algo_prompt}\n"
-        f"REGOLE FERREE DI SPIEGABILITÀ (Linee guida rigorose):\n"
-        f"1. Semplicità e Brevità: Concentrati solo su un numero limitato di cause determinanti (massimo 3-5 feature). Ignora le variabili marginali o non causali.\n"
-        f"2. Fedeltà alla Logica Umana: Usa un linguaggio umano e coerente con il dominio di business, adattando la spiegazione all'audience.\n"
-        f"3. Causalità vs Correlazione: Chiarisci sempre che le feature individuate dal modello indicano correlazioni statistiche, ma non implicano necessariamente una causalità diretta.\n"
-        f"4. Gestione Anomalie e Feature Support: Se noti valori estremi (outlier) o se la predizione sembra basarsi su dati insoliti, segnala che l'affidabilità (supporto) potrebbe essere bassa in quanto ci si allontana dai casi medi.\n"
-        f"5. Spiegazione Contrastiva: Se i dati e l'immagine lo permettono, cerca di spiegare le differenze in modo contrastivo (es. 'perché l'istanza è positiva rispetto a quella negativa').\n\n"
-        f"ISTRUZIONI GENERALI:\n"
-        f"1. Riassumi l'affidabilità generale del modello in pochi passaggi, basandoti sui dati ma senza entrare nei dettagli tecnici.\n"
-        f"2. Spiega in modo intuitivo i fattori (feature) principali che guidano le decisioni.\n"
-        f"3. Analizza i dati e i grafici allegati per confermare se le decisioni del modello sono in linea con il buon senso aziendale."
-        f"VINCOLI:\n"
-        f"- Evita gergo tecnico eccessivo, punta a un linguaggio chiaro e accessibile.\n"
-        f"- Non limitarti a ripetere i dati, ma fornisci un'interpretazione che li renda comprensibili e utili per decisioni strategiche."
-        f"- Niente formulazioni matematiche esplicite."
+        f"{general_prompt}\n"
     )
     
     results = {}
@@ -153,6 +114,7 @@ def analyze_statistics(metrics_path, coefficients_path, image_path, algo_name, a
         futures = executor.map(
             lambda m: fetch_model_response(m, role_sistem, prompt_text, base64_image),
             model_list_img_supp
+            # + model_list_text
         )
         
         for model_name, content in futures:
