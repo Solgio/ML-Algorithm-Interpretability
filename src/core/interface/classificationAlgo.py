@@ -82,37 +82,10 @@ class BaseClassificationAlgo(BaseMLAlgo):
                 roc_path = os.path.join(self.PLOT_DIR, "roc_curve.png")
                 plt.savefig(roc_path)
                 plt.close()
-                plot_paths["roc_curve"] = roc_path
-            else:
-                prob_x_axis = np.max(y_prob, axis=1)
-
-            plt.figure()
-            sns.residplot(
-                x=prob_x_axis, 
-                y=self.y - self.model.predict(self.X), 
-                lowess=True, 
-                line_kws={"color": "red"}
-            )
-            plt.title("Residuals vs Predicted Probabilities")
-            plt.xlabel("Predicted Probability")
-            
+                plot_paths["roc_curve"] = roc_path        
         else:
             print(f"Avviso: {self.model_name} non supporta predict_proba. ROC Curve saltata.")
-            plt.figure()
-            sns.residplot(
-                x=self.model.predict(self.X), 
-                y=self.y - self.model.predict(self.X), 
-                lowess=False
-            )
-            plt.title("Residuals vs Predicted Classes")
-            plt.xlabel("Predicted Class")
-
-        plt.ylabel("Residuals")
-        res_path = os.path.join(self.PLOT_DIR, "residual_plot.png")
-        plt.savefig(res_path)
-        plt.close()
-        plot_paths["residual_plot"] = res_path
-
+    
         dc = self.df.drop(columns=binary_features, errors='ignore')
         
         dc_numeric = dc.select_dtypes(include=[np.number])
@@ -143,12 +116,21 @@ class BaseClassificationAlgo(BaseMLAlgo):
         pass
     
     def SHAP_analysis(self, X_sample, dependence_variable):
+        if hasattr(self.model, "predict_proba"):
+            pred_fn = lambda x: self.model.predict_proba(x)[:, 1]
+        elif hasattr(self.model, "decision_function"):
+            pred_fn = self.model.decision_function(x)[:, 1] if len(self.model.classes_)>2 else self.model.decision_function(x)
+        else:
+            pred_fn = self.model.predict
         try:
             explainer = shap.Explainer(self.model, X_sample)
-            shap_values = explainer(X_sample)
+            shap_values = explainer(X_sample, check_additivity=False)
         except TypeError:
-            explainer = shap.Explainer(self.model.predict, X_sample)
-            shap_values = explainer(X_sample)
+            explainer = shap.Explainer(pred_fn, X_sample)
+            try:
+                shap_values = explainer(X_sample)
+            except TypeError:
+                shap_values = explainer(X_sample)
             
         if len(shap_values.shape) == 3:
             shap_values = shap_values[:, :, 1]
@@ -162,7 +144,7 @@ class BaseClassificationAlgo(BaseMLAlgo):
         sample_ind = 20
         shap.partial_dependence_plot(
             dependence_variable,
-            self.model.predict,
+            pred_fn,
             X_sample,
             model_expected_value=True,
             feature_expected_value=True,

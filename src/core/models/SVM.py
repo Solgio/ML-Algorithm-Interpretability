@@ -26,6 +26,7 @@ class SVM(BaseClassificationAlgo):
         self.y = y_test
     
     def generate_algorithm_specific_plots(self) -> dict:
+        plot_paths = {}
         
         plt.figure(figsize=(10, 6))
         
@@ -50,11 +51,12 @@ class SVM(BaseClassificationAlgo):
             alpha=0.6,
             ax=ax
         )
+        y_numeric = pd.Categorical(self.y).codes
         
         scatter = ax.scatter(
             X_vis[:, 0], 
             X_vis[:, 1], 
-            c=self.y, 
+            c=y_numeric, 
             edgecolors='k', 
             cmap=plt.cm.coolwarm,
             s=50
@@ -72,13 +74,11 @@ class SVM(BaseClassificationAlgo):
         plt.xlabel("Componente 1" if self.X.shape[1] > 2 else self.X.columns[0])
         plt.ylabel("Componente 2" if self.X.shape[1] > 2 else self.X.columns[1])
         
-        plot_path = os.path.join(self.PLOT_DIR, "svm_decision_function.png")
-        plt.savefig(plot_path, bbox_inches="tight")
+        plot_paths["SVM decision function"] = os.path.join(self.PLOT_DIR, "svm_decision_function.png")
+        plt.savefig(plot_paths["SVM decision function"], bbox_inches="tight")
         plt.close()
         
-        return {
-            "svm_decision_function": plot_path
-        }
+        return plot_paths
 
 if __name__ == "__main__":
     lr_model = SVM(dataset="Student Placed-Not Placed Dataset")
