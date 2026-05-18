@@ -89,10 +89,15 @@ def step_llm(export_results: dict, plot_paths: dict, config: dict):
         log.error("    Impossibile importare 'test.py'. Assicurati che sia nella stessa cartella.")
         return {}
 
-    corr_matrix_path = plot_paths.get("correlation_matrix")
-    if corr_matrix_path is None:
-        log.warning("    Correlation matrix non trovata — analisi LLM saltata.")
-        return {}
+    output_dir = export_results.get("plot_dir")
+    image_paths = []
+    
+    if output_dir:
+        p_dir = Path(output_dir)
+        image_paths.extend(list(p_dir.glob("*.png")))
+        
+    if not image_paths:
+        log.warning("    Nessuna immagine trovata nella directory di output — l'analisi LLM procederà solo con i dati testuali.")
 
     algo_name =config["algo_name"]
     algo_type = config["dataset_cfg"]["task"]
@@ -108,7 +113,7 @@ def step_llm(export_results: dict, plot_paths: dict, config: dict):
     risultati = analyze_statistics(
         metrics_path=metrics_path,
         coefficients_path=coefficients_path or metrics_path, 
-        image_path=corr_matrix_path,
+        image_path=image_paths,
         algo_name=algo_name,
         algo_type=algo_type,
         dataset_description=dataset_description,

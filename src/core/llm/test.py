@@ -38,37 +38,49 @@ def load_coefficients(file_path):
     return "Nessun coefficiente testuale disponibile."
 
 def encode_image(image_path):
-    logging.info(f"Start encoding image at path: {image_path}")
-    """Codifica l'immagine in base64 gestendo i percorsi in modo sicuro."""
-    path = Path(image_path)
-    if not path.exists():
-        raise FileNotFoundError(f"File non trovato: {image_path}")
-        
-    with open(path, "rb") as image_file:
-        return base64.b64encode(image_file.read()).decode("utf-8")
+    encoded_images = []
+    
+    for img_path in image_path:
+        logging.info(f"Start encoding image at path: {img_path}")
+        """Codifica l'immagine in base64 gestendo i percorsi in modo sicuro."""
+        path = Path(img_path)
+        if not path.exists():
+            raise FileNotFoundError(f"File non trovato: {img_path}")
+        with open(path, "rb") as image_file:
+            encoded_images.append(base64.b64encode(image_file.read()).decode("utf-8"))
+    return encoded_images
     
 def fetch_model_response(model, role_sistem, prompt_text, base64_image):
     """Funzione helper per eseguire la singola chiamata API."""
     logging.info(f"Testing model with image support: {model}")
+    message_content = [{
+        "type": "text",
+        "text": prompt_text
+    }]
+    
+    for img in base64_image:
+        message_content.append({
+            "type": "image_url",
+            "image_url": {"url": f"data:image/jpeg;base64,{img}"}
+        })
     try:
         response = client.chat.completions.create(
             model=model,
             messages=[
                 {
+                    "role": "system",
+                    "content": role_sistem
+                },
+                {
                     "role": "user",
-                    "content": [
-                        {"type": "text", "text": prompt_text},
-                        #{
-                        #    "type": "image_url",
-                        #    "image_url": {"url": f"data:image/jpeg;base64,{base64_image}"},
-                        #},
-                    ],
+                    "content": message_content
                 }
             ],
         )
         print(response)
         logging.info(f"API call successful for model: {model}-------------------------------------------------------------------------------------")
         return model, response.choices[0].message.content
+    
     except Exception as e:
         logging.exception(f"Errore durante la chiamata API per {model}-------------------------------------------------------------------------------------: {e}")
         return model, f"Errore: {str(e)}"
@@ -96,7 +108,7 @@ def analyze_statistics(metrics_path, coefficients_path, image_path, algo_name, a
     model_list_text = [
         "deepseek-r1:8b",
         "iodose/nuextract-v1.5:3.8b-q8_0",
-        "deepseek-coder-v2:latest",
+        #"deepseek-coder-v2:latest",
         "llama3.2:3b",
         "nomic-embed-text:latest",
         #"qwen3-embedding:0.6b",
@@ -140,7 +152,7 @@ def analyze_statistics(metrics_path, coefficients_path, image_path, algo_name, a
     with concurrent.futures.ThreadPoolExecutor() as executor:
         futures = executor.map(
             lambda m: fetch_model_response(m, role_sistem, prompt_text, base64_image),
-            model_list_text
+            model_list_img_supp
         )
         
         for model_name, content in futures:
