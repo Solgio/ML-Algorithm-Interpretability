@@ -1,7 +1,7 @@
 DATASETS = {
     "Student Salary Dataset": {
         "task": "regression",
-        "description": "Dataset che raccoglie una serie di metriche relative a studenti universitari e alle loro skills, esperienze alvorative, caratteristiche e risultati in test. L'obiettivo è prevedere quale sarà lo stipendio di un neolaureato in base a queste caratteristiche.",
+        "description": "Dataset che raccoglie una serie di metriche relative a studenti universitari e alle loro skills, esperienze lavorative, caratteristiche e risultati in test. L'obiettivo è prevedere quale sarà lo stipendio di un neolaureato in base a queste caratteristiche.",
         "source": "https://www.kaggle.com/datasets/spscientist/students-placement-dataset",
         "path": "../data/student-salary/student_placement_salary_elite_v2.csv",
         "drop_columns": ['salary_lpa', 'placed', 'student_id'],
@@ -11,7 +11,7 @@ DATASETS = {
     },
     "Student Company Type Dataset": {
         "task": "classification",
-        "description": "Dataset che raccoglie una serie di metriche relative a studenti universitari e alle loro skills, esperienze alvorative, caratteristiche e risultati in test. L'obiettivo è prevedere quale sarà lo stipendio di un neolaureato in base a queste caratteristiche.",
+        "description": "Dataset che raccoglie una serie di metriche relative a studenti universitari e alle loro skills, esperienze lavorative, caratteristiche e risultati in test. L'obiettivo è prevedere quale in quale tipo di azienda un neolaureato verrà collocato in base a queste caratteristiche.",
         "source": "https://www.kaggle.com/datasets/spscientist/students-placement-dataset",
         "path": "../data/student-salary/student_placement_salary_elite_v2.csv",
         "drop_columns": ['salary_lpa', 'placed', 'student_id'],
@@ -21,7 +21,7 @@ DATASETS = {
     },
     "Student Placed-Not Placed Dataset": {
         "task": "classification",
-        "description": "Dataset che raccoglie una serie di metriche relative a studenti universitari e alle loro skills, esperienze alvorative, caratteristiche e risultati in test. L'obiettivo è prevedere quale sarà lo stipendio di un neolaureato in base a queste caratteristiche.",
+        "description": "Dataset che raccoglie una serie di metriche relative a studenti universitari e alle loro skills, esperienze lavorative, caratteristiche e risultati in test. L'obiettivo è prevedere se un neolaureato sarà collocato in un'azienda in base a queste caratteristiche.",
         "source": "https://www.kaggle.com/datasets/spscientist/students-placement-dataset",
         "path": "../data/student-salary/student_placement_salary_elite_v2.csv",
         "drop_columns": ['salary_lpa', 'student_id', 'company_type', 'job_role', 'placed'],
@@ -31,7 +31,7 @@ DATASETS = {
     },
     "Nasa Asteroid Dataset": {
         "task": "classification",
-        "description": "Dataset che raccoglie una serie di metriche relative a studenti universitari e alle loro skills, esperienze alvorative, caratteristiche e risultati in test. L'obiettivo è prevedere quale sarà lo stipendio di un neolaureato in base a queste caratteristiche.",
+        "description": "Dataset che raccoglie una serie di metriche relative a studenti universitari e alle loro skills, esperienze lavorative, caratteristiche e risultati in test. L'obiettivo è prevedere se un neolaureato sarà collocato in un'azienda in base a queste caratteristiche.",
         "source": "https://www.kaggle.com/datasets/spscientist/students-placement-dataset",
         "path": "../data/nasa-asteroid/nasa_asteroid_dataset.csv",
         "drop_columns": ['id', 'name', 'absolute_magnitude_h', 'relative_velocity_km_per_sec', 'miss_distance_kilometers', 'orbiting_body'],
