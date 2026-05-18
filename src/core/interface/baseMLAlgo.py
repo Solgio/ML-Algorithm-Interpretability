@@ -42,7 +42,7 @@ class BaseMLAlgo(ABC):
         pass
     
     @abstractmethod
-    def SHAP_analysis(self, X_sample):
+    def SHAP_analysis(self, x_sample):
         pass
     
     @abstractmethod

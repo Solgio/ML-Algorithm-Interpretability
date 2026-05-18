@@ -67,8 +67,8 @@ def step_shap(model, dataset_cfg: dict):
         log.warning("    'shap_dependence_variable' non definita nel config — SHAP saltato.")
         return {}
 
-    X_sample = model.X.sample(n=min(200, len(model.X)), random_state=42)
-    paths = model.SHAP_analysis(X_sample=X_sample, dependence_variable=dependence_var[0])
+    x_sample = model.X.sample(n=min(200, len(model.X)), random_state=42)
+    paths = model.SHAP_analysis(x_sample=x_sample, dependence_variable=dependence_var[0])
     log.info(f"    SHAP plot salvati: {list(paths.values())}")
     return paths
 
@@ -135,7 +135,7 @@ def step_llm(export_results: dict, plot_paths: dict, config: dict):
                 
         log.info(f"    ✔ Report LLM salvato con successo in: {report_path}")
     except Exception as e:
-        log.error(f"    Errore durante il salvataggio del report LLM: {e}")
+        log.exception(f"    Errore durante il salvataggio del report LLM: {e}")
 
     return risultati
 
