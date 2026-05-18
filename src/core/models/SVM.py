@@ -53,7 +53,7 @@ class SVM(BaseClassificationAlgo):
         )
         y_numeric = pd.Categorical(self.y).codes
         
-        scatter = ax.scatter(
+        _ = ax.scatter(
             x_vis[:, 0], 
             x_vis[:, 1], 
             c=y_numeric, 

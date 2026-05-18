@@ -62,7 +62,7 @@ class XGBoostC(BaseClassificationAlgo):
         plot_paths["feature_importance_cover"] = imp_cover_path
 
         try:
-            fig, ax = plt.subplots(figsize=(30, 15))
+            _, ax = plt.subplots(figsize=(30, 15))
             xgb.plot_tree(self.model, num_trees=0, ax=ax)
             tree_path = os.path.join(self.PLOT_DIR, "xgb_tree_0.png")
             plt.savefig(tree_path, bbox_inches='tight', dpi=300)
@@ -162,7 +162,7 @@ class XGBoostR(BaseRegressionAlgo):
         plot_paths["feature_importance_cover"] = imp_cover_path
 
         try:
-            fig, ax = plt.subplots(figsize=(30, 15))
+            _, ax = plt.subplots(figsize=(30, 15))
             xgb.plot_tree(self.model, num_trees=0, ax=ax)
             tree_path = os.path.join(self.PLOT_DIR, "xgb_reg_tree_0.png")
             plt.savefig(tree_path, bbox_inches='tight', dpi=300)
