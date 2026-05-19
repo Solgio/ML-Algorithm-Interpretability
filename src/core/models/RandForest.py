@@ -1,6 +1,9 @@
 import os
 import numpy as np
 import matplotlib.pyplot as plt
+import optuna
+from sklearn.model_selection import cross_val_score
+from sklearn.pipeline import Pipeline
 from sklearn.tree import plot_tree
 from config.datasets_config import DATASETS as data
 from interface.classificationAlgo import BaseClassificationAlgo
@@ -11,16 +14,62 @@ from interface.regressionAlgo import BaseRegressionAlgo
 class RandomForestC(BaseClassificationAlgo):
     def __init__(self, dataset: str):
         super().__init__(dataset=dataset, model_name="Random Forest C")
+        self.param_grid = {
+            'n_estimators': [100, 200],
+            'max_depth': [None, 10, 20],
+            'min_samples_split': [2, 10],
+            'min_samples_leaf': [1, 4],
+            'max_features': ['sqrt', 'log2'],
+            'ccp_alpha': [0.0, 0.1],
+            'criterion': ['gini', 'entropy', 'log_loss'],
+            'min_impurity_decrease': [0.0, 0.1]
+        }
 
     def fit(self, X_train, y_train, X_test, y_test):
+        unique_classes = np.unique(y_train)
+        if len(unique_classes) < 2:
+            raise ValueError(f"Dati invalidi: y_train contiene una sola classe {unique_classes}. "
+                         "Controlla il dataset o il caricamento.")
+        def objective(trial):
+            params = {
+                'n_estimators': trial.suggest_categorical('n_estimators', self.param_grid['n_estimators']),
+                'max_depth': trial.suggest_categorical('max_depth', self.param_grid['max_depth']),
+                'min_samples_split': trial.suggest_int('min_samples_split', self.param_grid['min_samples_split'][0], self.param_grid['min_samples_split'][1]),
+                'min_samples_leaf': trial.suggest_int('min_samples_leaf', self.param_grid['min_samples_leaf'][0], self.param_grid['min_samples_leaf'][1]),
+                'max_features': trial.suggest_categorical('max_features', self.param_grid['max_features']),
+                'ccp_alpha': trial.suggest_float('ccp_alpha', self.param_grid['ccp_alpha'][0], self.param_grid['ccp_alpha'][1]),
+                'criterion': trial.suggest_categorical('criterion', self.param_grid['criterion']),
+                'min_impurity_decrease': trial.suggest_float('min_impurity_decrease', self.param_grid['min_impurity_decrease'][0], self.param_grid['min_impurity_decrease'][1])
+            }
+            
+            pipeline = Pipeline([
+                ('rf', RandomForestClassifier(
+                    **params,
+                    random_state=42,
+                    oob_score=True
+                ))
+            ])
+            
+            scores = cross_val_score(pipeline, X_train, y_train.values, cv=5, scoring='roc_auc', n_jobs=-1)
+            return scores.mean()
         
-        self.model = RandomForestClassifier(
-            random_state=42, 
-            oob_score=True,
-            min_samples_leaf=1,
-            max_features="sqrt")
-        self.model.fit(X_train, y_train)
+        optuna.logging.set_verbosity(optuna.logging.WARNING)
         
+        study = optuna.create_study(direction='maximize')
+        study.optimize(objective, n_trials=30, n_jobs=-1, show_progress_bar=True)
+        
+        print(f"Migliori parametri individuati da Optuna: {study.best_params}")
+        
+        best_p = study.best_params
+        self.model = Pipeline([
+            ('rf', RandomForestClassifier(
+                random_state=42, 
+                oob_score=True,
+                **best_p
+            ))
+        ])
+        self.model.fit(X_train, y_train.values)
+                
         self.X = X_test
         self.y = y_test
         
@@ -29,10 +78,12 @@ class RandomForestC(BaseClassificationAlgo):
         plot_paths = {}
         
         plt.figure(figsize=(24, 12)) 
-        feature_names = self.X.columns.tolist() if hasattr(self.X, 'columns') else None
-        class_names = [str(c) for c in self.model.classes_] if hasattr(self.model, 'classes_') else None
+        tree_model = self.model.named_steps['rf'] if isinstance(self.model, Pipeline) else self.model
         
-        single_tree = self.model.estimators_[0]
+        feature_names = self.X.columns.tolist() if hasattr(self.X, 'columns') else None
+        class_names = [str(c) for c in tree_model.classes_]
+        
+        single_tree = tree_model.estimators_[0]
         
         plot_tree(
             single_tree,
@@ -50,7 +101,7 @@ class RandomForestC(BaseClassificationAlgo):
         plot_paths["single_tree_structure"] = tree_path
         
         plt.figure(figsize=(10, 6))
-        importances = self.model.feature_importances_
+        importances = tree_model.feature_importances_
         indices = np.argsort(importances)[::-1]
         
         top_n = min(15, self.X.shape[1])
@@ -72,17 +123,58 @@ class RandomForestC(BaseClassificationAlgo):
 class RandomForestR(BaseRegressionAlgo):
     def __init__(self, dataset: str):
         super().__init__(dataset=dataset, model_name="Random Forest R")
+        self.param_grid = {
+            'n_estimators': [100, 200],
+            'max_depth': [None, 10, 20],
+            'min_samples_split': [2, 10],
+            'min_samples_leaf': [1, 4],
+            'max_features': ['sqrt', 'log2'],
+            'ccp_alpha': [0.0, 0.1],
+            'criterion': ['squared_error', 'absolute_error', 'friedman_mse', 'poisson'],
+            'min_impurity_decrease': [0.0, 0.1]
+        }
 
     def fit(self, X_train, y_train, X_test, y_test):
+        def objective(trial):
+            params = {
+                'n_estimators': trial.suggest_categorical('n_estimators', self.param_grid['n_estimators']),
+                'max_depth': trial.suggest_categorical('max_depth', self.param_grid['max_depth']),
+                'min_samples_split': trial.suggest_int('min_samples_split', self.param_grid['min_samples_split'][0], self.param_grid['min_samples_split'][1]),
+                'min_samples_leaf': trial.suggest_int('min_samples_leaf', self.param_grid['min_samples_leaf'][0], self.param_grid['min_samples_leaf'][1]),
+                'max_features': trial.suggest_categorical('max_features', self.param_grid['max_features']),
+                'ccp_alpha': trial.suggest_float('ccp_alpha', self.param_grid['ccp_alpha'][0], self.param_grid['ccp_alpha'][1]),
+                'criterion': trial.suggest_categorical('criterion', self.param_grid['criterion']),
+                'min_impurity_decrease': trial.suggest_float('min_impurity_decrease', self.param_grid['min_impurity_decrease'][0], self.param_grid['min_impurity_decrease'][1])
+            }
+            
+            pipeline = Pipeline([
+                ('rf', RandomForestRegressor(
+                    **params,
+                    random_state=42,
+                    oob_score=True
+                ))
+            ])
+            
+            scores = cross_val_score(pipeline, X_train, y_train.values, cv=5, scoring='neg_mean_squared_error', n_jobs=-1)
+            return scores.mean()
         
-        self.model = RandomForestRegressor(
-            random_state=42,
-            oob_score=True,
-            min_samples_leaf=1,
-            max_features="sqrt"
-        )
-        self.model.fit(X_train, y_train)
+        print("Inizio ottimizzazione iperparametri con Optuna (Tree-structured Parzen Estimators)...")
+        optuna.logging.set_verbosity(optuna.logging.WARNING)
         
+        study = optuna.create_study(direction='maximize')
+        study.optimize(objective, n_trials=30, n_jobs=-1, show_progress_bar=True)
+        
+        print(f"Migliori parametri individuati da Optuna: {study.best_params}")
+        
+        best_p = study.best_params
+        self.model = Pipeline([
+            ('rf', RandomForestRegressor(
+                **best_p,
+                random_state=42
+            ))
+        ])
+        
+        self.model.fit(X_train, y_train.values)
         self.X = X_test
         self.y = y_test
         
@@ -91,9 +183,11 @@ class RandomForestR(BaseRegressionAlgo):
         plot_paths = {}
         
         plt.figure(figsize=(24, 12)) 
+        tree_model = self.model.named_steps['rf'] if isinstance(self.model, Pipeline) else self.model
+        
         feature_names = self.X.columns.tolist() if hasattr(self.X, 'columns') else None
         
-        single_tree = self.model.estimators_[0]
+        single_tree = tree_model.estimators_[0]
         
         plot_tree(
             single_tree,
@@ -110,7 +204,7 @@ class RandomForestR(BaseRegressionAlgo):
         plot_paths["single_tree_structure"] = tree_path
         
         plt.figure(figsize=(10, 6))
-        importances = self.model.feature_importances_
+        importances = tree_model.feature_importances_
         indices = np.argsort(importances)[::-1]
         
         top_n = min(15, self.X.shape[1])
