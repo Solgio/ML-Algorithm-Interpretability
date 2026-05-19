@@ -8,7 +8,6 @@ import matplotlib.pyplot as plt
 import config.datasets_config as data
 from sklearn.pipeline import Pipeline
 from sklearn.decomposition import PCA
-from sklearn.model_selection import GridSearchCV
 from sklearn.model_selection import cross_val_score
 from sklearn.preprocessing import StandardScaler
 from sklearn.inspection import DecisionBoundaryDisplay
@@ -34,10 +33,10 @@ class SVM(BaseClassificationAlgo):
         
         def objective(trial):
             c = trial.suggest_float('C', 1e-2, 1e2, log=True)   
-            kernel = trial.suggest_categorical('kernel', ['linear', 'rbf', 'poly', 'sigmoid'])
-            gamma = trial.suggest_categorical('gamma', ['scale', 'auto'])
-            degree = trial.suggest_int('degree', 2, 4) if kernel == 'poly' else 3
-            class_weight = trial.suggest_categorical('class_weight', [None, 'balanced'])
+            kernel = trial.suggest_categorical('kernel', self.param_grid['kernel'])
+            gamma = trial.suggest_categorical('gamma', self.param_grid['gamma'])
+            degree = trial.suggest_int('degree', self.param_grid['degree'][0], self.param_grid['degree'][1]) if kernel == 'poly' else 3
+            class_weight = trial.suggest_categorical('class_weight', self.param_grid['class_weight'])
             
             pipeline = Pipeline([
                 ('scaler', StandardScaler()),

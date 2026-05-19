@@ -24,7 +24,8 @@ class BaseMLAlgo(ABC):
         
         X = pd.get_dummies(X, drop_first=True).astype(float)
         
-        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_size, random_state=random_state, stratify=y)
+        stratify_param = y if self.task_type == "classification" else None
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_size, random_state=random_state, stratify=stratify_param)
         
         return X_train, X_test, y_train, y_test
         

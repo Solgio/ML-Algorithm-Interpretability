@@ -65,11 +65,14 @@ class BaseRegressionAlgo(BaseMLAlgo):
         pass
     
     def SHAP_analysis(self, x_sample, dependence_variable):
-        
-        explainer = shap.Explainer(self.model, x_sample)
-        shap_values = explainer(x_sample)
-        print("\nSHAP values calculated successfully!")
-        
+        try:
+            explainer = shap.Explainer(self.model, x_sample)
+            shap_values = explainer(x_sample)
+            print("\nSHAP values calculated successfully!")
+        except Exception as e:
+            pred_fn = self.model.predict
+            explainer = shap.Explainer(pred_fn, x_sample)
+            shap_values = explainer(x_sample)
         shap.summary_plot(shap_values, x_sample, plot_type="bar", show=False)
         summary_path = os.path.join(self.PLOT_DIR, "shap_summary.png")
         plt.savefig(summary_path)
