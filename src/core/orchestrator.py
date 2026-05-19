@@ -84,9 +84,9 @@ def step_export(model) -> dict:
 def step_llm(export_results: dict, plot_paths: dict, config: dict):
     log.info("━━  STEP 6: Analisi LLM")
     try:
-        from core.llm.LLMRequestManager import analyze_statistics
+        from llm.LLMRequestManager import analyze_statistics
     except ImportError:
-        log.error("    Impossibile importare 'test.py'. Assicurati che sia nella stessa cartella.")
+        log.error(f"    Impossibile importare 'test.py'. Assicurati che sia nella stessa cartella.{e}")
         return {}
 
     output_dir = export_results.get("plot_dir")

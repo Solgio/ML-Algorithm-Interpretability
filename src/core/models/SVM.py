@@ -1,4 +1,5 @@
 import os
+import shap
 import sklearn.svm
 import optuna
 import pandas as pd
@@ -21,7 +22,8 @@ class SVM(BaseClassificationAlgo):
               'C': [0.1, 1, 10, 100],   
               'gamma':['scale', 'auto', 0.1, 0.01, 0.001, 0.0001],
               'kernel': ['linear', 'rbf', 'poly', 'sigmoid'],
-              'class_weight': [None, 'balanced']
+              'class_weight': [None, 'balanced'],
+              'degree': [2, 3, 4]
               }
 
     def fit(self, X_train, y_train, X_test, y_test):
@@ -30,6 +32,7 @@ class SVM(BaseClassificationAlgo):
         if len(unique_classes) < 2:
             raise ValueError(f"Dati invalidi: y_train contiene una sola classe {unique_classes}. "
                          "Controlla il dataset o il caricamento.")
+        scoring_metric = 'roc_auc_ovr' if len(unique_classes) > 2 else 'roc_auc'
         
         def objective(trial):
             c = trial.suggest_float('C', 1e-2, 1e2, log=True)   
@@ -40,10 +43,10 @@ class SVM(BaseClassificationAlgo):
             
             pipeline = Pipeline([
                 ('scaler', StandardScaler()),
-                ('svc', sklearn.svm.SVC(C=c, kernel=kernel, gamma=gamma, degree=degree, class_weight=class_weight, random_state=42))
+                ('svc', sklearn.svm.SVC(C=c, kernel=kernel, gamma=gamma, degree=degree, class_weight=class_weight, random_state=42, probability=True))
             ])
             
-            scores = cross_val_score(pipeline, X_train, y_train.values, cv=5, scoring='roc_auc', n_jobs=-1)
+            scores = cross_val_score(pipeline, X_train, y_train.values, cv=5, scoring=scoring_metric, n_jobs=-1)
             return scores.mean()
             
         
@@ -51,7 +54,7 @@ class SVM(BaseClassificationAlgo):
         optuna.logging.set_verbosity(optuna.logging.WARNING)
         
         study = optuna.create_study(direction='maximize')
-        study.optimize(objective, n_trials=30)
+        study.optimize(objective, n_trials=30, show_progress_bar=True)
         
         print(f"Migliori parametri individuati da Optuna: {study.best_params}")
         
@@ -133,6 +136,65 @@ class SVM(BaseClassificationAlgo):
         plt.close()
         
         return plot_paths
+    
+    def SHAP_analysis(self, x_sample, dependence_variable):
+        if hasattr(self.model, "predict_proba"):
+            pred_fn = lambda x: self.model.predict_proba(x)[:, 1]
+        elif hasattr(self.model, "decision_function"):
+            pred_fn = lambda x: self.model.decision_function(x)[:, 1] if len(self.model.classes_)>2 else self.model.decision_function(x)
+        else:
+            pred_fn = self.model.predict
+        try:
+            explainer = shap.Explainer(self.model, x_sample)
+            shap_values = explainer(x_sample, check_additivity=False)
+        except TypeError:
+            explainer = shap.Explainer(pred_fn, x_sample)
+            try:
+                shap_values = explainer(x_sample)
+            except TypeError:
+                shap_values = explainer(x_sample)
+            
+        if len(shap_values.shape) == 3:
+            shap_values = shap_values[:, :, 1]
+        print("\nSHAP values calculated successfully!")
+        
+        shap.summary_plot(shap_values, x_sample, plot_type="bar", show=False)
+        summary_path = os.path.join(self.PLOT_DIR, "shap_summary.png")
+        plt.savefig(summary_path)
+        plt.close()
+        
+        sample_ind = 20
+        shap.partial_dependence_plot(
+            dependence_variable,
+            pred_fn,
+            x_sample,
+            model_expected_value=True,
+            feature_expected_value=True,
+            ice=False,
+            shap_values=shap_values[sample_ind : sample_ind + 1, :],
+            show=False
+        )
+        pdp_path = os.path.join(self.PLOT_DIR, f"partial_dependence_{dependence_variable}_sample_{sample_ind}.png")
+        plt.savefig(pdp_path)
+        plt.close()
+        
+        values_to_plot = shap_values.values if hasattr(shap_values, 'values') else shap_values
+        
+        shap.dependence_plot(
+            dependence_variable,
+            values_to_plot,
+            x_sample,
+            show=False
+        )
+        effect_plot_path = os.path.join(self.PLOT_DIR, f"effect_plot_{dependence_variable}.png")
+        plt.savefig(effect_plot_path)
+        plt.close()
+        
+        return {
+            "shap_summary": summary_path,
+            "partial_dependence": pdp_path,
+            "effect_plot": effect_plot_path
+        }
 
 if __name__ == "__main__":
     default_dataset = "Student Placed-Not Placed Dataset"

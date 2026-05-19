@@ -7,7 +7,7 @@ import json
 from openai import OpenAI
 from dotenv import load_dotenv
 import logging
-from LLMDataWarehouse import role_sistem, general_prompt, model_list_img_supp, model_list_text
+from llm.LLMDataWarehouse import role_sistem, general_prompt, model_list_img_supp, model_list_text
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 load_dotenv()
