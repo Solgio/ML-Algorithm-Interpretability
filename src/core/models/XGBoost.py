@@ -1,5 +1,8 @@
 import os
+import optuna
 import numpy as np
+from sklearn.model_selection import cross_val_score
+from sklearn.pipeline import Pipeline
 import xgboost as xgb
 import matplotlib.pyplot as plt
 import shap
@@ -11,6 +14,14 @@ from interface.regressionAlgo import BaseRegressionAlgo
 class XGBoostC(BaseClassificationAlgo):
     def __init__(self, dataset: str):
         super().__init__(dataset=dataset, model_name="XGBoost C")
+        self.param_grid = {
+            'n_estimators': [100, 300],
+            'max_depth': [3, 10],
+            'learning_rate': [0.01, 0.2],
+            'subsample': [0.8, 1.0],
+            'colsample_bytree': [0.6, 1.0],
+            'gamma': [0, 0.2],
+        }
 
     def fit(self, X_train, y_train, X_test, y_test):
         self.le = LabelEncoder()
@@ -19,17 +30,43 @@ class XGBoostC(BaseClassificationAlgo):
         
         num_classes = len(np.unique(y_train_encoded))
         current_objective = "mlogloss" if num_classes > 2 else "logloss"
-        
-        self.model = xgb.XGBClassifier(
-            random_state=42,
-            eval_metric=current_objective,
-            early_stopping_rounds=10
-        )
+        def objective(trial):
+            params = {
+                'n_estimators': trial.suggest_categorical('n_estimators', self.param_grid['n_estimators']),
+                'max_depth': trial.suggest_int('max_depth', self.param_grid['max_depth'][0], self.param_grid['max_depth'][1]),
+                'learning_rate': trial.suggest_categorical('learning_rate', self.param_grid['learning_rate']),
+                'subsample': trial.suggest_float('subsample', self.param_grid['subsample'][0], self.param_grid['subsample'][1]),
+                'colsample_bytree': trial.suggest_float('colsample_bytree', self.param_grid['colsample_bytree'][0], self.param_grid['colsample_bytree'][1]),
+                'gamma': trial.suggest_float('gamma', self.param_grid['gamma'][0], self.param_grid['gamma'][1])
+            }
+            
+            pipeline = Pipeline([
+                ('xgb', xgb.XGBClassifier(
+                    **params,
+                    random_state=42,
+                    eval_metric=current_objective
+                ))
+            ])
+            
+            scores = cross_val_score(pipeline, X_train, y_train_encoded, cv=5, scoring='roc_auc', n_jobs=-1)
+            return scores.mean()
+
+        print("Inizio ottimizzazione iperparametri con Optuna (Tree-structured Parzen Estimators)...")
+        optuna.logging.set_verbosity(optuna.logging.WARNING)
+        study = optuna.create_study(direction='maximize')
+        study.optimize(objective, n_trials=30, n_jobs=-1, show_progress_bar=True)
+        print(f"Migliori parametri individuati da Optuna: {study.best_params}")
+        best_p = study.best_params
+        self.model = Pipeline([
+            ('xgb', xgb.XGBClassifier(
+                **best_p,
+                random_state=42,
+                eval_metric=current_objective
+            ))
+        ])
+
         self.model.fit(
-            X_train, y_train_encoded,
-            eval_set=[(X_train, y_train_encoded), (X_test, y_test_encoded)],
-            verbose=False
-        )
+            X_train, y_train_encoded, xgb__eval_set=[(X_train, y_train_encoded), (X_test, y_test_encoded)], xgb__verbose=False)
         
         self.X = X_test
         self.y = y_test_encoded
@@ -39,23 +76,24 @@ class XGBoostC(BaseClassificationAlgo):
         
     def generate_algorithm_specific_plots(self) -> dict:
         plot_paths = {}
+        xgb_model = self.model.named_steps['xgb'] if isinstance(self.model, Pipeline) else self.model
         
         plt.figure(figsize=(10, 6))
-        xgb.plot_importance(self.model, importance_type='weight', max_num_features=15, title="XGBoost: Feature Importance (Frequency/Weight)")
+        xgb.plot_importance(xgb_model, importance_type='weight', max_num_features=15, title="XGBoost: Feature Importance (Frequency/Weight)")
         imp_weight_path = os.path.join(self.PLOT_DIR, "xgb_feature_importance_weight.png")
         plt.savefig(imp_weight_path, bbox_inches='tight')
         plt.close()
         plot_paths["feature_importance_weight"] = imp_weight_path
 
         plt.figure(figsize=(10, 6))
-        xgb.plot_importance(self.model, importance_type='gain', max_num_features=15, title="XGBoost: Feature Importance (Gain)")
+        xgb.plot_importance(xgb_model, importance_type='gain', max_num_features=15, title="XGBoost: Feature Importance (Gain)")
         imp_gain_path = os.path.join(self.PLOT_DIR, "xgb_feature_importance_gain.png")
         plt.savefig(imp_gain_path, bbox_inches='tight')
         plt.close()
         plot_paths["feature_importance_gain"] = imp_gain_path
         
         plt.figure(figsize=(10, 6))
-        xgb.plot_importance(self.model, importance_type='cover', max_num_features=15, title="XGBoost: Feature Importance (Cover)")
+        xgb.plot_importance(xgb_model, importance_type='cover', max_num_features=15, title="XGBoost: Feature Importance (Cover)")
         imp_cover_path = os.path.join(self.PLOT_DIR, "xgb_feature_importance_cover.png")
         plt.savefig(imp_cover_path, bbox_inches='tight')
         plt.close()
@@ -63,7 +101,7 @@ class XGBoostC(BaseClassificationAlgo):
 
         try:
             _, ax = plt.subplots(figsize=(30, 15))
-            xgb.plot_tree(self.model, num_trees=0, ax=ax)
+            xgb.plot_tree(xgb_model, num_trees=0, ax=ax)
             tree_path = os.path.join(self.PLOT_DIR, "xgb_tree_0.png")
             plt.savefig(tree_path, bbox_inches='tight', dpi=300)
             plt.close()
@@ -71,7 +109,7 @@ class XGBoostC(BaseClassificationAlgo):
         except Exception as e:
             print(f"Impossibile generare la visualizzazione dell'albero. Assicurati che graphviz sia installato. Errore: {e}")
 
-        results = self.model.evals_result()
+        results = xgb_model.evals_result()
         if results:
             plt.figure(figsize=(8, 6))
             metric_key = next(iter(results['validation_0'].keys()))
@@ -92,7 +130,8 @@ class XGBoostC(BaseClassificationAlgo):
         return plot_paths
 
     def SHAP_analysis(self, x_sample, dependence_variable):
-        explainer = shap.TreeExplainer(self.model)
+        xgb_model = self.model.named_steps['xgb'] if isinstance(self.model, Pipeline) else self.model
+        explainer = shap.TreeExplainer(xgb_model)
         shap_values = explainer(x_sample)
         print("\nSHAP values (TreeExplainer) calcolati con successo!")
         
@@ -121,17 +160,56 @@ class XGBoostC(BaseClassificationAlgo):
 class XGBoostR(BaseRegressionAlgo):
     def __init__(self, dataset: str):
         super().__init__(dataset=dataset, model_name="XGBoost R")
+        self.param_grid = {
+            'n_estimators': [100, 300],
+            'max_depth': [3, 10],
+            'learning_rate': [0.01, 0.2],
+            'subsample': [0.8, 1.0],
+            'colsample_bytree': [0.6, 1.0],
+            'gamma': [0, 0.2]
+            }
 
     def fit(self, X_train, y_train, X_test, y_test):
-        self.model = xgb.XGBRegressor(
-            random_state=42,
-            eval_metric="rmse",
-            early_stopping_rounds=10
-        )
+        
+        def objective(trial):
+            params = {
+                'n_estimators': trial.suggest_categorical('n_estimators', self.param_grid['n_estimators']),
+                'max_depth': trial.suggest_int('max_depth', self.param_grid['max_depth'][0], self.param_grid['max_depth'][1]),
+                'learning_rate': trial.suggest_categorical('learning_rate', self.param_grid['learning_rate']),
+                'subsample': trial.suggest_float('subsample', self.param_grid['subsample'][0], self.param_grid['subsample'][1]),
+                'colsample_bytree': trial.suggest_float('colsample_bytree', self.param_grid['colsample_bytree'][0], self.param_grid['colsample_bytree'][1]),
+                'gamma': trial.suggest_float('gamma', self.param_grid['gamma'][0], self.param_grid['gamma'][1])
+            }
+            
+            pipeline = Pipeline([
+                ('xgb', xgb.XGBRegressor(
+                    **params,
+                    random_state=42,
+                    eval_metric="rmse"
+                ))
+            ])
+            
+            scores = cross_val_score(pipeline, X_train, y_train.values, cv=5, scoring='neg_mean_squared_error', n_jobs=-1)
+            return scores.mean()
+        
+        print("Inizio ottimizzazione iperparametri con Optuna (Tree-structured Parzen Estimators)...")
+        optuna.logging.set_verbosity(optuna.logging.WARNING)
+        study = optuna.create_study(direction='maximize')
+        study.optimize(objective, n_trials=30, n_jobs=-1, show_progress_bar=True)
+        print(f"Migliori parametri individuati da Optuna: {study.best_params}")
+        best_p = study.best_params
+        
+        self.model = Pipeline([
+            ('xgb', xgb.XGBRegressor(
+                **best_p,
+                random_state=42,
+                eval_metric="rmse"
+            ))
+        ])
         self.model.fit(
             X_train, y_train,
-            eval_set=[(X_train, y_train), (X_test, y_test)],
-            verbose=False
+            xgb__eval_set=[(X_train, y_train), (X_test, y_test)],
+            xgb__verbose=False
         )
         
         self.X = X_test
@@ -139,23 +217,24 @@ class XGBoostR(BaseRegressionAlgo):
         
     def generate_algorithm_specific_plots(self) -> dict:
         plot_paths = {}
+        xgb_model = self.model.named_steps['xgb'] if isinstance(self.model, Pipeline) else self.model
         
         plt.figure(figsize=(10, 6))
-        xgb.plot_importance(self.model, importance_type='weight', max_num_features=15, title="XGBoost Regressor: Feature Importance (Frequency/Weight)")
+        xgb.plot_importance(xgb_model, importance_type='weight', max_num_features=15, title="XGBoost Regressor: Feature Importance (Frequency/Weight)")
         imp_weight_path = os.path.join(self.PLOT_DIR, "xgb_reg_feature_importance_weight.png")
         plt.savefig(imp_weight_path, bbox_inches='tight')
         plt.close()
         plot_paths["feature_importance_weight"] = imp_weight_path
 
         plt.figure(figsize=(10, 6))
-        xgb.plot_importance(self.model, importance_type='gain', max_num_features=15, title="XGBoost Regressor: Feature Importance (Gain - Riduzione MSE)")
+        xgb.plot_importance(xgb_model, importance_type='gain', max_num_features=15, title="XGBoost Regressor: Feature Importance (Gain - Riduzione MSE)")
         imp_gain_path = os.path.join(self.PLOT_DIR, "xgb_reg_feature_importance_gain.png")
         plt.savefig(imp_gain_path, bbox_inches='tight')
         plt.close()
         plot_paths["feature_importance_gain"] = imp_gain_path
         
         plt.figure(figsize=(10, 6))
-        xgb.plot_importance(self.model, importance_type='cover', max_num_features=15, title="XGBoost Regressor: Feature Importance (Cover)")
+        xgb.plot_importance(xgb_model, importance_type='cover', max_num_features=15, title="XGBoost Regressor: Feature Importance (Cover)")
         imp_cover_path = os.path.join(self.PLOT_DIR, "xgb_reg_feature_importance_cover.png")
         plt.savefig(imp_cover_path, bbox_inches='tight')
         plt.close()
@@ -163,7 +242,7 @@ class XGBoostR(BaseRegressionAlgo):
 
         try:
             _, ax = plt.subplots(figsize=(30, 15))
-            xgb.plot_tree(self.model, num_trees=0, ax=ax)
+            xgb.plot_tree(xgb_model, num_trees=0, ax=ax)
             tree_path = os.path.join(self.PLOT_DIR, "xgb_reg_tree_0.png")
             plt.savefig(tree_path, bbox_inches='tight', dpi=300)
             plt.close()
@@ -175,7 +254,8 @@ class XGBoostR(BaseRegressionAlgo):
         return plot_paths
 
     def SHAP_analysis(self, x_sample, dependence_variable):
-        explainer = shap.TreeExplainer(self.model)
+        xgb_model = self.model.named_steps['xgb'] if isinstance(self.model, Pipeline) else self.model
+        explainer = shap.TreeExplainer(xgb_model)
         shap_values = explainer(x_sample)
         print("\nSHAP values (TreeExplainer) calcolati con successo!")
         
