@@ -30,6 +30,7 @@ class XGBoostC(BaseClassificationAlgo):
         
         num_classes = len(np.unique(y_train_encoded))
         current_objective = "mlogloss" if num_classes > 2 else "logloss"
+        scoring_metric = 'roc_auc_ovr' if num_classes > 2 else 'roc_auc'
         def objective(trial):
             params = {
                 'n_estimators': trial.suggest_categorical('n_estimators', self.param_grid['n_estimators']),
@@ -48,7 +49,7 @@ class XGBoostC(BaseClassificationAlgo):
                 ))
             ])
             
-            scores = cross_val_score(pipeline, X_train, y_train_encoded, cv=5, scoring='roc_auc', n_jobs=-1)
+            scores = cross_val_score(pipeline, X_train, y_train_encoded, cv=5, scoring=scoring_metric, n_jobs=-1)
             return scores.mean()
 
         print("Inizio ottimizzazione iperparametri con Optuna (Tree-structured Parzen Estimators)...")

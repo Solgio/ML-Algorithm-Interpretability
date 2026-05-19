@@ -28,6 +28,7 @@ class DecisionTreeC(BaseClassificationAlgo):
         if len(unique_classes) < 2:
             raise ValueError(f"Dati invalidi: y_train contiene una sola classe {unique_classes}. "
                          "Controlla il dataset o il caricamento.")
+        scoring_metric = 'roc_auc_ovr' if len(unique_classes) > 2 else 'roc_auc'
         
         def objective(trial):
             params = {
@@ -45,7 +46,7 @@ class DecisionTreeC(BaseClassificationAlgo):
                 ))
             ])
             
-            scores = cross_val_score(pipeline, X_train, y_train.values, cv=5, scoring='roc_auc', n_jobs=-1)
+            scores = cross_val_score(pipeline, X_train, y_train.values, cv=5, scoring=scoring_metric, n_jobs=-1)
             return scores.mean()
         
         print("Inizio ottimizzazione iperparametri con Optuna (Tree-structured Parzen Estimators)...")

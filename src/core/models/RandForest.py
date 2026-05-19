@@ -30,6 +30,8 @@ class RandomForestC(BaseClassificationAlgo):
         if len(unique_classes) < 2:
             raise ValueError(f"Dati invalidi: y_train contiene una sola classe {unique_classes}. "
                          "Controlla il dataset o il caricamento.")
+        scoring_metric = 'roc_auc_ovr' if len(unique_classes) > 2 else 'roc_auc'
+        
         def objective(trial):
             params = {
                 'n_estimators': trial.suggest_categorical('n_estimators', self.param_grid['n_estimators']),
@@ -50,7 +52,7 @@ class RandomForestC(BaseClassificationAlgo):
                 ))
             ])
             
-            scores = cross_val_score(pipeline, X_train, y_train.values, cv=5, scoring='roc_auc', n_jobs=-1)
+            scores = cross_val_score(pipeline, X_train, y_train.values, cv=5, scoring=scoring_metric, n_jobs=-1)
             return scores.mean()
         
         optuna.logging.set_verbosity(optuna.logging.WARNING)
