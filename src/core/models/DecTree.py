@@ -1,7 +1,10 @@
 import os
 import matplotlib.pyplot as plt
+import optuna
 import numpy as np
+from sklearn.pipeline import Pipeline
 from sklearn.tree import plot_tree
+from sklearn.model_selection import cross_val_score
 from config.datasets_config import DATASETS as data
 from interface.classificationAlgo import BaseClassificationAlgo
 from sklearn.tree import DecisionTreeClassifier as SklearnDecisionTreeClassifier
@@ -12,25 +15,69 @@ from sklearn.tree import DecisionTreeRegressor as SklearnDecisionTreeRegressor
 class DecisionTreeC(BaseClassificationAlgo):
     def __init__(self, dataset: str):
         super().__init__(dataset=dataset, model_name="Decision Tree C")
+        self.param_grid = {
+            'criterion': ['gini', 'entropy'],
+            'max_depth': [None, 5, 20],
+            'min_samples_split': [2, 10],
+            'min_samples_leaf': [1, 4],
+            'ccp_alpha': [0.0, 0.1]
+        }
 
     def fit(self, X_train, y_train, X_test, y_test):
+        unique_classes = np.unique(y_train)
+        if len(unique_classes) < 2:
+            raise ValueError(f"Dati invalidi: y_train contiene una sola classe {unique_classes}. "
+                         "Controlla il dataset o il caricamento.")
         
-        self.model = SklearnDecisionTreeClassifier(
-            random_state=42,
-            ccp_alpha=0.01
-            )   
-        self.model.fit(X_train, y_train)
+        def objective(trial):
+            params = {
+                'criterion': trial.suggest_categorical('criterion', self.param_grid['criterion']),
+                'max_depth': trial.suggest_categorical('max_depth', self.param_grid['max_depth']),
+                'min_samples_split': trial.suggest_int('min_samples_split', self.param_grid['min_samples_split'][0], self.param_grid['min_samples_split'][1]),
+                'min_samples_leaf': trial.suggest_int('min_samples_leaf', self.param_grid['min_samples_leaf'][0], self.param_grid['min_samples_leaf'][1]),
+                'ccp_alpha': trial.suggest_float('ccp_alpha', self.param_grid['ccp_alpha'][0], self.param_grid['ccp_alpha'][1])
+            }
+            
+            pipeline = Pipeline([
+                ('dt', SklearnDecisionTreeClassifier(
+                    **params,
+                    random_state=42
+                ))
+            ])
+            
+            scores = cross_val_score(pipeline, X_train, y_train.values, cv=5, scoring='roc_auc', n_jobs=-1)
+            return scores.mean()
         
+        print("Inizio ottimizzazione iperparametri con Optuna (Tree-structured Parzen Estimators)...")
+        optuna.logging.set_verbosity(optuna.logging.WARNING)
+        
+        study = optuna.create_study(direction='maximize')
+        study.optimize(objective, n_trials=30, n_jobs=-1, show_progress_bar=True)
+        
+        print(f"Migliori parametri individuati da Optuna: {study.best_params}")
+        
+        best_p = study.best_params
+        self.model = Pipeline([
+            ('dt', SklearnDecisionTreeClassifier(
+                **best_p,
+                random_state=42
+            ))
+        ])
+        
+        self.model.fit(X_train, y_train.values)
+                
         self.X = X_test
         self.y = y_test
                 
     def generate_algorithm_specific_plots(self) -> dict:
         plot_paths = {}
         plt.figure(figsize=(24, 12)) 
+        tree_model = self.model.named_steps['dt'] if isinstance(self.model, Pipeline) else self.model
+        
         feature_names = self.X.columns.tolist() if hasattr(self.X, 'columns') else None
-        class_names = [str(c) for c in self.model.classes_] if hasattr(self.model, 'classes_') else None
+        class_names = [str(c) for c in tree_model.classes_]
         plot_tree(
-            self.model,
+            tree_model,
             feature_names=feature_names,
             class_names=class_names,
             filled=True,     
@@ -47,7 +94,7 @@ class DecisionTreeC(BaseClassificationAlgo):
         print(f"Plot dell'albero salvato in: {tree_path}")
         
         plt.figure(figsize=(10, 6))
-        importances = self.model.feature_importances_
+        importances = tree_model.feature_importances_
         indices = np.argsort(importances)[::-1]
         
         plt.bar(range(len(indices)), importances[indices], color='forestgreen')
@@ -63,12 +110,53 @@ class DecisionTreeC(BaseClassificationAlgo):
 class DecisionTreeR(BaseRegressionAlgo):
     def __init__(self, dataset: str):
         super().__init__(dataset=dataset, model_name="Decision Tree R")
+        self.param_grid = {    
+            'criterion': ['squared_error', 'absolute_error'],
+            'max_depth': [None, 5, 20],
+            'min_samples_split': [2, 10],
+            'min_samples_leaf': [1, 4],
+            'ccp_alpha': [0.0, 0.1]
+        }
 
     def fit(self, X_train, y_train, X_test, y_test):
                 
-        self.model = SklearnDecisionTreeRegressor(random_state=42, ccp_alpha=0.01)
-        self.model.fit(X_train, y_train)
+        def objective(trial):
+            params = {
+                'criterion': trial.suggest_categorical('criterion', self.param_grid['criterion']),
+                'max_depth': trial.suggest_categorical('max_depth', self.param_grid['max_depth']),
+                'min_samples_split': trial.suggest_int('min_samples_split', self.param_grid['min_samples_split'][0], self.param_grid['min_samples_split'][1]),
+                'min_samples_leaf': trial.suggest_int('min_samples_leaf', self.param_grid['min_samples_leaf'][0], self.param_grid['min_samples_leaf'][1]),
+                'ccp_alpha': trial.suggest_float('ccp_alpha', self.param_grid['ccp_alpha'][0], self.param_grid['ccp_alpha'][1])
+            }
+            
+            pipeline = Pipeline([
+                ('dt', SklearnDecisionTreeRegressor(
+                    **params,
+                    random_state=42
+                ))
+            ])
+            
+            scores = cross_val_score(pipeline, X_train, y_train.values, cv=5, scoring='neg_mean_squared_error', n_jobs=-1)
+            return scores.mean()
         
+        print("Inizio ottimizzazione iperparametri con Optuna (Tree-structured Parzen Estimators)...")
+        optuna.logging.set_verbosity(optuna.logging.WARNING)
+        
+        study = optuna.create_study(direction='maximize')
+        study.optimize(objective, n_trials=30, n_jobs=-1, show_progress_bar=True)
+        
+        print(f"Migliori parametri individuati da Optuna: {study.best_params}")
+        
+        best_p = study.best_params
+        self.model = Pipeline([
+            ('dt', SklearnDecisionTreeRegressor(
+                **best_p,
+                random_state=42
+            ))
+        ])
+        
+        self.model.fit(X_train, y_train.values)
+                
         self.X = X_test
         self.y = y_test
         
@@ -76,18 +164,19 @@ class DecisionTreeR(BaseRegressionAlgo):
         plot_paths = {}
 
         plt.figure(figsize=(24, 12)) 
+        tree_model = self.model.named_steps['dt'] if isinstance(self.model, Pipeline) else self.model
+        
         feature_names = self.X.columns.tolist() if hasattr(self.X, 'columns') else None
-        class_names = [str(c) for c in self.model.classes_] if hasattr(self.model, 'classes_') else None
         plot_tree(
-            self.model,
+            tree_model,
             feature_names=feature_names,
-            class_names=class_names,
+            class_names=None,
             filled=True,     
             rounded=True,    
             max_depth=3,     
             fontsize=10
         )        
-        plt.title("Struttura dell'Albero di Decisione (Classificazione - Primi 3 livelli)")
+        plt.title("Struttura dell'Albero di Decisione (Regresione - Primi 3 livelli)")
         tree_path = os.path.join(self.PLOT_DIR, "decision_tree_structure.png")
         plt.savefig(tree_path, bbox_inches='tight') 
         plt.close()
@@ -97,7 +186,7 @@ class DecisionTreeR(BaseRegressionAlgo):
         plot_paths["decision_tree_structure"] = tree_path
 
         plt.figure(figsize=(10, 6))
-        importances = self.model.feature_importances_
+        importances = tree_model.feature_importances_
         indices = np.argsort(importances)[::-1]
         
         plt.bar(range(len(indices)), importances[indices], color='forestgreen')
