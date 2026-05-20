@@ -12,8 +12,8 @@ from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 from interface.regressionAlgo import BaseRegressionAlgo
 
 class RandomForestC(BaseClassificationAlgo):
-    def __init__(self, dataset: str):
-        super().__init__(dataset=dataset, model_name="Random Forest C")
+    def __init__(self, dataset: str, param_grid: dict = None):
+        super().__init__(dataset=dataset, model_name="Random Forest C", param_grid=param_grid)
 
     def fit(self, X_train, y_train, X_test, y_test):
         unique_classes = np.unique(y_train)
@@ -113,8 +113,8 @@ class RandomForestC(BaseClassificationAlgo):
         return plot_paths
     
 class RandomForestR(BaseRegressionAlgo):
-    def __init__(self, dataset: str):
-        super().__init__(dataset=dataset, model_name="Random Forest R")
+    def __init__(self, dataset: str, param_grid: dict = None):
+        super().__init__(dataset=dataset, model_name="Random Forest R", param_grid=param_grid)
 
     def fit(self, X_train, y_train, X_test, y_test):
         def objective(trial):
