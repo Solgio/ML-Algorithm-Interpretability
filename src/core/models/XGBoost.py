@@ -14,14 +14,6 @@ from interface.regressionAlgo import BaseRegressionAlgo
 class XGBoostC(BaseClassificationAlgo):
     def __init__(self, dataset: str):
         super().__init__(dataset=dataset, model_name="XGBoost C")
-        self.param_grid = {
-            'n_estimators': [100, 300],
-            'max_depth': [3, 10],
-            'learning_rate': [0.01, 0.2],
-            'subsample': [0.8, 1.0],
-            'colsample_bytree': [0.6, 1.0],
-            'gamma': [0, 0.2],
-        }
 
     def fit(self, X_train, y_train, X_test, y_test):
         self.le = LabelEncoder()
@@ -47,7 +39,7 @@ class XGBoostC(BaseClassificationAlgo):
                     random_state=42,
                     eval_metric=current_objective
                 ))
-            ])
+            ], memory=None)
             
             scores = cross_val_score(pipeline, X_train, y_train_encoded, cv=5, scoring=scoring_metric, n_jobs=-1)
             return scores.mean()
@@ -64,7 +56,7 @@ class XGBoostC(BaseClassificationAlgo):
                 random_state=42,
                 eval_metric=current_objective
             ))
-        ])
+        ], memory=None)
 
         self.model.fit(
             X_train, y_train_encoded, xgb__eval_set=[(X_train, y_train_encoded), (X_test, y_test_encoded)], xgb__verbose=False)
@@ -161,14 +153,6 @@ class XGBoostC(BaseClassificationAlgo):
 class XGBoostR(BaseRegressionAlgo):
     def __init__(self, dataset: str):
         super().__init__(dataset=dataset, model_name="XGBoost R")
-        self.param_grid = {
-            'n_estimators': [100, 300],
-            'max_depth': [3, 10],
-            'learning_rate': [0.01, 0.2],
-            'subsample': [0.8, 1.0],
-            'colsample_bytree': [0.6, 1.0],
-            'gamma': [0, 0.2]
-            }
 
     def fit(self, X_train, y_train, X_test, y_test):
         
@@ -188,7 +172,7 @@ class XGBoostR(BaseRegressionAlgo):
                     random_state=42,
                     eval_metric="rmse"
                 ))
-            ])
+            ], memory=None)
             
             scores = cross_val_score(pipeline, X_train, y_train.values, cv=5, scoring='neg_mean_squared_error', n_jobs=-1)
             return scores.mean()
@@ -206,7 +190,7 @@ class XGBoostR(BaseRegressionAlgo):
                 random_state=42,
                 eval_metric="rmse"
             ))
-        ])
+        ], memory=None)
         self.model.fit(
             X_train, y_train,
             xgb__eval_set=[(X_train, y_train), (X_test, y_test)],

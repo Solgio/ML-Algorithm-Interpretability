@@ -5,10 +5,11 @@ from sklearn.model_selection import train_test_split
 
 class BaseMLAlgo(ABC):
     
-    def __init__(self, model_name: str, task_type: str, dataset: str):
+    def __init__(self, model_name: str, task_type: str, dataset: str, param_grid: dict):
         self.model_name = model_name
         self.task_type = task_type
         self.dataset = dataset
+        self.param_grid = param_grid or {}
         PROJECT_NAME="{}_{}_{}".format(model_name, task_type, dataset)
         self.PLOT_DIR = os.path.join("../output", PROJECT_NAME)
         os.makedirs(self.PLOT_DIR, exist_ok=True)

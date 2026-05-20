@@ -15,14 +15,7 @@ from sklearn.tree import DecisionTreeRegressor as SklearnDecisionTreeRegressor
 class DecisionTreeC(BaseClassificationAlgo):
     def __init__(self, dataset: str):
         super().__init__(dataset=dataset, model_name="Decision Tree C")
-        self.param_grid = {
-            'criterion': ['gini', 'entropy'],
-            'max_depth': [None, 5, 20],
-            'min_samples_split': [2, 10],
-            'min_samples_leaf': [1, 4],
-            'ccp_alpha': [0.0, 0.1]
-        }
-
+       
     def fit(self, X_train, y_train, X_test, y_test):
         unique_classes = np.unique(y_train)
         if len(unique_classes) < 2:
@@ -40,11 +33,11 @@ class DecisionTreeC(BaseClassificationAlgo):
             }
             
             pipeline = Pipeline([
-                ('dt', SklearnDecisionTreeClassifier(
+                ('dt', SklearnDecisionTreeClassifier(  # nosonar - False positive per parametri dinamici
                     **params,
                     random_state=42
                 ))
-            ])
+            ], memory=None)
             
             scores = cross_val_score(pipeline, X_train, y_train.values, cv=5, scoring=scoring_metric, n_jobs=-1)
             return scores.mean()
@@ -59,11 +52,11 @@ class DecisionTreeC(BaseClassificationAlgo):
         
         best_p = study.best_params
         self.model = Pipeline([
-            ('dt', SklearnDecisionTreeClassifier(
+            ('dt', SklearnDecisionTreeClassifier(  # nosonar - False positive per parametri dinamici
                 **best_p,
                 random_state=42
             ))
-        ])
+        ], memory=None)
         
         self.model.fit(X_train, y_train.values)
                 
@@ -111,13 +104,6 @@ class DecisionTreeC(BaseClassificationAlgo):
 class DecisionTreeR(BaseRegressionAlgo):
     def __init__(self, dataset: str):
         super().__init__(dataset=dataset, model_name="Decision Tree R")
-        self.param_grid = {    
-            'criterion': ['squared_error', 'absolute_error'],
-            'max_depth': [None, 5, 20],
-            'min_samples_split': [2, 10],
-            'min_samples_leaf': [1, 4],
-            'ccp_alpha': [0.0, 0.1]
-        }
 
     def fit(self, X_train, y_train, X_test, y_test):
                 
@@ -131,11 +117,11 @@ class DecisionTreeR(BaseRegressionAlgo):
             }
             
             pipeline = Pipeline([
-                ('dt', SklearnDecisionTreeRegressor(
+                ('dt', SklearnDecisionTreeRegressor(  # nosonar - False positive per parametri dinamici
                     **params,
                     random_state=42
                 ))
-            ])
+            ], memory=None)
             
             scores = cross_val_score(pipeline, X_train, y_train.values, cv=5, scoring='neg_mean_squared_error', n_jobs=-1)
             return scores.mean()
@@ -150,11 +136,11 @@ class DecisionTreeR(BaseRegressionAlgo):
         
         best_p = study.best_params
         self.model = Pipeline([
-            ('dt', SklearnDecisionTreeRegressor(
+            ('dt', SklearnDecisionTreeRegressor( # nosonar - False positive per parametri dinamici
                 **best_p,
                 random_state=42
             ))
-        ])
+        ], memory=None)
         
         self.model.fit(X_train, y_train.values)
                 
