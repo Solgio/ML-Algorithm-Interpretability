@@ -94,7 +94,7 @@ def analyze_statistics(metrics_path, coefficients_path, image_path, algo_name, a
     raw_coefficients = load_coefficients(coefficients_path)
     
     logging.info(f"Start analyzing statistics for image: {image_path}")
-    base64_image = encode_image(image_path)
+    base64_images = encode_image(image_path)
     logging.info("Image encoded successfully, preparing prompt for LLM.")
 
     prompt_text = (
@@ -110,15 +110,20 @@ def analyze_statistics(metrics_path, coefficients_path, image_path, algo_name, a
     
     results = {}
     
-    with concurrent.futures.ThreadPoolExecutor() as executor:
-        futures = executor.map(
-            lambda m: fetch_model_response(m, role_sistem, prompt_text, base64_image),
-            model_list_img_supp
-            # + model_list_text
-        )
+    with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+        futures = {
+            executor.submit(fetch_model_response, m, role_sistem, prompt_text, base64_images): m 
+            for m in model_list_img_supp #+ model_list_text
+        }
         
-        for model_name, content in futures:
-            results[model_name] = content
+        for future in concurrent.futures.as_completed(futures):
+            model_name = futures[future]
+            try:
+                model_name, content = future.result()
+                results[model_name] = content
+            except Exception as e:
+                logging.error(f"Eccezione per il modello {model_name}: {e}")
+                results[model_name] = f"Errore: {str(e)}"
 
     return results
 
