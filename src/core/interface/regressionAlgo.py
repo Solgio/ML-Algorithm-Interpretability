@@ -13,9 +13,9 @@ from .baseMLAlgo import BaseMLAlgo
 
 class BaseRegressionAlgo(BaseMLAlgo):
     @abstractmethod
-    def __init__(self, model_name: str, dataset: str):
+    def __init__(self, model_name: str, dataset: str, param_grid: dict=None):
         self.model_name = model_name
-        super().__init__(model_name=model_name, task_type="regression", dataset=dataset)
+        super().__init__(model_name=model_name, task_type="regression", dataset=dataset, param_grid=param_grid)
         
     @abstractmethod
     def fit(self, X_train, y_train, X_test, y_test):
@@ -64,12 +64,12 @@ class BaseRegressionAlgo(BaseMLAlgo):
     def generate_algorithm_specific_plots(self) -> dict:
         pass
     
-    def SHAP_analysis(self, x_sample, dependence_variable):
+    def SHAP_analysis(self, x_sample, dependence_variable=None):
         try:
             explainer = shap.Explainer(self.model, x_sample)
             shap_values = explainer(x_sample)
             print("\nSHAP values calculated successfully!")
-        except Exception as e:
+        except Exception:
             pred_fn = self.model.predict
             explainer = shap.Explainer(pred_fn, x_sample)
             shap_values = explainer(x_sample)
@@ -78,21 +78,22 @@ class BaseRegressionAlgo(BaseMLAlgo):
         plt.savefig(summary_path)
         plt.close()
         
-        sample_ind = 20
-        shap.partial_dependence_plot(
-            dependence_variable,
-            self.model.predict,
-            x_sample,
-            model_expected_value=True,
-            feature_expected_value=True,
-            ice=True,
-            shap_values=shap_values[sample_ind : sample_ind + 1, :],
-            show=False
-        )
-        pdp_path = os.path.join(self.PLOT_DIR, f"partial_dependence_{dependence_variable}_sample_{sample_ind}.png")
-        plt.savefig(pdp_path)
-        plt.close()
-        #shap.plots.beeswarm(shap_values)
+        if dependence_variable is not None:
+            sample_ind = 20
+            shap.partial_dependence_plot(
+                dependence_variable,
+                self.model.predict,
+                x_sample,
+                model_expected_value=True,
+                feature_expected_value=True,
+                ice=True,
+                shap_values=shap_values[sample_ind : sample_ind + 1, :],
+                show=False
+            )
+            pdp_path = os.path.join(self.PLOT_DIR, f"partial_dependence_{dependence_variable}_sample_{sample_ind}.png")
+            plt.savefig(pdp_path)
+            plt.close()
+            #shap.plots.beeswarm(shap_values)
         
         shap.plots.heatmap(shap_values, show=False)
         heatmap_path = os.path.join(self.PLOT_DIR, "shap_heatmap.png")

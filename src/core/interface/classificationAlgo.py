@@ -11,10 +11,10 @@ from .baseMLAlgo import BaseMLAlgo
 
 class BaseClassificationAlgo(BaseMLAlgo):
     @abstractmethod
-    def __init__(self, model_name: str, dataset: str):
+    def __init__(self, model_name: str, dataset: str, param_grid: dict=None):
         self.model_name = model_name
-        super().__init__(model_name=model_name, task_type="classification", dataset=dataset)
-    
+        super().__init__(model_name=model_name, task_type="classification", dataset=dataset, param_grid=param_grid)
+
     @abstractmethod
     def fit(self, X_train, y_train, X_test, y_test):
         pass
@@ -115,7 +115,7 @@ class BaseClassificationAlgo(BaseMLAlgo):
     def generate_algorithm_specific_plots(self) -> dict:
         pass
     
-    def SHAP_analysis(self, x_sample, dependence_variable):
+    def SHAP_analysis(self, x_sample, dependence_variable=None):
         if hasattr(self.model, "predict_proba"):
             pred_fn = lambda x: self.model.predict_proba(x)[:, 1]
         elif hasattr(self.model, "decision_function"):
@@ -141,20 +141,21 @@ class BaseClassificationAlgo(BaseMLAlgo):
         plt.savefig(summary_path)
         plt.close()
         
-        sample_ind = 20
-        shap.partial_dependence_plot(
-            dependence_variable,
-            pred_fn,
-            x_sample,
-            model_expected_value=True,
-            feature_expected_value=True,
-            ice=False,
-            shap_values=shap_values[sample_ind : sample_ind + 1, :],
-            show=False
-        )
-        pdp_path = os.path.join(self.PLOT_DIR, f"partial_dependence_{dependence_variable}_sample_{sample_ind}.png")
-        plt.savefig(pdp_path)
-        plt.close()
+        if dependence_variable is not None:
+            sample_ind = 20
+            shap.partial_dependence_plot(
+                dependence_variable,
+                pred_fn,
+                x_sample,
+                model_expected_value=True,
+                feature_expected_value=True,
+                ice=False,
+                shap_values=shap_values[sample_ind : sample_ind + 1, :],
+                show=False
+            )
+            pdp_path = os.path.join(self.PLOT_DIR, f"partial_dependence_{dependence_variable}_sample_{sample_ind}.png")
+            plt.savefig(pdp_path)
+            plt.close()
         
         values_to_plot = shap_values.values if hasattr(shap_values, 'values') else shap_values
         

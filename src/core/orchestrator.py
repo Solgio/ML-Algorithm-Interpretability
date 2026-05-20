@@ -30,7 +30,8 @@ def _load_model(algo_info: dict, dataset_name: str):
     """
     module = importlib.import_module(algo_info["module"])
     cls    = getattr(module, algo_info["class"])
-    return cls(dataset=dataset_name)
+    param_grid = algo_info.get("param_grid_attr", {})
+    return cls(dataset=dataset_name, param_grid=param_grid)
 
 def step_load_data(model, dataset_cfg: dict, test_size: float):
     log.info("━━  STEP 1: Caricamento dati")

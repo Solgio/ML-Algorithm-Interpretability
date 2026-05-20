@@ -14,16 +14,6 @@ from interface.regressionAlgo import BaseRegressionAlgo
 class RandomForestC(BaseClassificationAlgo):
     def __init__(self, dataset: str):
         super().__init__(dataset=dataset, model_name="Random Forest C")
-        self.param_grid = {
-            'n_estimators': [100, 200],
-            'max_depth': [None, 10, 20],
-            'min_samples_split': [2, 10],
-            'min_samples_leaf': [1, 4],
-            'max_features': ['sqrt', 'log2'],
-            'ccp_alpha': [0.0, 0.1],
-            'criterion': ['gini', 'entropy', 'log_loss'],
-            'min_impurity_decrease': [0.0, 0.1]
-        }
 
     def fit(self, X_train, y_train, X_test, y_test):
         unique_classes = np.unique(y_train)
@@ -45,12 +35,12 @@ class RandomForestC(BaseClassificationAlgo):
             }
             
             pipeline = Pipeline([
-                ('rf', RandomForestClassifier(
+                ('rf', RandomForestClassifier( # nosonar - False positive per parametri dinamici
                     **params,
                     random_state=42,
                     oob_score=True
                 ))
-            ])
+            ], memory=None)
             
             scores = cross_val_score(pipeline, X_train, y_train.values, cv=5, scoring=scoring_metric, n_jobs=-1)
             return scores.mean()
@@ -64,12 +54,12 @@ class RandomForestC(BaseClassificationAlgo):
         
         best_p = study.best_params
         self.model = Pipeline([
-            ('rf', RandomForestClassifier(
+            ('rf', RandomForestClassifier(  # nosonar - False positive per parametri dinamici
                 random_state=42, 
                 oob_score=True,
                 **best_p
             ))
-        ])
+        ], memory=None)
         self.model.fit(X_train, y_train.values)
                 
         self.X = X_test
@@ -125,16 +115,6 @@ class RandomForestC(BaseClassificationAlgo):
 class RandomForestR(BaseRegressionAlgo):
     def __init__(self, dataset: str):
         super().__init__(dataset=dataset, model_name="Random Forest R")
-        self.param_grid = {
-            'n_estimators': [100, 200],
-            'max_depth': [None, 10, 20],
-            'min_samples_split': [2, 10],
-            'min_samples_leaf': [1, 4],
-            'max_features': ['sqrt', 'log2'],
-            'ccp_alpha': [0.0, 0.1],
-            'criterion': ['squared_error', 'absolute_error', 'friedman_mse', 'poisson'],
-            'min_impurity_decrease': [0.0, 0.1]
-        }
 
     def fit(self, X_train, y_train, X_test, y_test):
         def objective(trial):
@@ -150,12 +130,12 @@ class RandomForestR(BaseRegressionAlgo):
             }
             
             pipeline = Pipeline([
-                ('rf', RandomForestRegressor(
+                ('rf', RandomForestRegressor(  # nosonar - False positive per parametri dinamici
                     **params,
                     random_state=42,
                     oob_score=True
                 ))
-            ])
+            ], memory=None)
             
             scores = cross_val_score(pipeline, X_train, y_train.values, cv=5, scoring='neg_mean_squared_error', n_jobs=-1)
             return scores.mean()
@@ -170,11 +150,11 @@ class RandomForestR(BaseRegressionAlgo):
         
         best_p = study.best_params
         self.model = Pipeline([
-            ('rf', RandomForestRegressor(
+            ('rf', RandomForestRegressor(  # nosonar - False positive per parametri dinamici
                 **best_p,
                 random_state=42
             ))
-        ])
+        ], memory=None)
         
         self.model.fit(X_train, y_train.values)
         self.X = X_test
