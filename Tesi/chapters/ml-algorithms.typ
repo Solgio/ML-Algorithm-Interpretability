@@ -1,7 +1,7 @@
 #pagebreak(to:"odd")
 
-= Descrizione dello stage
-<cap:descrizione-stage>
+= ML algorithms analysis
+<cap:ml-algorithms-analysis>
 
 #v(1em)
 #text(style: "italic", [

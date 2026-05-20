@@ -1,40 +1,16 @@
-#import "../config/thesis-config.typ": useCase
-
 #pagebreak(to:"odd")
 
-= Analisi dei requisiti
-<cap:analisi-requisiti>
+= Stage description
+<cap:stage-description>
 
 #v(1em)
 #text(style: "italic", [
-    Breve introduzione al capitolo
+    In this chapter, we will describe the stage of the internship, starting from the company where the internship took place, the project idea, the requirements and the design of the product, to the testing phase.
 ])
 
 #v(1em)
 
-== Casi d'uso
 
-Per lo studio dei casi di utilizzo del prodotto sono stati creati dei diagrammi.
-I diagrammi dei casi d'uso (in inglese _Use Case Diagram_) sono diagrammi di tipo _UML_ (*TODO* AGGIUNGI GLOSSARIO in qualche modo) dedicati alla descrizione delle funzioni o servizi offerti da un sistema, così come sono percepiti e utilizzati dagli attori che interagiscono col sistema stesso.
-Essendo il progetto finalizzato alla creazione di un tool per l'automazione di un processo, le interazioni da parte dell'utilizzatore devono essere ovviamente ridotte allo stretto necessario. Per questi motivi i diagrammi dei casi d'uso risultano semplici e in numero ridotto.
-
-#figure(
-    image("../images/usecase/scenario-principale.png", width: 100%),
-    caption: "Use Case - UC0: Scenario principale"
-) <uc:scenario-principale>
-
-// L'ordine e i nomi delle chiavi sono arbitrari, vedere la funzione nel file ..config/thesis-config.typ
-#useCase(
-    (
-        number: 0,
-        name: "Apertura plugin",
-        "Attore principale": "Sviluppatore applicativi",
-        "Precondizioni": "Lo sviluppatore è entrato nel plug-in di simulazione all'interno dell'IDE",
-        "Postcondizioni": "Il sistema è pronto per permettere una nuova interazione",
-        "Scenario principale": "La finestra di simulazione mette a disposizione i comandi per configurare, registrare o eseguire un test"
-    )
-)
-<uc:0>
 
 == Tracciamento dei requisiti
 

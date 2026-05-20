@@ -1,7 +1,7 @@
 #pagebreak(to:"odd")
 
-= Verifica e validazione
-<cap:verifica-validazione>
+= Prompt Engineering
+<cap:prompt-engineering>
 
 #v(1em)
 #text(style: "italic", [
