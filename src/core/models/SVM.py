@@ -18,13 +18,6 @@ class SVM(BaseClassificationAlgo):
     def __init__(self, dataset: str):
         super().__init__(model_name="SVM", dataset=dataset)
         self.scaler = StandardScaler()
-        self.param_grid = {
-              'C': [0.1, 1, 10, 100],   
-              'gamma':['scale', 'auto', 0.1, 0.01, 0.001, 0.0001],
-              'kernel': ['linear', 'rbf', 'poly', 'sigmoid'],
-              'class_weight': [None, 'balanced'],
-              'degree': [2, 3, 4]
-              }
 
     def fit(self, X_train, y_train, X_test, y_test):
         
@@ -44,7 +37,7 @@ class SVM(BaseClassificationAlgo):
             pipeline = Pipeline([
                 ('scaler', StandardScaler()),
                 ('svc', sklearn.svm.SVC(C=c, kernel=kernel, gamma=gamma, degree=degree, class_weight=class_weight, random_state=42, probability=True))
-            ])
+            ], memory=None)
             
             scores = cross_val_score(pipeline, X_train, y_train.values, cv=5, scoring=scoring_metric, n_jobs=-1)
             return scores.mean()
@@ -70,7 +63,7 @@ class SVM(BaseClassificationAlgo):
                 probability=True,
                 random_state=42
             ))
-        ])
+        ], memory=None)
         
         self.model.fit(X_train, y_train.values)
         final_svc = self.model.named_steps['svc']
@@ -144,30 +137,31 @@ class SVM(BaseClassificationAlgo):
             pred_fn = lambda x: self.model.decision_function(x)[:, 1] if len(self.model.classes_)>2 else self.model.decision_function(x)
         else:
             pred_fn = self.model.predict
-        try:
-            explainer = shap.Explainer(self.model, x_sample)
-            shap_values = explainer(x_sample, check_additivity=False)
-        except TypeError:
-            explainer = shap.Explainer(pred_fn, x_sample)
-            try:
-                shap_values = explainer(x_sample)
-            except TypeError:
-                shap_values = explainer(x_sample)
+            
+        print("\nInizio calcolo SHAP ottimizzato per SVM (potrebbe richiedere qualche secondo)...")
+    
+        background_sample = shap.sample(x_sample, 20)
+        x_eval_sample = x_sample.iloc[:100] if hasattr(x_sample, 'iloc') else x_sample[:100]
+        explainer = shap.Explainer(pred_fn, background_sample)
+        
+        shap_values = explainer(x_eval_sample)
             
         if len(shap_values.shape) == 3:
             shap_values = shap_values[:, :, 1]
-        print("\nSHAP values calculated successfully!")
+            
+        print("SHAP values calcolati con successo in formato ridotto!")
         
-        shap.summary_plot(shap_values, x_sample, plot_type="bar", show=False)
+        shap.summary_plot(shap_values, x_eval_sample, plot_type="bar", show=False)
         summary_path = os.path.join(self.PLOT_DIR, "shap_summary.png")
-        plt.savefig(summary_path)
+        plt.savefig(summary_path, bbox_inches="tight")
         plt.close()
         
-        sample_ind = 20
+        sample_ind = min(20, len(x_eval_sample) - 1)
+        
         shap.partial_dependence_plot(
             dependence_variable,
             pred_fn,
-            x_sample,
+            x_eval_sample,
             model_expected_value=True,
             feature_expected_value=True,
             ice=False,
@@ -175,7 +169,7 @@ class SVM(BaseClassificationAlgo):
             show=False
         )
         pdp_path = os.path.join(self.PLOT_DIR, f"partial_dependence_{dependence_variable}_sample_{sample_ind}.png")
-        plt.savefig(pdp_path)
+        plt.savefig(pdp_path, bbox_inches="tight")
         plt.close()
         
         values_to_plot = shap_values.values if hasattr(shap_values, 'values') else shap_values
@@ -183,11 +177,11 @@ class SVM(BaseClassificationAlgo):
         shap.dependence_plot(
             dependence_variable,
             values_to_plot,
-            x_sample,
+            x_eval_sample,
             show=False
         )
         effect_plot_path = os.path.join(self.PLOT_DIR, f"effect_plot_{dependence_variable}.png")
-        plt.savefig(effect_plot_path)
+        plt.savefig(effect_plot_path, bbox_inches="tight")
         plt.close()
         
         return {
