@@ -1,7 +1,7 @@
 #pagebreak(to:"odd")
 
-= Progettazione e codifica
-<cap:progettazione-codifica>
+= Design and code \ implementation
+<cap:code-implementation>
 
 #v(1em)
 #text(style: "italic", [

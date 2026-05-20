@@ -12,11 +12,11 @@
 #counter(page).update(1)
 
 #include "./chapters/introduction.typ"
-#include "./chapters/process.typ"
-#include "./chapters/stage-description.typ"
-#include "./chapters/requirements.typ"
-#include "./chapters/product-design.typ"
-#include "./chapters/product-testing.typ"
+#include "chapters/background.typ"
+#include "chapters/ml-algorithms.typ"
+#include "chapters/stage.typ"
+#include "chapters/code-implementation.typ"
+#include "chapters/prompt.typ"
 #include "./chapters/conclusion.typ"
 
 // // Appendix
