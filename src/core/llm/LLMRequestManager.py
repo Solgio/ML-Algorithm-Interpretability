@@ -122,7 +122,7 @@ def analyze_statistics(metrics_path, coefficients_path, image_path, algo_name, a
                 model_name, content = future.result()
                 results[model_name] = content
             except Exception as e:
-                logging.error(f"Eccezione per il modello {model_name}: {e}")
+                logging.exception(f"Eccezione per il modello {model_name}: {e}")
                 results[model_name] = f"Errore: {str(e)}"
 
     return results
