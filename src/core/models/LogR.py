@@ -8,8 +8,8 @@ from interface.classificationAlgo import BaseClassificationAlgo
 from sklearn.linear_model import LogisticRegression as SklearnLogisticRegression
         
 class LogisticRegression(BaseClassificationAlgo):
-    def __init__(self, dataset: str):
-        super().__init__(model_name="Logistic Regression", dataset=dataset)
+    def __init__(self, dataset: str, param_grid: dict = None):
+        super().__init__(model_name="Logistic Regression", dataset=dataset, param_grid=param_grid)
         self.scaler = StandardScaler()
 
     def fit(self, X_train, y_train, X_test, y_test):

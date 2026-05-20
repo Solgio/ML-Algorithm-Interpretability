@@ -74,7 +74,7 @@ ALGORITHMS = {
               'gamma':['scale', 'auto', 0.1, 0.01, 0.001, 0.0001],
               'kernel': ['linear', 'rbf', 'poly', 'sigmoid'],
               'class_weight': [None, 'balanced'],
-              'degree': [2, 3, 4]
+              'degree': [2, 4]
               }
         },
         "Decision tree":{

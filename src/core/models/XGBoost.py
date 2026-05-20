@@ -12,8 +12,8 @@ from interface.classificationAlgo import BaseClassificationAlgo
 from interface.regressionAlgo import BaseRegressionAlgo
 
 class XGBoostC(BaseClassificationAlgo):
-    def __init__(self, dataset: str):
-        super().__init__(dataset=dataset, model_name="XGBoost C")
+    def __init__(self, dataset: str, param_grid: dict = None):
+        super().__init__(dataset=dataset, model_name="XGBoost C", param_grid=param_grid)
 
     def fit(self, X_train, y_train, X_test, y_test):
         self.le = LabelEncoder()

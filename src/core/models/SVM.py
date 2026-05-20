@@ -15,12 +15,11 @@ from sklearn.inspection import DecisionBoundaryDisplay
 from interface.classificationAlgo import BaseClassificationAlgo
         
 class SVM(BaseClassificationAlgo):
-    def __init__(self, dataset: str):
-        super().__init__(model_name="SVM", dataset=dataset)
+    def __init__(self, dataset: str, param_grid: dict = None):
+        super().__init__(model_name="SVM", dataset=dataset, param_grid=param_grid)
         self.scaler = StandardScaler()
 
     def fit(self, X_train, y_train, X_test, y_test):
-        
         unique_classes = np.unique(y_train)
         if len(unique_classes) < 2:
             raise ValueError(f"Dati invalidi: y_train contiene una sola classe {unique_classes}. "
@@ -28,7 +27,7 @@ class SVM(BaseClassificationAlgo):
         scoring_metric = 'roc_auc_ovr' if len(unique_classes) > 2 else 'roc_auc'
         
         def objective(trial):
-            c = trial.suggest_float('C', 1e-2, 1e2, log=True)   
+            c = trial.suggest_float('C',self.param_grid['C'][0], self.param_grid['C'][1], log=True)   
             kernel = trial.suggest_categorical('kernel', self.param_grid['kernel'])
             gamma = trial.suggest_categorical('gamma', self.param_grid['gamma'])
             degree = trial.suggest_int('degree', self.param_grid['degree'][0], self.param_grid['degree'][1]) if kernel == 'poly' else 3
