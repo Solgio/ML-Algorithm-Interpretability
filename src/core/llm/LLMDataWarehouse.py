@@ -19,11 +19,11 @@ general_prompt = (
 
 model_list_img_supp = [
         "gemma4:e4b",
-        "gemma3:1b",
+        #"gemma3:1b",
         "qwen3.6:27b",
         "gemma3:27b",
         "gemma4:26b",
-        "qwen3.5:2b",
+        #"qwen3.5:2b",
     ]
     
 model_list_text = [
