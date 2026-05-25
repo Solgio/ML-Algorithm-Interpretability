@@ -99,12 +99,12 @@ def analyze_statistics(metrics_path, coefficients_path, image_path, algo_name, a
 
     prompt_text = (
         f"Contesto analisi:\n\n"
-        f"ALGORITMO: {algo_name}\n"
-        f"Tipo di algoritmo: {algo_type}\n"
-        f"Descrizione del dataset: {dataset_description}\n"
-        f"DATI NUMERICI:\n{raw_metrics}\n\n"
-        f"COEFFICIENTI: \n{raw_coefficients}\n\n"
-        f"ISTRUZIONI SPECIFICHE: {algo_prompt}\n"
+        f"# ALGORITMO: {algo_name}\n"
+        f"## Tipo di algoritmo: {algo_type}\n"
+        f"## Descrizione del dataset: {dataset_description}\n"
+        f"# DATI NUMERICI:\n{raw_metrics}\n\n"
+        f"# COEFFICIENTI: \n{raw_coefficients}\n\n"
+        f"# ISTRUZIONI SPECIFICHE: {algo_prompt}\n"
         f"{general_prompt}\n"
     )
     
