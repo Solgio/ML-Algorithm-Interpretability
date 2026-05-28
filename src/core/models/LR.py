@@ -66,6 +66,15 @@ class LinearRegression(BaseRegressionAlgo):
         plt.savefig(weight_path, bbox_inches='tight')
         plt.close()
         plot_paths["weight_plot"] = weight_path
+        
+        plt.figure(figsize=(8,6))
+        sns.histplot(residuals, kde=True, color='purple')
+        plt.title('Distribuzione dei Residui')
+        residual_dist_path = os.path.join(self.PLOT_DIR, "residual_distribution.png")
+        plt.savefig(residual_dist_path)
+        plt.close()
+        plot_paths["residual_distribution"] = residual_dist_path
+        
 
         return plot_paths
 
