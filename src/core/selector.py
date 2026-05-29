@@ -19,7 +19,7 @@ ALGORITHMS = {
             "description": "Albero decisionale (sklearn)",
             "prompt": "Questo modello possiede un'elevata tracciabilità locale basata su una spiegabilità strutturale.Spiega le decisioni come una sequenza di regole logiche 'se... allora' (cammino decisionale) che rispecchiano fedelmente il ragionamento umano. Utilizza la feature importance globale per evidenziare qual è il criterio di sbarramento fondamentale al vertice dell'albero.",
             "param_grid": {
-            'criterion': ['gini', 'entropy'],
+            'criterion': ['squared_error', 'absolute_error', 'friedman_mse', 'poisson'],
             'max_depth': [None, 5, 20],
             'min_samples_split': [2, 10],
             'min_samples_leaf': [1, 4],
@@ -102,7 +102,7 @@ ALGORITHMS = {
             'min_samples_leaf': [1, 4],
             'max_features': ['sqrt', 'log2'],
             'ccp_alpha': [0.0, 0.1],
-            'criterion': ['squared_error', 'absolute_error', 'friedman_mse', 'poisson'],
+            'criterion': ['gini', 'entropy', 'log_loss'],
             'min_impurity_decrease': [0.0, 0.1]
         }
         },

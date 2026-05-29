@@ -13,9 +13,9 @@ from .baseMLAlgo import BaseMLAlgo
 
 class BaseRegressionAlgo(BaseMLAlgo):
     @abstractmethod
-    def __init__(self, model_name: str, dataset: str, param_grid: dict=None):
+    def __init__(self, model_name: str, dataset: str, dataset_path: str, param_grid: dict=None):
         self.model_name = model_name
-        super().__init__(model_name=model_name, task_type="regression", dataset=dataset, param_grid=param_grid)
+        super().__init__(model_name=model_name, task_type="regression", dataset=dataset, dataset_path=dataset_path, param_grid=param_grid)
         
     @abstractmethod
     def fit(self, X_train, y_train, X_test, y_test):

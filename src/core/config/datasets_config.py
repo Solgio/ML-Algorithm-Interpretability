@@ -6,7 +6,7 @@ DATASETS = {
         "description": "Dataset che raccoglie una serie di metriche relative a studenti universitari e alle loro skills, esperienze lavorative, caratteristiche e risultati in test. L'obiettivo è prevedere quale sarà lo stipendio di un neolaureato in base a queste caratteristiche.",
         "source": url_student_dataset,
         "path": path_student_dataset,
-        "drop_columns": ['salary_lpa', 'placed', 'student_id'],
+        "drop_columns": ['placed', 'student_id'],
         "objective_column": "salary_lpa",
         "binary_categorical_features": ['student_id', 'branch', 'company_type', 'job_role', 'dsa_skill', 'ml_skill', 'web_dev_skill', 'placed'],
         "shap_dependence_variable": ["cgpa"]
@@ -16,7 +16,7 @@ DATASETS = {
         "description": "Dataset che raccoglie una serie di metriche relative a studenti universitari e alle loro skills, esperienze lavorative, caratteristiche e risultati in test. L'obiettivo è prevedere quale in quale tipo di azienda un neolaureato verrà collocato in base a queste caratteristiche.",
         "source": url_student_dataset,
         "path": path_student_dataset,
-        "drop_columns": ['salary_lpa', 'placed', 'student_id', 'job_role', 'company_type'],
+        "drop_columns": ['salary_lpa', 'placed', 'student_id', 'job_role'],
         "objective_column": "company_type",
         "binary_categorical_features": ['student_id', 'branch', 'company_type', 'job_role', 'dsa_skill', 'ml_skill', 'web_dev_skill', 'placed'],
         "shap_dependence_variable": ["cgpa"]
@@ -26,7 +26,7 @@ DATASETS = {
         "description": "Dataset che raccoglie una serie di metriche relative a studenti universitari e alle loro skills, esperienze lavorative, caratteristiche e risultati in test. L'obiettivo è prevedere se un neolaureato sarà collocato in un'azienda in base a queste caratteristiche.",
         "source": url_student_dataset,
         "path": path_student_dataset,
-        "drop_columns": ['salary_lpa', 'student_id', 'company_type', 'job_role', 'placed'],
+        "drop_columns": ['salary_lpa', 'student_id', 'company_type', 'job_role'],
         "objective_column": "placed",
         "binary_categorical_features": ['student_id', 'branch', 'company_type', 'job_role', 'dsa_skill', 'ml_skill', 'web_dev_skill', 'placed'],
         "shap_dependence_variable": ["cgpa"]

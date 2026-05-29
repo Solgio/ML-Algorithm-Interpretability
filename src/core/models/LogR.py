@@ -8,8 +8,8 @@ from interface.classificationAlgo import BaseClassificationAlgo
 from sklearn.linear_model import LogisticRegression as SklearnLogisticRegression
         
 class LogisticRegression(BaseClassificationAlgo):
-    def __init__(self, dataset: str, param_grid: dict = None):
-        super().__init__(model_name="Logistic Regression", dataset=dataset, param_grid=param_grid)
+    def __init__(self, dataset: str, dataset_path: str, param_grid: dict = None):
+        super().__init__(model_name="Logistic Regression", dataset=dataset, dataset_path=dataset_path, param_grid=param_grid)
         self.scaler = StandardScaler()
 
     def fit(self, X_train, y_train, X_test, y_test):
@@ -84,12 +84,11 @@ class LogisticRegression(BaseClassificationAlgo):
 
 if __name__ == "__main__":
     default_dataset = "Student Salary Dataset"
-    logr_model = LogisticRegression(dataset=default_dataset)
-    dataset_path = data.DATASETS[default_dataset]["path"]
+    logr_model = LogisticRegression(dataset=default_dataset, dataset_path=data.DATASETS[default_dataset]["path"])
     drop_columns = data.DATASETS[default_dataset]["drop_columns"]
     objective_column = data.DATASETS[default_dataset]["objective_column"]
 
-    logr_model.import_data(dataset_path, drop_columns, objective_column)
+    logr_model.import_data(logr_model.dataset_path, drop_columns, objective_column)
     logr_model.fit(logr_model.X, logr_model.y, None, None)
     logr_model.calculate_metrics()
     logr_model.generate_plots()

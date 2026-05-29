@@ -12,8 +12,8 @@ from interface.classificationAlgo import BaseClassificationAlgo
 from interface.regressionAlgo import BaseRegressionAlgo
 
 class XGBoostC(BaseClassificationAlgo):
-    def __init__(self, dataset: str, param_grid: dict = None):
-        super().__init__(dataset=dataset, model_name="XGBoost C", param_grid=param_grid)
+    def __init__(self, dataset: str, dataset_path: str, param_grid: dict = None):
+        super().__init__(dataset=dataset, dataset_path=dataset_path, model_name="XGBoost C", param_grid=param_grid)
 
     def fit(self, X_train, y_train, X_test, y_test):
         self.le = LabelEncoder()
@@ -151,8 +151,8 @@ class XGBoostC(BaseClassificationAlgo):
 
 
 class XGBoostR(BaseRegressionAlgo):
-    def __init__(self, dataset: str):
-        super().__init__(dataset=dataset, model_name="XGBoost R")
+    def __init__(self, dataset: str, dataset_path: str, param_grid: dict = None):
+        super().__init__(dataset=dataset, dataset_path=dataset_path, model_name="XGBoost R", param_grid=param_grid)
 
     def fit(self, X_train, y_train, X_test, y_test):
         
@@ -266,12 +266,11 @@ class XGBoostR(BaseRegressionAlgo):
 if __name__ == "__main__":
     print("--- Test XGBoost Classification ---")
     default_dataset = "Student Placed-Not Placed Dataset"
-    XGB_model_c = XGBoostC(dataset=default_dataset)
-    dataset_path_c = data.DATASETS[default_dataset]["path"]
+    XGB_model_c = XGBoostC(dataset=default_dataset, dataset_path=data.DATASETS[default_dataset]["path"])
     drop_columns_c = data.DATASETS[default_dataset]["drop_columns"]
     objective_column_c = data.DATASETS[default_dataset]["objective_column"]
 
-    XGB_model_c.import_data(dataset_path_c, drop_columns_c, objective_column_c)
+    XGB_model_c.import_data(XGB_model_c.dataset_path, drop_columns_c, objective_column_c)
     XGB_model_c.fit(XGB_model_c.X, XGB_model_c.y, None, None)
     XGB_model_c.calculate_metrics()
     XGB_model_c.generate_plots()
@@ -280,12 +279,11 @@ if __name__ == "__main__":
 
     print("\n--- Test XGBoost Regression ---")
     default_dataset = "Student Salary Dataset"
-    XGB_model_r = XGBoostR(dataset=default_dataset)
-    dataset_path_r = data.DATASETS[default_dataset]["path"]
+    XGB_model_r = XGBoostR(dataset=default_dataset, dataset_path=data.DATASETS[default_dataset]["path"])
     drop_columns_r = data.DATASETS[default_dataset]["drop_columns"]
     objective_column_r = data.DATASETS[default_dataset]["objective_column"]
 
-    XGB_model_r.import_data(dataset_path_r, drop_columns_r, objective_column_r)
+    XGB_model_r.import_data(XGB_model_r.dataset_path, drop_columns_r, objective_column_r)
     XGB_model_r.fit(XGB_model_r.X, XGB_model_r.y, None, None)
     XGB_model_r.calculate_metrics()
     XGB_model_r.generate_plots()

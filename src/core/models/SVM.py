@@ -15,8 +15,8 @@ from sklearn.inspection import DecisionBoundaryDisplay
 from interface.classificationAlgo import BaseClassificationAlgo
         
 class SVM(BaseClassificationAlgo):
-    def __init__(self, dataset: str, param_grid: dict = None):
-        super().__init__(model_name="SVM", dataset=dataset, param_grid=param_grid)
+    def __init__(self, dataset: str, dataset_path: str, param_grid: dict = None):
+        super().__init__(dataset=dataset, dataset_path=dataset_path, model_name="SVM", param_grid=param_grid)
         self.scaler = StandardScaler()
 
     def fit(self, X_train, y_train, X_test, y_test):
@@ -191,12 +191,11 @@ class SVM(BaseClassificationAlgo):
 
 if __name__ == "__main__":
     default_dataset = "Student Placed-Not Placed Dataset"
-    svm_model = SVM(dataset=default_dataset)
-    dataset_path = data.DATASETS[default_dataset]["path"]
+    svm_model = SVM(dataset=default_dataset, dataset_path=data.DATASETS[default_dataset]["path"])
     drop_columns = data.DATASETS[default_dataset]["drop_columns"]
     objective_column = data.DATASETS[default_dataset]["objective_column"]
 
-    svm_model.import_data(dataset_path, drop_columns, objective_column)
+    svm_model.import_data(svm_model.dataset_path, drop_columns, objective_column)
     svm_model.fit(svm_model.X, svm_model.y, None, None)
     svm_model.calculate_metrics()
     svm_model.generate_plots()
