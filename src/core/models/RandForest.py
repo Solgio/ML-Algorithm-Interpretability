@@ -12,8 +12,8 @@ from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 from interface.regressionAlgo import BaseRegressionAlgo
 
 class RandomForestC(BaseClassificationAlgo):
-    def __init__(self, dataset: str, param_grid: dict = None):
-        super().__init__(dataset=dataset, model_name="Random Forest C", param_grid=param_grid)
+    def __init__(self, dataset: str, dataset_path: str, param_grid: dict = None):
+        super().__init__(dataset=dataset, dataset_path=dataset_path, model_name="Random Forest C", param_grid=param_grid)
 
     def fit(self, X_train, y_train, X_test, y_test):
         unique_classes = np.unique(y_train)
@@ -113,8 +113,8 @@ class RandomForestC(BaseClassificationAlgo):
         return plot_paths
     
 class RandomForestR(BaseRegressionAlgo):
-    def __init__(self, dataset: str, param_grid: dict = None):
-        super().__init__(dataset=dataset, model_name="Random Forest R", param_grid=param_grid)
+    def __init__(self, dataset: str, dataset_path: str, param_grid: dict = None):
+        super().__init__(dataset=dataset, dataset_path=dataset_path, model_name="Random Forest R", param_grid=param_grid)
 
     def fit(self, X_train, y_train, X_test, y_test):
         def objective(trial):
@@ -209,12 +209,11 @@ if __name__ == "__main__":
     
     print("\n--- Test Random Forest Classification ---")
     default_dataset = "Student Placed-Not Placed Dataset"
-    rf_model_c = RandomForestC(dataset=default_dataset)
-    dataset_path = data.DATASETS[default_dataset]["path"]
+    rf_model_c = RandomForestC(dataset=default_dataset, dataset_path=data.DATASETS[default_dataset]["path"])
     drop_columns = data.DATASETS[default_dataset]["drop_columns"]
     objective_column = data.DATASETS[default_dataset]["objective_column"]
 
-    rf_model_c.import_data(dataset_path, drop_columns, objective_column)
+    rf_model_c.import_data(rf_model_c.dataset_path, drop_columns, objective_column)
     rf_model_c.fit(rf_model_c.X, rf_model_c.y, None, None)
     rf_model_c.calculate_metrics()
     rf_model_c.generate_plots()
@@ -223,12 +222,11 @@ if __name__ == "__main__":
 
     print("\n--- Test Random Forest Regression ---")
     default_dataset = "Student Salary Dataset"
-    rf_model_r = RandomForestR(dataset=default_dataset)
-    dataset_path = data.DATASETS[default_dataset]["path"]
+    rf_model_r = RandomForestR(dataset=default_dataset, dataset_path=data.DATASETS[default_dataset]["path"])
     drop_columns = data.DATASETS[default_dataset]["drop_columns"]
     objective_column = data.DATASETS[default_dataset]["objective_column"]
 
-    rf_model_r.import_data(dataset_path, drop_columns, objective_column)
+    rf_model_r.import_data(rf_model_r.dataset_path, drop_columns, objective_column)
     rf_model_r.fit(rf_model_r.X, rf_model_r.y, None, None)
     rf_model_r.calculate_metrics()
     rf_model_r.generate_plots()

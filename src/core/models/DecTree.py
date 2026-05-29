@@ -13,8 +13,8 @@ from interface.regressionAlgo import BaseRegressionAlgo
 from sklearn.tree import DecisionTreeRegressor as SklearnDecisionTreeRegressor
 
 class DecisionTreeC(BaseClassificationAlgo):
-    def __init__(self, dataset: str, param_grid: dict = None):
-        super().__init__(dataset=dataset, model_name="Decision Tree C", param_grid=param_grid)
+    def __init__(self, dataset: str, dataset_path: str, param_grid: dict = None):
+        super().__init__(dataset=dataset, dataset_path=dataset_path, model_name="Decision Tree C", param_grid=param_grid)
 
     def fit(self, X_train, y_train, X_test, y_test):
         unique_classes = np.unique(y_train)
@@ -102,8 +102,8 @@ class DecisionTreeC(BaseClassificationAlgo):
         return plot_paths
 
 class DecisionTreeR(BaseRegressionAlgo):
-    def __init__(self, dataset: str):
-        super().__init__(dataset=dataset, model_name="Decision Tree R")
+    def __init__(self, dataset: str, dataset_path: str, param_grid: dict = None):
+        super().__init__(dataset=dataset, dataset_path=dataset_path, model_name="Decision Tree R", param_grid = param_grid)
 
     def fit(self, X_train, y_train, X_test, y_test):
                 
@@ -190,23 +190,21 @@ if __name__ == "__main__":
     
     print("--- Test Decision Tree Classification ---")
     default_dataset = "Student Placed-Not Placed Dataset"
-    dt_model = DecisionTreeC(dataset=default_dataset)
-    dataset_path = data.DATASETS[default_dataset]["path"]
+    dt_model = DecisionTreeC(dataset=default_dataset, dataset_path=data.DATASETS[default_dataset]["path"])
     drop_columns = data.DATASETS[default_dataset]["drop_columns"]
     objective_column = data.DATASETS[default_dataset]["objective_column"]
 
-    dt_model.import_data(dataset_path, drop_columns, objective_column)
+    dt_model.import_data(dt_model.dataset_path, drop_columns, objective_column)
     dt_model.fit(dt_model.X, dt_model.y, None, None)
     dt_model.generate_algorithm_specific_plots()
     
     print("\n--- Test Decision Tree Regression ---")
     default_dataset = "Student Salary Dataset"
-    dt_model = DecisionTreeR(dataset=default_dataset)
-    dataset_path = data.DATASETS[default_dataset]["path"]
+    dt_model = DecisionTreeR(dataset=default_dataset, dataset_path=data.DATASETS[default_dataset]["path"])
     drop_columns = data.DATASETS[default_dataset]["drop_columns"]
     objective_column = data.DATASETS[default_dataset]["objective_column"]
 
-    dt_model.import_data(dataset_path, drop_columns, objective_column)
+    dt_model.import_data(dt_model.dataset_path, drop_columns, objective_column)
     dt_model.fit(dt_model.X, dt_model.y, None, None)
     dt_model.calculate_metrics()
     dt_model.generate_plots()

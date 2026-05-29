@@ -5,8 +5,8 @@ from interface.regressionAlgo import BaseRegressionAlgo
 from sklearn.linear_model import LinearRegression as SklearnLinearRegression
         
 class LinearRegression(BaseRegressionAlgo):
-    def __init__(self, dataset: str, param_grid: dict = None):
-        super().__init__(model_name="Linear Regression", dataset=dataset, param_grid=param_grid)
+    def __init__(self, dataset: str, dataset_path:str, param_grid: dict = None):
+        super().__init__(model_name="Linear Regression", dataset=dataset, dataset_path=dataset_path, param_grid=param_grid)
         self.scaler = StandardScaler()
 
     def fit(self, X_train, y_train, X_test, y_test):
