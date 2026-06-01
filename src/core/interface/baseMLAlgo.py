@@ -2,11 +2,11 @@ from abc import ABC, abstractmethod
 import os
 import pandas as pd
 from sklearn.model_selection import train_test_split
-from infrastracture.data.Pipeline import DataPipeline
-from infrastracture.data.dataLoader import CSVDataLoader
-from infrastracture.data.dataProcessor import MissingDataStrategy, PandasDataProcessor
-from infrastracture.data.dataSplitter import StratifiedDataSplitter, DataSplitConfig
-from infrastracture.data.dataValidator import SchemaValidator
+from infrastructure.data.Pipeline import DataPipeline
+from infrastructure.data.dataLoader import CSVDataLoader
+from infrastructure.data.dataProcessor import MissingDataStrategy, PandasDataProcessor
+from infrastructure.data.dataSplitter import StratifiedDataSplitter, DataSplitConfig
+from infrastructure.data.dataValidator import SchemaValidator
 
 class BaseMLAlgo(ABC):
     """Abstract base class for machine learning algorithms."""

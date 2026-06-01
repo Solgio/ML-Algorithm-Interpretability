@@ -4,6 +4,8 @@ import sys
 import traceback
 from pathlib import Path
 from abc import ABC, abstractmethod
+
+from infrastructure.models.registry_initializer import initialize_model_registry
  
 logging.basicConfig(
     level=logging.INFO,
@@ -262,6 +264,7 @@ def run_pipeline(config: dict) -> dict:
  
 if __name__ == "__main__":
     try:
+        initialize_model_registry()
         from selector import run_selector
         config = run_selector()
         run_pipeline(config)

@@ -1,8 +1,11 @@
 url_student_dataset = "https://www.kaggle.com/datasets/spscientist/students-placement-dataset"
 path_student_dataset = "../data/student-salary/student_placement_salary_elite_v2.csv"
+
+from domain.enums import TaskType
+
 DATASETS = {
     "Student Salary Dataset": {
-        "task": "regression",
+        "task": TaskType.REGRESSION,
         "description": "Dataset che raccoglie una serie di metriche relative a studenti universitari e alle loro skills, esperienze lavorative, caratteristiche e risultati in test. L'obiettivo è prevedere quale sarà lo stipendio di un neolaureato in base a queste caratteristiche.",
         "source": url_student_dataset,
         "path": path_student_dataset,
@@ -12,7 +15,7 @@ DATASETS = {
         "shap_dependence_variable": ["cgpa"]
     },
     "Student Company Type Dataset": {
-        "task": "classification",
+        "task": TaskType.CLASSIFICATION,
         "description": "Dataset che raccoglie una serie di metriche relative a studenti universitari e alle loro skills, esperienze lavorative, caratteristiche e risultati in test. L'obiettivo è prevedere quale in quale tipo di azienda un neolaureato verrà collocato in base a queste caratteristiche.",
         "source": url_student_dataset,
         "path": path_student_dataset,
@@ -22,7 +25,7 @@ DATASETS = {
         "shap_dependence_variable": ["cgpa"]
     },
     "Student Placed-Not Placed Dataset": {
-        "task": "classification",
+        "task": TaskType.CLASSIFICATION,
         "description": "Dataset che raccoglie una serie di metriche relative a studenti universitari e alle loro skills, esperienze lavorative, caratteristiche e risultati in test. L'obiettivo è prevedere se un neolaureato sarà collocato in un'azienda in base a queste caratteristiche.",
         "source": url_student_dataset,
         "path": path_student_dataset,
@@ -32,7 +35,7 @@ DATASETS = {
         "shap_dependence_variable": ["cgpa"]
     },
     "Atelier Dataset": {
-        "task": "classification",
+        "task": TaskType.CLASSIFICATION,
         "description": "...",
         "source": "...",
         "path": "../data/atelier/prodotti_atelier.csv",
@@ -42,7 +45,7 @@ DATASETS = {
         "shap_dependence_variable": ["dipendenti"]
     },
     "Nasa Asteroid Dataset": {
-        "task": "classification",
+        "task": TaskType.CLASSIFICATION,
         "description": "Dataset che raccoglie una serie di metriche relative a studenti universitari e alle loro skills, esperienze lavorative, caratteristiche e risultati in test. L'obiettivo è prevedere se un neolaureato sarà collocato in un'azienda in base a queste caratteristiche.",
         "source": url_student_dataset,
         "path": path_student_dataset,
