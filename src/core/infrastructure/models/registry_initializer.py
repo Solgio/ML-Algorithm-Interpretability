@@ -113,6 +113,11 @@ def initialize_model_registry() -> None:
             "che un evento si verifichi. Commenta la sicurezza del modello ricordando che probabilità "
             "molto vicine allo 0 o al 100 indicano alta confidenza."
         ),
+        param_grid={
+            'C': [0.1, 1, 10],
+            'penalty': ['l1', 'l2'],
+            'solver': ['liblinear', 'saga']
+        }
     ))
     
     # SVM

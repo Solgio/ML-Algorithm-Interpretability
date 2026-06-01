@@ -4,6 +4,9 @@ import sys
 import traceback
 from pathlib import Path
 from abc import ABC, abstractmethod
+from domain.enums import Algorithm, TaskType
+from infrastructure.models.model_factory import ModelFactory
+from infrastructure.models.exceptions import ModelNotFoundError, ModelCreationError
 
 from infrastructure.models.registry_initializer import initialize_model_registry
  
@@ -15,15 +18,36 @@ logging.basicConfig(
 log = logging.getLogger(__name__)
  
  
-def _load_model(algo_info: dict, dataset_name: str, dataset_path: str):
+def _load_model(config: dict):
     """
-    Importa dinamicamente il modulo e istanzia la classe del modello.
-    Usa il registro in selector.ALGORITHMS — nessun import hardcoded.
+    Dynamically import the model class based on the provided algorithm information and instantiate it.
     """
-    module = importlib.import_module(algo_info["module"])
-    cls    = getattr(module, algo_info["class"])
-    param_grid = algo_info.get("param_grid")
-    return cls(dataset=dataset_name, dataset_path=dataset_path, param_grid=param_grid)
+    algorithm = config["algo_enum"]
+    task_type = config["dataset_cfg"]["task"]
+    dataset_name = config["dataset_name"]
+    dataset_path = config["dataset_cfg"]["path"]
+    
+    try:
+        log.info(f"Creazione modello: {algorithm} ({task_type})")
+        
+        model = ModelFactory.create(
+            algorithm=algorithm,
+            task_type=task_type,
+            dataset=dataset_name,
+            dataset_path=dataset_path
+        )
+        
+        log.info(f"✓ Modello creato: {type(model).__name__}")
+        return model
+    
+    except ModelNotFoundError as e:
+        log.error(f"Algoritmo non trovato: {e}")
+        print(f"\n✗ ERRORE: {e}")
+        sys.exit(1)
+    except ModelCreationError as e:
+        log.error(f"Errore creazione modello: {e}")
+        print(f"\n✗ ERRORE: {e}")
+        sys.exit(1)
  
 def step_load_data(model, dataset_cfg: dict, test_size: float):
     log.info("━━  STEP 1: Caricamento dati")
@@ -77,7 +101,7 @@ def step_llm(export_results: dict, plot_paths: dict, config: dict):
     log.info("━━  STEP 6: Analisi LLM")
     try:
         from llm.LLMRequestManager import analyze_statistics
-    except ImportError:
+    except ImportError as e:
         log.error(f"    Impossibile importare 'test.py'. Assicurati che sia nella stessa cartella.{e}")
         return {}
  
@@ -152,9 +176,7 @@ class BasePipeline(ABC):
  
     def run(self, config: dict) -> dict:
         dataset_name = config["dataset_name"]
-        dataset_path = config["dataset_cfg"]["path"]
         dataset_cfg = config["dataset_cfg"]
-        algo_info = config["algo_info"]
         test_size = config.get("test_size", 0.2)
         run_shap = config.get("run_shap", False)
         run_llm = config.get("run_llm", False)
@@ -164,7 +186,7 @@ class BasePipeline(ABC):
         log.info("═" * 60)
  
         # primitive operations implemented by subclass
-        model = self.load_model(algo_info, dataset_name, dataset_path)
+        model = self.load_model(config)
  
         X_train, X_test, y_train, y_test = self.load_data(model, dataset_cfg, test_size)
  
@@ -195,7 +217,7 @@ class BasePipeline(ABC):
         }
  
     @abstractmethod
-    def load_model(self, algo_info: dict, dataset_name: str, dataset_path: str):
+    def load_model(self, config: dict):
         raise NotImplementedError()
  
     @abstractmethod
@@ -230,8 +252,8 @@ class DefaultPipeline(BasePipeline):
     Template Method for easier extension and testing.
     """
  
-    def load_model(self, algo_info: dict, dataset_name: str, dataset_path: str):
-        return _load_model(algo_info, dataset_name, dataset_path)
+    def load_model(self, config: dict):
+        return _load_model(config)
  
     def load_data(self, model, dataset_cfg: dict, test_size: float):
         return step_load_data(model, dataset_cfg, test_size)

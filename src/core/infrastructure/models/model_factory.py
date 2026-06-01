@@ -26,7 +26,7 @@ class ModelFactory:
         
     
     @classmethod
-    def create(cls, algorithm: Algorithm, task_type: TaskType, hyperparameters: Optional[Dict]):
+    def create(cls, algorithm: Algorithm, task_type: TaskType, dataset: str, dataset_path: str, param_grid: Optional[Dict] = None):
         """Create an instance of the specified algorithm for the given task type."""
         if not isinstance(algorithm, Algorithm):
             raise TypeError(f"algorithm must be an instance of Algorithm enum, got {type(algorithm)}")
@@ -55,19 +55,20 @@ class ModelFactory:
         except Exception as e:
             raise ModelCreationError(str(algorithm), f"unexpected error during class retrieval: {registry_entry.class_name} from {registry_entry.module_path}", e)
         
-        merged_params = {}
-        if registry_entry.hyperparameters:
-            merged_params.update(registry_entry.hyperparameters.to_dict())
-        if hyperparameters:
-            merged_params.update(hyperparameters)
-        if merged_params:
-            logging.debug(f"Using hyperparameters for {algorithm} ({task_type}): {merged_params}")
+        #merged_params = {}
+        #if registry_entry.hyperparameters:
+        #    merged_params.update(registry_entry.hyperparameters.to_dict())
+        #if hyperparameters:
+        #    merged_params.update(hyperparameters)
+        #if merged_params:
+        #    logging.debug(f"Using hyperparameters for {algorithm} ({task_type}): {merged_params}")
         
         try:
-            if merged_params:
-                model_instance = model_class(**merged_params)
-            else:
-                model_instance = model_class()
+            model_instance = model_class(
+                dataset=dataset,
+                dataset_path=dataset_path,
+                param_grid=registry_entry.param_grid
+            )
             logging.info(f"Successfully created model instance for {algorithm} ({task_type})")
             return model_instance
         except TypeError as e:
@@ -85,7 +86,7 @@ class ModelFactory:
             return sorted(list(algos))
         else:
             algos = []
-            for algo, task in cls._registry:
+            for algo, task in cls._registry.keys():
                 if task == task_type:
                     algos.append(str(algo))
             return algos

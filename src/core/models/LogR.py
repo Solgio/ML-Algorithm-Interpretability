@@ -1,7 +1,11 @@
 import os
+import optuna
 import pandas as pd
+import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
+from sklearn.model_selection import cross_val_score
+from sklearn.pipeline import Pipeline
 import config.datasets_config as data
 from sklearn.preprocessing import StandardScaler
 from interface.classificationAlgo import BaseClassificationAlgo
@@ -13,13 +17,74 @@ class LogisticRegression(BaseClassificationAlgo):
         self.scaler = StandardScaler()
 
     def fit(self, X_train, y_train, X_test, y_test):
-        x_train_scaled = self.scaler.fit_transform(X_train)
-        x_test_scaled = self.scaler.transform(X_test)
+        unique_classes = np.unique(y_train)
+        if len(unique_classes) < 2:
+            raise ValueError(f"Dati invalidi: y_train contiene una sola classe {unique_classes}. "
+                             "Controlla il dataset o il caricamento.")
+        scoring_metric = 'roc_auc_ovr' if len(unique_classes) > 2 else 'roc_auc'
         
-        self.model = SklearnLogisticRegression()
-        self.model.fit(pd.DataFrame(x_train_scaled, columns=X_train.columns), y_train)
+        y_train_arr = y_train.values if hasattr(y_train, 'values') else y_train
         
-        self.X = pd.DataFrame(x_test_scaled, columns=X_test.columns)
+        # 2. Funzione obiettivo per Optuna
+        def objective(trial):
+            # Fallback a range di default se param_grid non è stato definito nel registry
+            if self.param_grid and 'C' in self.param_grid:
+                c = trial.suggest_float('C', self.param_grid['C'][0], self.param_grid['C'][1], log=True)
+            else:
+                c = trial.suggest_float('C', 1e-4, 1e2, log=True)   
+            
+            if self.param_grid and 'solver' in self.param_grid:
+                solver = trial.suggest_categorical('solver', self.param_grid['solver'])
+            else:
+                solver = trial.suggest_categorical('solver', ['lbfgs', 'liblinear'])
+            if solver == 'lbfgs':
+                penalty = 'l2'
+            else:
+                penalty = trial.suggest_categorical('penalty', ['l1', 'l2'])
+            
+            pipeline = Pipeline([
+                ('scaler', StandardScaler()),
+                ('logr', SklearnLogisticRegression(C=c, solver=solver, penalty=penalty, max_iter=2000, random_state=42))
+            ], memory=None)
+            
+            scores = cross_val_score(pipeline, X_train, y_train_arr, cv=5, scoring=scoring_metric, n_jobs=-1)
+            return scores.mean()
+            
+        print("Inizio ottimizzazione iperparametri con Optuna (Logistic Regression)...")
+        optuna.logging.set_verbosity(optuna.logging.WARNING)
+        
+        study = optuna.create_study(direction='maximize')
+        study.optimize(objective, n_trials=30, show_progress_bar=True)
+        
+        print(f"Migliori parametri individuati da Optuna: {study.best_params}")
+        
+        best_p = study.best_params
+        final_solver = best_p.get('solver', 'lbfgs')
+        final_penalty = 'l2' if final_solver == 'lbfgs' else best_p.get('penalty', 'l2')
+        
+        # 3. Addestramento del modello finale con i parametri migliori
+        self.model = Pipeline([
+            ('scaler', StandardScaler()),
+            ('logr', SklearnLogisticRegression(
+                C=best_p['C'],
+                solver=final_solver,
+                penalty=final_penalty,
+                max_iter=2000,
+                random_state=42
+            ))
+        ], memory=None)
+        
+        self.model.fit(X_train, y_train_arr)
+        
+        # 4. Esponi gli attributi necessari per i plot specifici
+        final_logr = self.model.named_steps['logr']
+        if hasattr(final_logr, "coef_"):
+            self.model.coef_ = final_logr.coef_
+        if hasattr(final_logr, "classes_"):
+            self.model.classes_ = final_logr.classes_
+        
+        # 5. Salva i dati di test (non scalati, ci pensa la Pipeline)
+        self.X = X_test if isinstance(X_test, pd.DataFrame) else pd.DataFrame(X_test, columns=X_train.columns)
         self.y = y_test
     
     def generate_algorithm_specific_plots(self) -> dict:
