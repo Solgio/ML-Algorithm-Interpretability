@@ -100,6 +100,15 @@ def initialize_model_registry() -> None:
         }
     ))
     
+    #Symbolic Regressor
+    ModelFactory.register(AlgorithmRegistry(
+        algorithm=Algorithm.SYMBOLIC_REGRESSOR,
+        task_type=TaskType.REGRESSION,
+        module_path="models.SymbR",
+        class_name="SymbolicRegressor",
+        description="Simbolic Regressor (pysr)",
+        
+    ))
     # Logistic Regression
     ModelFactory.register(AlgorithmRegistry(
         algorithm=Algorithm.LOGISTIC_REGRESSION,

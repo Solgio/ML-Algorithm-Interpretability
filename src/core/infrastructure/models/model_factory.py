@@ -55,14 +55,6 @@ class ModelFactory:
         except Exception as e:
             raise ModelCreationError(str(algorithm), f"unexpected error during class retrieval: {registry_entry.class_name} from {registry_entry.module_path}", e)
         
-        #merged_params = {}
-        #if registry_entry.hyperparameters:
-        #    merged_params.update(registry_entry.hyperparameters.to_dict())
-        #if hyperparameters:
-        #    merged_params.update(hyperparameters)
-        #if merged_params:
-        #    logging.debug(f"Using hyperparameters for {algorithm} ({task_type}): {merged_params}")
-        
         try:
             model_instance = model_class(
                 dataset=dataset,

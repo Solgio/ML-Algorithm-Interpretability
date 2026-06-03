@@ -12,6 +12,7 @@ class Algorithm(Enum):
     SVM = "svm"
     XGBOOST_CLASSIFIER = "xgboost_classifier"
     XGBOOST_REGRESSOR = "xgboost_regressor"
+    SYMBOLIC_REGRESSOR = "symbolic_regressor"
     
     def __str__(self):
         """ User-friendly string representation of the algorithm. """
