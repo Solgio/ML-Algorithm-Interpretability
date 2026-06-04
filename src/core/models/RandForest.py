@@ -9,7 +9,7 @@ from src.core.config.datasets_config import DATASETS as data
 from src.core.interface.classificationAlgo import BaseClassificationAlgo
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor 
 
-from interface.regressionAlgo import BaseRegressionAlgo
+from src.core.interface.regressionAlgo import BaseRegressionAlgo
 
 class RandomForestC(BaseClassificationAlgo):
     def __init__(self, dataset: str, dataset_path: str, param_grid: dict = None):

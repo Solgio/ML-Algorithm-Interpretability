@@ -1,9 +1,8 @@
-from typing import Dict
+from typing import Dict, Iterable
 import logging
 import pandas as pd
-from src.core.infrastructure.models.model_factory import ModelFactory
 from src.core.domain.enums import Algorithm, TaskType
-from src.core.infrastructure.explainers.base import Explainer
+from src.core.infrastructure.explainers.base import Explainer, ExplainerResult
 from src.core.infrastructure.explainers.strategy import ExplainerStrategy, select_explainer_strategy
 from src.core.infrastructure.explainers.strategies.shap_kernel_explainer import SHAPKernelExplainer
 from src.core.infrastructure.explainers.strategies.shap_tree_explainer import SHAPTreeExplainer
@@ -15,6 +14,21 @@ class SHAPAnalyzerAdapter:
         ExplainerStrategy.TREE: SHAPTreeExplainer,
         ExplainerStrategy.KERNEL: SHAPKernelExplainer
     }
+    _MODEL_ALIASES = {
+        "LinearRegression": Algorithm.LINEAR_REGRESSION,
+        "LogisticRegression": Algorithm.LOGISTIC_REGRESSION,
+        "DecisionTreeClassifier": Algorithm.DECISION_TREE_CLASSIFIER,
+        "DecisionTreeRegressor": Algorithm.DECISION_TREE_REGRESSOR,
+        "RandomForestClassifier": Algorithm.RANDOM_FOREST_CLASSIFIER,
+        "RandomForestRegressor": Algorithm.RANDOM_FOREST_REGRESSOR,
+        "SVC": Algorithm.SVM,
+        "SVR": Algorithm.SVM,
+        "XGBClassifier": Algorithm.XGBOOST_CLASSIFIER,
+        "XGBRegressor": Algorithm.XGBOOST_REGRESSOR,
+        "XGBoostC": Algorithm.XGBOOST_CLASSIFIER,
+        "XGBoostR": Algorithm.XGBOOST_REGRESSOR,
+        "SymbolicRegressor": Algorithm.SYMBOLIC_REGRESSOR,
+    }
     
     def __init__(self, model, x_train: pd.DataFrame, plot_dir: str, task_type: TaskType):
         self.model=model
@@ -22,16 +36,29 @@ class SHAPAnalyzerAdapter:
         self.plot_dir = plot_dir
         self.task_type= task_type
       
-    def explain(self, x_sample: pd.DataFrame, dependence_variable: str) -> Dict[str, str]:
+    def explain(self, x_sample: pd.DataFrame, dependence_variable: str) -> ExplainerResult:
         """Generate SHAP explanations and associated plots for a given sample."""
         logging.info(f"Starting explanation for sample with dependence variable '{dependence_variable}'")
         try: 
             model_type = self._extract_model_type()
             strategy = select_explainer_strategy(algorithm=model_type, task_type=self.task_type)
             explainer = self._create_explainer(strategy)
-            plot_paths = explainer.explain(x_sample, dependence_variable)
+            # input validation: ensure x_sample is a DataFrame and not huge
+            if not hasattr(x_sample, 'shape') or not hasattr(x_sample, 'columns'):
+                raise TypeError("x_sample must be a pandas DataFrame")
+            max_rows = 2000
+            if len(x_sample) > max_rows:
+                logging.warning(f"x_sample too large ({len(x_sample)} rows); truncating to {max_rows}")
+                x_sample = x_sample.iloc[:max_rows]
+
+            missing_cols = set(self.x_train.columns) - set(x_sample.columns)
+            extra_cols = set(x_sample.columns) - set(self.x_train.columns)
+
+            logging.warning(f"Columns in x_train but missing in x_sample: {missing_cols}")
+            logging.warning(f"Columns in x_sample but missing in x_train: {extra_cols}")
+            result = explainer.explain(x_sample, dependence_variable)
             logging.info(f"Explanation completed successfully with strategy '{strategy}'")
-            return plot_paths        
+            return result
         except Exception as e:
             logging.exception(f"Error occurred while explaining sample: {e}")
             raise
@@ -44,25 +71,35 @@ class SHAPAnalyzerAdapter:
             base_model=self.model.named_steps[list(self.model.named_steps.keys())[-1]]
         else:
             base_model=self.model
-        current_class_name = type(base_model).__name__
-        underlying_class_name = None
-        if hasattr(base_model, 'model'):
-            underlying_class_name = type(base_model.model).__name__
-        
-        for registry in ModelFactory._registry.values():
-            if registry.class_name == current_class_name or (underlying_class_name and registry.class_name in underlying_class_name):
-                return registry.algorithm
-                
-        for registry in ModelFactory._registry.values():
-            reg_lower = registry.class_name.lower()
-            curr_lower = current_class_name.lower()
-            if reg_lower in curr_lower or curr_lower in reg_lower:
-                return registry.algorithm
+        candidate_names = self._candidate_model_class_names(base_model)
+
+        for candidate_name in candidate_names:
+            if candidate_name in self._MODEL_ALIASES:
+                return self._MODEL_ALIASES[candidate_name]
+
+        normalized_candidates = [candidate.lower() for candidate in candidate_names]
+        for candidate_name in normalized_candidates:
+            for alias_name, algorithm in self._MODEL_ALIASES.items():
+                alias_lower = alias_name.lower()
+                if alias_lower in candidate_name or candidate_name in alias_lower:
+                    return algorithm
 
         raise ValueError(
-            f"Impossibile mappare dinamicamente il modello '{current_class_name}' a un algoritmo noto. "
-            f"Verifica la corrispondenza del 'class_name' nel registry_initializer."
+            f"Impossibile mappare dinamicamente il modello '{type(base_model).__name__}' a un algoritmo noto. "
+            f"Registra un alias esplicito in SHAPAnalyzerAdapter._MODEL_ALIASES."
         )
+
+    def _candidate_model_class_names(self, model: object) -> Iterable[str]:
+        """Return all class-name candidates that may identify the underlying estimator."""
+        names = [type(model).__name__]
+
+        if hasattr(model, "model") and model.model is not None:
+            names.append(type(model.model).__name__)
+
+        if hasattr(model, "estimator") and model.estimator is not None:
+            names.append(type(model.estimator).__name__)
+
+        return names
         
         
          

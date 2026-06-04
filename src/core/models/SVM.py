@@ -65,11 +65,11 @@ class SVM(BaseClassificationAlgo):
         ], memory=None)
         
         self.model.fit(X_train, y_train.values)
-        final_svc = self.model.named_steps['svc']
-        if hasattr(final_svc, "coef_"):
-            self.model.coef_ = final_svc.coef_
-        if hasattr(final_svc, "feature_importances_"):
-            self.model.feature_importances_ = final_svc.feature_importances_
+        #final_svc = self.model.named_steps['svc']
+        #if hasattr(final_svc, "coef_"):
+        #    self.model.coef_ = final_svc.coef_
+        #if hasattr(final_svc, "feature_importances_"):
+        #    self.model.feature_importances_ = final_svc.feature_importances_
         
         self.X = X_test
         self.y = y_test

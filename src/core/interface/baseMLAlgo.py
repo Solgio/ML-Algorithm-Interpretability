@@ -6,7 +6,6 @@ import pandas as pd
 from sklearn.model_selection import train_test_split
 from src.core.domain.enums import TaskType
 from src.core.infrastructure.explainers.adapter import SHAPAnalyzerAdapter
-from src.core.infrastructure.explainers.service import ExplainerService
 from src.core.infrastructure.data.Pipeline import DataPipeline
 from src.core.infrastructure.data.dataLoader import CSVDataLoader
 from src.core.infrastructure.data.dataProcessor import MissingDataStrategy, PandasDataProcessor
@@ -71,7 +70,7 @@ class BaseMLAlgo(ABC):
         pass
     
     def explain_with_shap(self, x_sample: pd.DataFrame, 
-                     dependence_variable: str) -> Dict[str, str]:
+                     dependence_variable: str):
         """Execute SHAP analysis """
         logging.info("Inizio SHAP analysis...")
     
@@ -86,9 +85,11 @@ class BaseMLAlgo(ABC):
                 task_type=task_type
             )
             
-            plot_paths = adapter.explain(x_sample, dependence_variable)
+            result = adapter.explain(x_sample, dependence_variable)
+            # result is an ExplainerResult; extract plot paths for logging
+            plot_paths = getattr(result, 'plot_paths', {})
             logging.info(f"✓ SHAP completato. Plot: {list(plot_paths.keys())}")
-            return plot_paths
+            return result
             
         except Exception as e:
             logging.exception(f"Errore SHAP: {e}")

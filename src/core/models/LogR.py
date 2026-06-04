@@ -10,6 +10,10 @@ import src.core.config.datasets_config as data
 from sklearn.preprocessing import StandardScaler
 from src.core.interface.classificationAlgo import BaseClassificationAlgo
 from sklearn.linear_model import LogisticRegression as SklearnLogisticRegression
+
+import warnings
+warnings.filterwarnings("ignore", category=FutureWarning, module="sklearn")
+warnings.filterwarnings("ignore", category=UserWarning, module="sklearn")
         
 class LogisticRegression(BaseClassificationAlgo):
     def __init__(self, dataset: str, dataset_path: str, param_grid: dict = None):
@@ -27,7 +31,6 @@ class LogisticRegression(BaseClassificationAlgo):
         
         # 2. Funzione obiettivo per Optuna
         def objective(trial):
-            # Fallback a range di default se param_grid non è stato definito nel registry
             if self.param_grid and 'C' in self.param_grid:
                 c = trial.suggest_float('C', self.param_grid['C'][0], self.param_grid['C'][1], log=True)
             else:
@@ -38,13 +41,21 @@ class LogisticRegression(BaseClassificationAlgo):
             else:
                 solver = trial.suggest_categorical('solver', ['lbfgs', 'liblinear'])
             if solver == 'lbfgs':
-                penalty = 'l2'
+                model_params = {'C': c, 'solver': solver, 'max_iter': 2000, 'random_state': 42}
             else:
                 penalty = trial.suggest_categorical('penalty', ['l1', 'l2'])
-            
+                l1_ratio = 1.0 if penalty == 'l1' else 0.0
+                model_params = {
+                    'C': c, 
+                    'solver': solver, 
+                    'penalty': penalty, 
+                    'l1_ratio': l1_ratio,
+                    'max_iter': 2000, 
+                    'random_state': 42
+                }
             pipeline = Pipeline([
                 ('scaler', StandardScaler()),
-                ('logr', SklearnLogisticRegression(C=c, solver=solver, penalty=penalty, max_iter=2000, random_state=42))
+                ('logr', SklearnLogisticRegression(**model_params))
             ], memory=None)
             
             scores = cross_val_score(pipeline, X_train, y_train_arr, cv=5, scoring=scoring_metric, n_jobs=-1)
@@ -60,31 +71,34 @@ class LogisticRegression(BaseClassificationAlgo):
         
         best_p = study.best_params
         final_solver = best_p.get('solver', 'lbfgs')
-        final_penalty = 'l2' if final_solver == 'lbfgs' else best_p.get('penalty', 'l2')
-        
-        # 3. Addestramento del modello finale con i parametri migliori
+        final_params = {
+            'C': best_p['C'],
+            'solver': final_solver,
+            'max_iter': 2000,
+            'random_state': 42
+        }
+        if final_solver != 'lbfgs' and 'penalty' in best_p:
+            final_params['penalty'] = best_p['penalty']
+            final_params['l1_ratio'] = 1.0 if best_p['penalty'] == 'l1' else 0.0
+
         self.model = Pipeline([
             ('scaler', StandardScaler()),
-            ('logr', SklearnLogisticRegression(
-                C=best_p['C'],
-                solver=final_solver,
-                penalty=final_penalty,
-                max_iter=2000,
-                random_state=42
-            ))
+            ('logr', SklearnLogisticRegression(**final_params))
         ], memory=None)
         
         self.model.fit(X_train, y_train_arr)
         
-        # 4. Esponi gli attributi necessari per i plot specifici
         final_logr = self.model.named_steps['logr']
-        if hasattr(final_logr, "coef_"):
-            self.model.coef_ = final_logr.coef_
-        if hasattr(final_logr, "classes_"):
-            self.model.classes_ = final_logr.classes_
         
-        # 5. Salva i dati di test (non scalati, ci pensa la Pipeline)
-        self.X = X_test if isinstance(X_test, pd.DataFrame) else pd.DataFrame(X_test, columns=X_train.columns)
+        type(self.model).coef_ = property(lambda s: final_logr.coef_)
+        type(self.model).classes_ = property(lambda s: final_logr.classes_)
+        
+        if isinstance(X_test, pd.DataFrame):
+            X_test_num = X_test.select_dtypes(include=[np.number])
+            self.X = X_test_num.reindex(columns=X_train.columns, fill_value=0).astype(np.float64)
+        else:
+            self.X = pd.DataFrame(X_test, columns=X_train.columns).astype(np.float64)
+            
         self.y = y_test
     
     def generate_algorithm_specific_plots(self) -> dict:

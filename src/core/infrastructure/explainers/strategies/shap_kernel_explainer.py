@@ -1,10 +1,9 @@
-import os
 import logging
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
 import shap
 from src.core.infrastructure.explainers.base import Explainer
+from src.core.infrastructure.explainers.plot_renderer import SHAPPlotRenderer
 from typing import Any, Dict
 
 
@@ -14,21 +13,26 @@ class SHAPKernelExplainer(Explainer):
     
     def _compute_shap_values(self, x_sample: pd.DataFrame):
         """Compute SHAP values using the KernelExplainer."""
+        """Compute SHAP values using the KernelExplainer."""
         logging.info("Computing SHAP values using KernelExplainer...")
-        model_to_explain = self._extract_base_model()
-        pred_fn = self._create_prediction_function(model_to_explain)
-        background_sample = shap.sample(self.x_train, min(30, len(self.x_train)))
+
+        def clean_data(df):
+            if isinstance(df, pd.DataFrame):
+                return df.astype(np.float64)
+            return np.asarray(df, dtype=np.float64)
+        
+        x_sample_clean = clean_data(x_sample)
+        x_train_clean = clean_data(self.x_train)
+
+        pred_fn = self._create_prediction_function(self.model)
+
+        background_sample = shap.sample(x_train_clean, min(30, len(x_train_clean)))
         explainer = shap.Explainer(pred_fn, background_sample)
-        shap_values = explainer(x_sample)
+
+        logging.info(f"SHAP explanation starting with {x_sample_clean.shape[1]} features")
+        shap_values = explainer(x_sample_clean)
+
         return shap_values
-    
-    def _extract_base_model(self):
-        """Extract the underlying model if it's wrapped in a pipeline or ensemble."""
-        from sklearn.pipeline import Pipeline
-        if isinstance(self.model, Pipeline):
-            return self.model.named_steps[list(self.model.named_steps.keys())[-1]]
-        else:
-            return self.model
         
     def _create_prediction_function(self, model: Any):
         """Create a prediction function based on the model's capabilities."""
@@ -44,62 +48,6 @@ class SHAPKernelExplainer(Explainer):
     
     def _generate_plots(self, shap_values, x_sample: pd.DataFrame, dependence_variable: str) -> Dict[str, str]:
         """Generate SHAP plots and save them to disk, returning their paths."""
-        plot_paths = {}
-        plot_dir = self._ensure_plot_dir()
-        
-        try: # Plot 1: Summary Bar
-            logging.info("Generando SHAP summary plot...")
-            plt.figure(figsize=(10, 6))
-            
-            shap_vals = shap_values.values if hasattr(shap_values, 'values') else shap_values
-            if len(shap_vals.shape) == 3:
-                shap.summary_plot(shap_vals[:, :, 1], x_sample, plot_type="bar", 
-                                show=False)
-            else:
-                shap.summary_plot(shap_vals, x_sample, plot_type="bar", show=False)
-            
-            summary_path = os.path.join(plot_dir, "shap_summary_bar.png")
-            plt.savefig(summary_path, bbox_inches='tight', dpi=300)
-            plt.close()
-            plot_paths["shap_summary"] = summary_path
-            logging.info(f"✓ Summary: {summary_path}")
-        except Exception as e:
-            logging.warning(f"Failed to generate SHAP summary plot: {e}")
-            
-        try: # Plot 2: Dependence
-            logging.info(f"Generando dependence plot...")
-            plt.figure(figsize=(10, 6))
-            
-            if len(shap_vals.shape) == 3:
-                shap_vals_2d = shap_vals[:, :, 1]
-            else:
-                shap_vals_2d = shap_vals
-            
-            shap.dependence_plot(dependence_variable, shap_vals_2d, x_sample, 
-                               show=False)
-            dep_path = os.path.join(plot_dir, f"shap_dependence_{dependence_variable}.png")
-            plt.savefig(dep_path, bbox_inches='tight', dpi=300)
-            plt.close()
-            plot_paths["dependence_plot"] = dep_path
-            logging.info(f"✓ Dependence: {dep_path}")
-        except Exception as e:
-            logging.warning(f"Failed to generate SHAP dependence plot: {e}")
-            
-        try: # Plot 3: Waterfall (primo campione)
-            logging.info("Generando force plot...")
-            plt.figure(figsize=(12, 6))
-            
-            if len(shap_values.shape) == 3:
-                shap.plots.waterfall(shap_values[0, :, 1], show=False)
-            else:
-                shap.plots.waterfall(shap_values[0], show=False)
-            
-            force_path = os.path.join(plot_dir, "shap_force_plot_sample_0.png")
-            plt.savefig(force_path, bbox_inches='tight', dpi=300)
-            plt.close()
-            plot_paths["force_plot"] = force_path
-            logging.info(f"✓ Force: {force_path}")
-        except Exception as e:
-            logging.warning(f"Failed to generate SHAP force plot: {e}")
-        
-        return plot_paths
+        logging.info("Generating standard SHAP plots via shared renderer...")
+        renderer = SHAPPlotRenderer(self.plot_dir)
+        return renderer.render(shap_values, x_sample, dependence_variable)

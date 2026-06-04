@@ -83,9 +83,10 @@ def step_shap(model, dataset_cfg: dict):
         return {}
  
     x_sample = model.X.sample(n=min(200, len(model.X)), random_state=42)
-    paths = model.explain_with_shap(x_sample=x_sample, dependence_variable=dependence_var[0])
-    log.info(f"    SHAP plot salvati: {list(paths.values())}")
-    return paths
+    result = model.explain_with_shap(x_sample=x_sample, dependence_variable=dependence_var[0])
+    plot_paths = getattr(result, 'plot_paths', {}) if result is not None else {}
+    log.info(f"    SHAP plot salvati: {list(plot_paths.values())}")
+    return result
  
  
 def step_export(model) -> dict:
@@ -99,7 +100,7 @@ def step_export(model) -> dict:
 def step_llm(export_results: dict, plot_paths: dict, config: dict):
     log.info("━━  STEP 6: Analisi LLM")
     try:
-        from llm.LLMRequestManager import analyze_statistics
+        from src.core.llm.LLMRequestManager import analyze_statistics
     except ImportError as e:
         log.exception(f"    Impossibile importare 'test.py'. Assicurati che sia nella stessa cartella.{e}")
         return {}
@@ -195,7 +196,12 @@ class BasePipeline(ABC):
  
         shap_paths = {}
         if run_shap:
-            shap_paths = self.shap(model, dataset_cfg)
+            shap_result = self.shap(model, dataset_cfg)
+            # shap_result may be either the legacy dict or the new ExplainerResult
+            if isinstance(shap_result, dict):
+                shap_paths = shap_result
+            else:
+                shap_paths = getattr(shap_result, 'plot_paths', {})
  
         export_res = self.export(model)
  

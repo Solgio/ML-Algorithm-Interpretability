@@ -11,6 +11,7 @@ from src.core.infrastructure.explainers.strategy import ExplainerStrategy, selec
 from src.core.infrastructure.explainers.strategies.shap_kernel_explainer import SHAPKernelExplainer
 from src.core.infrastructure.explainers.strategies.shap_tree_explainer import SHAPTreeExplainer
 from src.core.infrastructure.explainers.adapter import SHAPAnalyzerAdapter
+from src.core.infrastructure.explainers.base import ExplainerResult
 
 from src.core.domain.enums import Algorithm, TaskType
 
@@ -57,9 +58,9 @@ class TestSHAPAnalyzerAdapter:
         
         adapter = SHAPAnalyzerAdapter(model, X, str(tmp_path), TaskType.CLASSIFICATION)
         result = adapter.explain(X.iloc[:10], 'f1')
-        
-        assert isinstance(result, dict)
-        assert 'shap_summary' in result
+
+        assert isinstance(result, ExplainerResult)
+        assert 'shap_summary' in result.plot_paths
     
     def test_regr_kernel(self, regr_data, tmp_path):
         X, y = regr_data
@@ -68,9 +69,9 @@ class TestSHAPAnalyzerAdapter:
         
         adapter = SHAPAnalyzerAdapter(model, X, str(tmp_path), TaskType.REGRESSION)
         result = adapter.explain(X.iloc[:10], 'f1')
-        
-        assert isinstance(result, dict)
-        assert 'shap_summary' in result
+
+        assert isinstance(result, ExplainerResult)
+        assert 'shap_summary' in result.plot_paths
     
     def test_classif_tree(self, classif_data, tmp_path):
         X, y = classif_data
@@ -79,8 +80,8 @@ class TestSHAPAnalyzerAdapter:
         
         adapter = SHAPAnalyzerAdapter(model, X, str(tmp_path), TaskType.CLASSIFICATION)
         result = adapter.explain(X.iloc[:10], 'f1')
-        
-        assert isinstance(result, dict)
+
+        assert isinstance(result, ExplainerResult)
 
 
 if __name__ == "__main__":
