@@ -21,6 +21,8 @@ class RandomForestC(BaseClassificationAlgo):
             raise ValueError(f"Dati invalidi: y_train contiene una sola classe {unique_classes}. "
                          "Controlla il dataset o il caricamento.")
         scoring_metric = 'roc_auc_ovr' if len(unique_classes) > 2 else 'roc_auc'
+        X_train_arr = np.asarray(X_train, dtype=np.float64)
+        y_train_arr = np.asarray(y_train).ravel()
         
         def objective(trial):
             params = {
@@ -42,7 +44,7 @@ class RandomForestC(BaseClassificationAlgo):
                 ))
             ], memory=None)
             
-            scores = cross_val_score(pipeline, X_train, y_train.values, cv=5, scoring=scoring_metric, n_jobs=-1)
+            scores = cross_val_score(pipeline, X_train_arr, y_train_arr, cv=5, scoring=scoring_metric, n_jobs=-1)
             return scores.mean()
         
         optuna.logging.set_verbosity(optuna.logging.WARNING)
@@ -60,7 +62,7 @@ class RandomForestC(BaseClassificationAlgo):
                 **best_p
             ))
         ], memory=None)
-        self.model.fit(X_train, y_train.values)
+        self.model.fit(X_train_arr, y_train_arr)
                 
         self.X = X_test
         self.y = y_test
@@ -117,6 +119,9 @@ class RandomForestR(BaseRegressionAlgo):
         super().__init__(dataset=dataset, dataset_path=dataset_path, model_name="Random Forest R", param_grid=param_grid)
 
     def fit(self, X_train, y_train, X_test, y_test):
+        X_train_arr = np.asarray(X_train, dtype=np.float64)
+        y_train_arr = np.asarray(y_train).ravel()
+
         def objective(trial):
             params = {
                 'n_estimators': trial.suggest_categorical('n_estimators', self.param_grid['n_estimators']),
@@ -137,7 +142,7 @@ class RandomForestR(BaseRegressionAlgo):
                 ))
             ], memory=None)
             
-            scores = cross_val_score(pipeline, X_train, y_train.values, cv=5, scoring='neg_mean_squared_error', n_jobs=-1)
+            scores = cross_val_score(pipeline, X_train_arr, y_train_arr, cv=5, scoring='neg_mean_squared_error', n_jobs=-1)
             return scores.mean()
         
         print("Inizio ottimizzazione iperparametri con Optuna (Tree-structured Parzen Estimators)...")
@@ -156,7 +161,7 @@ class RandomForestR(BaseRegressionAlgo):
             ))
         ], memory=None)
         
-        self.model.fit(X_train, y_train.values)
+        self.model.fit(X_train_arr, y_train_arr)
         self.X = X_test
         self.y = y_test
         

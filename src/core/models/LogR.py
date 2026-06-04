@@ -27,7 +27,8 @@ class LogisticRegression(BaseClassificationAlgo):
                              "Controlla il dataset o il caricamento.")
         scoring_metric = 'roc_auc_ovr' if len(unique_classes) > 2 else 'roc_auc'
         
-        y_train_arr = y_train.values if hasattr(y_train, 'values') else y_train
+        X_train_arr = np.asarray(X_train, dtype=np.float64)
+        y_train_arr = np.asarray(y_train).ravel()
         
         # 2. Funzione obiettivo per Optuna
         def objective(trial):
@@ -66,7 +67,7 @@ class LogisticRegression(BaseClassificationAlgo):
                 ('logr', SklearnLogisticRegression(**model_params))
             ], memory=None)
             
-            scores = cross_val_score(pipeline, X_train, y_train_arr, cv=5, scoring=scoring_metric, n_jobs=-1)
+            scores = cross_val_score(pipeline, X_train_arr, y_train_arr, cv=5, scoring=scoring_metric, n_jobs=-1)
             return scores.mean()
             
         print("Inizio ottimizzazione iperparametri con Optuna (Logistic Regression)...")
@@ -94,7 +95,7 @@ class LogisticRegression(BaseClassificationAlgo):
             ('logr', SklearnLogisticRegression(**final_params))
         ], memory=None)
         
-        self.model.fit(X_train, y_train_arr)
+        self.model.fit(X_train_arr, y_train_arr)
         
         final_logr = self.model.named_steps['logr']
         

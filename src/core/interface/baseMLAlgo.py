@@ -22,7 +22,7 @@ class BaseMLAlgo(ABC):
         self.dataset_path = dataset_path
         self.param_grid = param_grid or {}
         PROJECT_NAME="{}_{}_{}".format(model_name, task_type, dataset)
-        self.PLOT_DIR = os.path.join("../output", PROJECT_NAME)
+        self.PLOT_DIR = os.path.join("src/output", PROJECT_NAME)
         os.makedirs(self.PLOT_DIR, exist_ok=True)
         self.data_pipeline = self._setup_data_pipeline()
         

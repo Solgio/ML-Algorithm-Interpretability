@@ -22,7 +22,7 @@ class XGBoostC(BaseClassificationAlgo):
         
         num_classes = len(np.unique(y_train_encoded))
         current_objective = "mlogloss" if num_classes > 2 else "logloss"
-        scoring_metric = 'roc_auc_ovr' if num_classes > 2 else 'roc_auc'
+        scoring_metric = 'roc_auc_ovr' if num_classes > 2 else 'roc_auc'        
         def objective(trial):
             params = {
                 'n_estimators': trial.suggest_categorical('n_estimators', self.param_grid['n_estimators']),

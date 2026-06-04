@@ -25,6 +25,8 @@ class SVM(BaseClassificationAlgo):
             raise ValueError(f"Dati invalidi: y_train contiene una sola classe {unique_classes}. "
                          "Controlla il dataset o il caricamento.")
         scoring_metric = 'roc_auc_ovr' if len(unique_classes) > 2 else 'roc_auc'
+        X_train_arr = np.asarray(X_train, dtype=np.float64)
+        y_train_arr = np.asarray(y_train).ravel()
         
         def objective(trial):
             c = trial.suggest_float('C',self.param_grid['C'][0], self.param_grid['C'][1], log=True)   
@@ -38,7 +40,7 @@ class SVM(BaseClassificationAlgo):
                 ('svc', sklearn.svm.SVC(C=c, kernel=kernel, gamma=gamma, degree=degree, class_weight=class_weight, random_state=42, probability=True))
             ], memory=None)
             
-            scores = cross_val_score(pipeline, X_train, y_train.values, cv=5, scoring=scoring_metric, n_jobs=-1)
+            scores = cross_val_score(pipeline, X_train_arr, y_train_arr, cv=5, scoring=scoring_metric, n_jobs=-1)
             return scores.mean()
             
         
@@ -64,7 +66,7 @@ class SVM(BaseClassificationAlgo):
             ))
         ], memory=None)
         
-        self.model.fit(X_train, y_train.values)
+        self.model.fit(X_train_arr, y_train_arr)
         #final_svc = self.model.named_steps['svc']
         #if hasattr(final_svc, "coef_"):
         #    self.model.coef_ = final_svc.coef_
