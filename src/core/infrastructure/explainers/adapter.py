@@ -50,12 +50,7 @@ class SHAPAnalyzerAdapter:
             if len(x_sample) > max_rows:
                 logging.warning(f"x_sample too large ({len(x_sample)} rows); truncating to {max_rows}")
                 x_sample = x_sample.iloc[:max_rows]
-
-            missing_cols = set(self.x_train.columns) - set(x_sample.columns)
-            extra_cols = set(x_sample.columns) - set(self.x_train.columns)
-
-            logging.warning(f"Columns in x_train but missing in x_sample: {missing_cols}")
-            logging.warning(f"Columns in x_sample but missing in x_train: {extra_cols}")
+                
             result = explainer.explain(x_sample, dependence_variable)
             logging.info(f"Explanation completed successfully with strategy '{strategy}'")
             return result

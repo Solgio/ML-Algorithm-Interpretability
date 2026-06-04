@@ -35,11 +35,19 @@ class LogisticRegression(BaseClassificationAlgo):
                 c = trial.suggest_float('C', self.param_grid['C'][0], self.param_grid['C'][1], log=True)
             else:
                 c = trial.suggest_float('C', 1e-4, 1e2, log=True)   
+                
+            is_multiclass = len(unique_classes) > 2
             
             if self.param_grid and 'solver' in self.param_grid:
-                solver = trial.suggest_categorical('solver', self.param_grid['solver'])
+                allowed_solvers = self.param_grid['solver']
+                if is_multiclass and 'liblinear' in allowed_solvers:
+                    allowed_solvers = [s for s in allowed_solvers if s != 'liblinear']
+                    if not allowed_solvers:
+                        allowed_solvers = ['lbfgs']
             else:
-                solver = trial.suggest_categorical('solver', ['lbfgs', 'liblinear'])
+                allowed_solvers = ['lbfgs'] if is_multiclass else ['lbfgs', 'liblinear']
+                
+            solver = trial.suggest_categorical('solver', allowed_solvers)
             if solver == 'lbfgs':
                 model_params = {'C': c, 'solver': solver, 'max_iter': 2000, 'random_state': 42}
             else:
