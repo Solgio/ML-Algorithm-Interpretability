@@ -1,7 +1,7 @@
 url_student_dataset = "https://www.kaggle.com/datasets/spscientist/students-placement-dataset"
-path_student_dataset = "../data/student-salary/student_placement_salary_elite_v2.csv"
+path_student_dataset = "src/data/student-salary/student_placement_salary_elite_v2.csv"
 
-from domain.enums import TaskType
+from src.core.domain.enums import TaskType
 
 DATASETS = {
     "Student Salary Dataset": {
@@ -38,7 +38,7 @@ DATASETS = {
         "task": TaskType.CLASSIFICATION,
         "description": "...",
         "source": "...",
-        "path": "../data/atelier/prodotti_atelier.csv",
+        "path": "src/data/atelier/prodotti_atelier.csv",
         "drop_columns": ['codice_cliente', 'nome_cliente'],
         "objective_column": "is_cloud",
         "binary_categorical_features": ['is_cloud', 'codice_ateco', 'provincia', 'mercato'],

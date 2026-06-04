@@ -1,10 +1,10 @@
 import logging
-from domain.enums import Algorithm, TaskType
-from domain.value_object import AlgorithmRegistry
-from infrastructure.models.model_factory import ModelFactory
+from src.core.domain.enums import Algorithm, TaskType
+from src.core.domain.value_object import AlgorithmRegistry
+from src.core.infrastructure.models.model_factory import ModelFactory
 
 logger = logging.getLogger(__name__)
-
+base_model_path = "src.core.models."
 
 def initialize_model_registry() -> None:
     """Initialize the model registry with predefined algorithms."""
@@ -15,7 +15,7 @@ def initialize_model_registry() -> None:
     ModelFactory.register(AlgorithmRegistry(
         algorithm=Algorithm.LINEAR_REGRESSION,
         task_type=TaskType.REGRESSION,
-        module_path="models.LR",
+        module_path=base_model_path + "LR",
         class_name="LinearRegression",
         description="Regressione lineare OLS (sklearn)",
         prompt=(
@@ -31,7 +31,7 @@ def initialize_model_registry() -> None:
     ModelFactory.register(AlgorithmRegistry(
         algorithm=Algorithm.DECISION_TREE_REGRESSOR,
         task_type=TaskType.REGRESSION,
-        module_path="models.DecTree",
+        module_path=base_model_path + "DecTree",
         class_name="DecisionTreeR",
         description="Decision tree per regressione (sklearn)",
         prompt=(
@@ -54,7 +54,7 @@ def initialize_model_registry() -> None:
     ModelFactory.register(AlgorithmRegistry(
         algorithm=Algorithm.RANDOM_FOREST_REGRESSOR,
         task_type=TaskType.REGRESSION,
-        module_path="models.RandForest",
+        module_path=base_model_path + "RandForest",
         class_name="RandomForestR",
         description="Random Forest per regressione (sklearn)",
         prompt=(
@@ -80,7 +80,7 @@ def initialize_model_registry() -> None:
     ModelFactory.register(AlgorithmRegistry(
         algorithm=Algorithm.XGBOOST_REGRESSOR,
         task_type=TaskType.REGRESSION,
-        module_path="models.XGBoost",
+        module_path=base_model_path + "XGBoost",
         class_name="XGBoostR",
         description="XGBoost per regressione",
         prompt=(
@@ -104,7 +104,7 @@ def initialize_model_registry() -> None:
     ModelFactory.register(AlgorithmRegistry(
         algorithm=Algorithm.SYMBOLIC_REGRESSOR,
         task_type=TaskType.REGRESSION,
-        module_path="models.SymbR",
+        module_path=base_model_path + "SymbR",
         class_name="SymbolicRegressor",
         description="Simbolic Regressor (pysr)",
         
@@ -113,7 +113,7 @@ def initialize_model_registry() -> None:
     ModelFactory.register(AlgorithmRegistry(
         algorithm=Algorithm.LOGISTIC_REGRESSION,
         task_type=TaskType.CLASSIFICATION,
-        module_path="models.LogR",
+        module_path=base_model_path + "LogR",
         class_name="LogisticRegression",
         description="Regressione logistica (sklearn)",
         prompt=(
@@ -133,7 +133,7 @@ def initialize_model_registry() -> None:
     ModelFactory.register(AlgorithmRegistry(
         algorithm=Algorithm.SVM,
         task_type=TaskType.CLASSIFICATION,
-        module_path="models.SVM",
+        module_path=base_model_path + "SVM",
         class_name="SVM",
         description="Support Vector Machine (sklearn.svm.SVC)",
         prompt=(
@@ -155,7 +155,7 @@ def initialize_model_registry() -> None:
     ModelFactory.register(AlgorithmRegistry(
         algorithm=Algorithm.DECISION_TREE_CLASSIFIER,
         task_type=TaskType.CLASSIFICATION,
-        module_path="models.DecTree",
+        module_path=base_model_path + "DecTree",
         class_name="DecisionTreeC",
         description="Decision tree per classificazione (sklearn)",
         prompt=(
@@ -178,7 +178,7 @@ def initialize_model_registry() -> None:
     ModelFactory.register(AlgorithmRegistry(
         algorithm=Algorithm.RANDOM_FOREST_CLASSIFIER,
         task_type=TaskType.CLASSIFICATION,
-        module_path="models.RandForest",
+        module_path=base_model_path + "RandForest",
         class_name="RandomForestC",
         description="Random Forest per classificazione (sklearn)",
         prompt=(
@@ -204,7 +204,7 @@ def initialize_model_registry() -> None:
     ModelFactory.register(AlgorithmRegistry(
         algorithm=Algorithm.XGBOOST_CLASSIFIER,
         task_type=TaskType.CLASSIFICATION,
-        module_path="models.XGBoost",
+        module_path=base_model_path + "XGBoost",
         class_name="XGBoostC",
         description="XGBoost per classificazione",
         prompt=(

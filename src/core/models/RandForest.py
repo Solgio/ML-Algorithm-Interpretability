@@ -5,8 +5,8 @@ import optuna
 from sklearn.model_selection import cross_val_score
 from sklearn.pipeline import Pipeline
 from sklearn.tree import plot_tree
-from config.datasets_config import DATASETS as data
-from interface.classificationAlgo import BaseClassificationAlgo
+from src.core.config.datasets_config import DATASETS as data
+from src.core.interface.classificationAlgo import BaseClassificationAlgo
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor 
 
 from interface.regressionAlgo import BaseRegressionAlgo

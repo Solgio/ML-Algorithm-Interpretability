@@ -3,9 +3,9 @@ selector.py — Selezione interattiva da CLI di dataset e algoritmo.
 
 Restituisce un dizionario con le scelte effettuate, pronto per l'orchestratore.
 """
-from config.datasets_config import DATASETS
-from domain.enums import Algorithm, TaskType
-from infrastructure.models.model_factory import ModelFactory
+from src.core.config.datasets_config import DATASETS
+from src.core.domain.enums import Algorithm, AnalysisType, TaskType
+from src.core.infrastructure.models.model_factory import ModelFactory
 
 
 def _print_menu(title: str, options: list[str]) -> int:
@@ -28,6 +28,12 @@ def _confirm(question: str) -> bool:
     ans = input(f"\n  {question} [s/n]: ").strip().lower()
     return ans in ("s", "si", "sì", "y", "yes")
 
+
+def select_analysis_type()-> AnalysisType:
+    """Prompt the user to select the type of analysis to perform (comparative run or single model)."""
+    options = ["Eseguire un confronto tra più modelli", "Eseguire un'analisi su un singolo modello"]
+    idx = _print_menu("Seleziona il tipo di analisi", options)
+    return AnalysisType.COMPARATIVE if idx == 0 else AnalysisType.SINGLE
 
 def select_dataset() -> tuple[str, dict]:
     """Fa scegliere all'utente un dataset. Restituisce (nome, config)."""
@@ -114,25 +120,44 @@ def run_selector() -> dict:
     print("   ML PIPELINE — Configurazione")
     print("═" * 50)
 
+    analysis_type = select_analysis_type()
     dataset_name, dataset_cfg = select_dataset()
     dataset_task = dataset_cfg["task"]
-    algo_enum= select_algorithm(dataset_task)
-    options                   = select_options()
+    
+    algorithms_to_run=[]
+    if analysis_type == AnalysisType.SINGLE:
+        algo_enum = select_algorithm(dataset_task)
+        algorithms_to_run.append(algo_enum)
+    else:
+        available_algorithms = ModelFactory.list_algorithms(dataset_task)
+        for algo_name in available_algorithms:
+            algo_enum = Algorithm(algo_name.lower().replace(" ", "_"))
+            algorithms_to_run.append(algo_enum)
+
+    options = select_options()
     config = {
+        "analysis_type": analysis_type,
         "dataset_name": dataset_name,
         "dataset_cfg":  dataset_cfg,
-        "algo_enum": algo_enum,
-        "algo_name": str(algo_enum),
-        "algo_info": ModelFactory.get_all_info(algo_enum, dataset_task),
+        "algorithms": algorithms_to_run,
         **options,
     }
+    
+    if analysis_type == AnalysisType.SINGLE:
+        config["algo_enum"] = algorithms_to_run[0]
+        config["algo_name"] = str(algorithms_to_run[0])
+        config["algo_info"] = ModelFactory.get_all_info(algorithms_to_run[0], dataset_task)
 
     # Riepilogo
     print("\n" + "═" * 50)
     print("   RIEPILOGO CONFIGURAZIONE")
     print("═" * 50)
+    print(f"  Tipo analisi : {analysis_type.value.title()}")
     print(f"  Dataset    : {dataset_name}")
-    print(f"  Algoritmo  : {algo_enum}")
+    if analysis_type == AnalysisType.SINGLE:
+        print(f"  Algoritmo   : {algorithms_to_run[0]}")
+    else:
+        print(f"  Algoritmi   : {', '.join([str(a) for a in algorithms_to_run])}")
     print(f"  Test size  : {options['test_size']}")
     print(f"  SHAP       : {'sì' if options['run_shap'] else 'no'}")
     print(f"  LLM        : {'sì' if options['run_llm'] else 'no'}")

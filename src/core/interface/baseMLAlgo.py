@@ -1,12 +1,17 @@
 from abc import ABC, abstractmethod
 import os
+from typing import Dict, Optional
+import logging
 import pandas as pd
 from sklearn.model_selection import train_test_split
-from infrastructure.data.Pipeline import DataPipeline
-from infrastructure.data.dataLoader import CSVDataLoader
-from infrastructure.data.dataProcessor import MissingDataStrategy, PandasDataProcessor
-from infrastructure.data.dataSplitter import StratifiedDataSplitter, DataSplitConfig
-from infrastructure.data.dataValidator import SchemaValidator
+from src.core.domain.enums import TaskType
+from src.core.infrastructure.explainers.adapter import SHAPAnalyzerAdapter
+from src.core.infrastructure.explainers.service import ExplainerService
+from src.core.infrastructure.data.Pipeline import DataPipeline
+from src.core.infrastructure.data.dataLoader import CSVDataLoader
+from src.core.infrastructure.data.dataProcessor import MissingDataStrategy, PandasDataProcessor
+from src.core.infrastructure.data.dataSplitter import StratifiedDataSplitter, DataSplitConfig
+from src.core.infrastructure.data.dataValidator import SchemaValidator
 
 class BaseMLAlgo(ABC):
     """Abstract base class for machine learning algorithms."""
@@ -65,10 +70,42 @@ class BaseMLAlgo(ABC):
     def generate_algorithm_specific_plots(self) -> dict:
         pass
     
-    @abstractmethod
-    def SHAP_analysis(self, x_sample):
-        pass
+    def explain_with_shap(self, x_sample: pd.DataFrame, 
+                     dependence_variable: str) -> Dict[str, str]:
+        """Execute SHAP analysis """
+        logging.info("Inizio SHAP analysis...")
     
+        try:
+            task_type = self._get_task_type()
+            logging.info(f"Task type: {task_type.value}")
+            
+            adapter = SHAPAnalyzerAdapter(
+                model=self.model,
+                x_train=self.X,
+                plot_dir=self.PLOT_DIR,
+                task_type=task_type
+            )
+            
+            plot_paths = adapter.explain(x_sample, dependence_variable)
+            logging.info(f"✓ SHAP completato. Plot: {list(plot_paths.keys())}")
+            return plot_paths
+            
+        except Exception as e:
+            logging.exception(f"Errore SHAP: {e}")
+            return {}
+
+    def _get_task_type(self) -> TaskType:
+        """Determina il task type della classe"""
+        base_class_names = [cls.__name__ for cls in self.__class__.__mro__]
+
+        if 'BaseClassificationAlgo' in base_class_names:
+            return TaskType.CLASSIFICATION
+        elif 'BaseRegressionAlgo' in base_class_names:
+            return TaskType.REGRESSION
+
+        logging.warning("Task type indeterminato, uso CLASSIFICATION")
+        return TaskType.CLASSIFICATION
+
     @abstractmethod
     def export_results(self) -> dict:
         pass

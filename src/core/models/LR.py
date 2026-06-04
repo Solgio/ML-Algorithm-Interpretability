@@ -1,7 +1,7 @@
 import pandas as pd
-import config.datasets_config as data
+import src.core.config.datasets_config as data
 from sklearn.preprocessing import StandardScaler
-from interface.regressionAlgo import BaseRegressionAlgo
+from src.core.interface.regressionAlgo import BaseRegressionAlgo
 from sklearn.linear_model import LinearRegression as SklearnLinearRegression
         
 class LinearRegression(BaseRegressionAlgo):

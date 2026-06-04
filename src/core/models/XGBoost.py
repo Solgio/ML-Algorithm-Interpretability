@@ -7,9 +7,9 @@ import xgboost as xgb
 import matplotlib.pyplot as plt
 import shap
 from sklearn.preprocessing import LabelEncoder
-from config.datasets_config import DATASETS as data
-from interface.classificationAlgo import BaseClassificationAlgo
-from interface.regressionAlgo import BaseRegressionAlgo
+from src.core.config.datasets_config import DATASETS as data
+from src.core.interface.classificationAlgo import BaseClassificationAlgo
+from src.core.interface.regressionAlgo import BaseRegressionAlgo
 
 class XGBoostC(BaseClassificationAlgo):
     def __init__(self, dataset: str, dataset_path: str, param_grid: dict = None):
@@ -122,32 +122,32 @@ class XGBoostC(BaseClassificationAlgo):
         print(f"Plot specifici XGBoost Classificazione salvati in: {self.PLOT_DIR}")
         return plot_paths
 
-    def SHAP_analysis(self, x_sample, dependence_variable):
-        xgb_model = self.model.named_steps['xgb'] if isinstance(self.model, Pipeline) else self.model
-        explainer = shap.TreeExplainer(xgb_model)
-        shap_values = explainer(x_sample)
-        print("\nSHAP values (TreeExplainer) calcolati con successo!")
-        
-        shap.summary_plot(shap_values, x_sample, show=False)
-        summary_path = os.path.join(self.PLOT_DIR, "shap_summary_xgb.png")
-        plt.savefig(summary_path, bbox_inches='tight')
-        plt.close()
-        
-        sample_ind = 0
-        plt.figure(figsize=(10, 6))
-        if len(shap_values.shape) == 3:
-            shap.plots.waterfall(shap_values[sample_ind, :, 1], show=False)
-        else:
-            shap.plots.waterfall(shap_values[sample_ind], show=False)
-            
-        local_exp_path = os.path.join(self.PLOT_DIR, f"shap_local_explanation_sample_{sample_ind}.png")
-        plt.savefig(local_exp_path, bbox_inches='tight')
-        plt.close()
-
-        return {
-            "shap_summary": summary_path,
-            "local_explanation": local_exp_path
-        }
+    #def SHAP_analysis(self, x_sample, dependence_variable):
+    #    xgb_model = self.model.named_steps['xgb'] if isinstance(self.model, Pipeline) else self.model
+    #    explainer = shap.TreeExplainer(xgb_model)
+    #    shap_values = explainer(x_sample)
+    #    print("\nSHAP values (TreeExplainer) calcolati con successo!")
+    #    
+    #    shap.summary_plot(shap_values, x_sample, show=False)
+    #    summary_path = os.path.join(self.PLOT_DIR, "shap_summary_xgb.png")
+    #    plt.savefig(summary_path, bbox_inches='tight')
+    #    plt.close()
+    #    
+    #    sample_ind = 0
+    #    plt.figure(figsize=(10, 6))
+    #    if len(shap_values.shape) == 3:
+    #        shap.plots.waterfall(shap_values[sample_ind, :, 1], show=False)
+    #    else:
+    #        shap.plots.waterfall(shap_values[sample_ind], show=False)
+    #        
+    #    local_exp_path = os.path.join(self.PLOT_DIR, f"shap_local_explanation_sample_{sample_ind}.png")
+    #    plt.savefig(local_exp_path, bbox_inches='tight')
+    #    plt.close()
+#
+    #    return {
+    #        "shap_summary": summary_path,
+    #        "local_explanation": local_exp_path
+    #    }
 
 
 class XGBoostR(BaseRegressionAlgo):
@@ -238,29 +238,29 @@ class XGBoostR(BaseRegressionAlgo):
         print(f"Plot specifici XGBoost Regressione salvati in: {self.PLOT_DIR}")
         return plot_paths
 
-    def SHAP_analysis(self, x_sample, dependence_variable):
-        xgb_model = self.model.named_steps['xgb'] if isinstance(self.model, Pipeline) else self.model
-        explainer = shap.TreeExplainer(xgb_model)
-        shap_values = explainer(x_sample)
-        print("\nSHAP values (TreeExplainer) calcolati con successo!")
-        
-        shap.summary_plot(shap_values, x_sample, show=False)
-        summary_path = os.path.join(self.PLOT_DIR, "shap_summary_xgb_reg.png")
-        plt.savefig(summary_path, bbox_inches='tight')
-        plt.close()
-        
-        sample_ind = 0
-        plt.figure(figsize=(10, 6))
-        shap.plots.waterfall(shap_values[sample_ind], show=False)
-            
-        local_exp_path = os.path.join(self.PLOT_DIR, f"shap_local_explanation_sample_{sample_ind}_reg.png")
-        plt.savefig(local_exp_path, bbox_inches='tight')
-        plt.close()
-
-        return {
-            "shap_summary": summary_path,
-            "local_explanation": local_exp_path
-        }
+    #def SHAP_analysis(self, x_sample, dependence_variable):
+    #    xgb_model = self.model.named_steps['xgb'] if isinstance(self.model, Pipeline) else self.model
+    #    explainer = shap.TreeExplainer(xgb_model)
+    #    shap_values = explainer(x_sample)
+    #    print("\nSHAP values (TreeExplainer) calcolati con successo!")
+    #    
+    #    shap.summary_plot(shap_values, x_sample, show=False)
+    #    summary_path = os.path.join(self.PLOT_DIR, "shap_summary_xgb_reg.png")
+    #    plt.savefig(summary_path, bbox_inches='tight')
+    #    plt.close()
+    #    
+    #    sample_ind = 0
+    #    plt.figure(figsize=(10, 6))
+    #    shap.plots.waterfall(shap_values[sample_ind], show=False)
+    #        
+    #    local_exp_path = os.path.join(self.PLOT_DIR, f"shap_local_explanation_sample_{sample_ind}_reg.png")
+    #    plt.savefig(local_exp_path, bbox_inches='tight')
+    #    plt.close()
+#
+    #    return {
+    #        "shap_summary": summary_path,
+    #        "local_explanation": local_exp_path
+    #    }
 
 
 if __name__ == "__main__":

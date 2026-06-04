@@ -6,9 +6,9 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 from sklearn.model_selection import cross_val_score
 from sklearn.pipeline import Pipeline
-import config.datasets_config as data
+import src.core.config.datasets_config as data
 from sklearn.preprocessing import StandardScaler
-from interface.classificationAlgo import BaseClassificationAlgo
+from src.core.interface.classificationAlgo import BaseClassificationAlgo
 from sklearn.linear_model import LogisticRegression as SklearnLogisticRegression
         
 class LogisticRegression(BaseClassificationAlgo):

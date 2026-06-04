@@ -1,6 +1,10 @@
 
 from enum import Enum
-
+class AnalysisType(Enum):
+    """Enum for supported analysis types."""
+    COMPARATIVE = "comparative"
+    SINGLE = "single"
+    
 class Algorithm(Enum):
     """Enum for supported algorithms."""
     LINEAR_REGRESSION = "linear_regression"

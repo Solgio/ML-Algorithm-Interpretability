@@ -1,14 +1,14 @@
 import importlib
 import logging
-import sys
+import sys   
 import traceback
 from pathlib import Path
 from abc import ABC, abstractmethod
-from domain.enums import Algorithm, TaskType
-from infrastructure.models.model_factory import ModelFactory
-from infrastructure.models.exceptions import ModelNotFoundError, ModelCreationError
+from src.core.domain.enums import Algorithm, AnalysisType, TaskType
+from src.core.infrastructure.models.model_factory import ModelFactory
+from src.core.infrastructure.models.exceptions import ModelNotFoundError, ModelCreationError
 
-from infrastructure.models.registry_initializer import initialize_model_registry
+from src.core.infrastructure.models.registry_initializer import initialize_model_registry
  
 logging.basicConfig(
     level=logging.INFO,
@@ -16,7 +16,6 @@ logging.basicConfig(
     datefmt="%H:%M:%S",
 )
 log = logging.getLogger(__name__)
- 
  
 def _load_model(config: dict):
     """
@@ -41,11 +40,11 @@ def _load_model(config: dict):
         return model
     
     except ModelNotFoundError as e:
-        log.error(f"Algoritmo non trovato: {e}")
+        log.exception(f"Algoritmo non trovato: {e}")
         print(f"\n✗ ERRORE: {e}")
         sys.exit(1)
     except ModelCreationError as e:
-        log.error(f"Errore creazione modello: {e}")
+        log.exception(f"Errore creazione modello: {e}")
         print(f"\n✗ ERRORE: {e}")
         sys.exit(1)
  
@@ -84,7 +83,7 @@ def step_shap(model, dataset_cfg: dict):
         return {}
  
     x_sample = model.X.sample(n=min(200, len(model.X)), random_state=42)
-    paths = model.SHAP_analysis(x_sample=x_sample, dependence_variable=dependence_var[0])
+    paths = model.explain_with_shap(x_sample=x_sample, dependence_variable=dependence_var[0])
     log.info(f"    SHAP plot salvati: {list(paths.values())}")
     return paths
  
@@ -102,7 +101,7 @@ def step_llm(export_results: dict, plot_paths: dict, config: dict):
     try:
         from llm.LLMRequestManager import analyze_statistics
     except ImportError as e:
-        log.error(f"    Impossibile importare 'test.py'. Assicurati che sia nella stessa cartella.{e}")
+        log.exception(f"    Impossibile importare 'test.py'. Assicurati che sia nella stessa cartella.{e}")
         return {}
  
     output_dir = export_results.get("plot_dir")
@@ -277,7 +276,40 @@ class DefaultPipeline(BasePipeline):
 def run_pipeline(config: dict) -> dict:
     """Backward-compatible wrapper that runs the default pipeline."""
     pipeline = DefaultPipeline()
-    return pipeline.run(config)
+    analysis_type = config.get("analysis_type", AnalysisType.SINGLE)
+    results_map={}
+    
+    algorithms = config.get("algorithms", [config.get("algo_enum")])
+    
+    print("\n" + "█" * 60)
+    print(f"  AVVIO WORKFLOW: {analysis_type.value.upper()} su dataset '{config['dataset_name']}'")
+    print("█" * 60)
+
+    for algo in algorithms:
+        local_config = config.copy()
+        local_config["algo_enum"] = algo
+        local_config["algo_name"] = str(algo)
+        local_config["algo_info"] = ModelFactory.get_all_info(algo, config["dataset_cfg"]["task"])
+        
+        try:
+            pipeline_output = pipeline.run(local_config)
+            results_map[str(algo)] = pipeline_output
+        except Exception as e:
+            log.exception(f"❌ Errore critico durante l'esecuzione di {algo}: {e}")
+            traceback.print_exc()
+            print(f"\n Passaggio al prossimo algoritmo...\n")
+            continue
+        
+    if analysis_type == AnalysisType.COMPARATIVE and len(results_map) > 1:
+        print("\n" + "═" * 60)
+        print("   CONFRONTO FINALE METRICHE")
+        print("═" * 60)
+        for algo_name, out in results_map.items():
+            metrics = out["export"].get("metrics", {})
+            print(f"  > {algo_name}: {metrics}")
+        print("═" * 60)
+
+    return results_map
  
  
 # ------------------------------------------------------------------ #
@@ -287,7 +319,7 @@ def run_pipeline(config: dict) -> dict:
 if __name__ == "__main__":
     try:
         initialize_model_registry()
-        from selector import run_selector
+        from src.core.selector import run_selector
         config = run_selector()
         run_pipeline(config)
     except KeyboardInterrupt:

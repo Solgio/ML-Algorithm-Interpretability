@@ -5,11 +5,11 @@ import numpy as np
 from sklearn.pipeline import Pipeline
 from sklearn.tree import plot_tree
 from sklearn.model_selection import cross_val_score
-from config.datasets_config import DATASETS as data
-from interface.classificationAlgo import BaseClassificationAlgo
+from src.core.config.datasets_config import DATASETS as data
+from src.core.interface.classificationAlgo import BaseClassificationAlgo
 from sklearn.tree import DecisionTreeClassifier as SklearnDecisionTreeClassifier
 
-from interface.regressionAlgo import BaseRegressionAlgo
+from src.core.interface.regressionAlgo import BaseRegressionAlgo
 from sklearn.tree import DecisionTreeRegressor as SklearnDecisionTreeRegressor
 
 class DecisionTreeC(BaseClassificationAlgo):

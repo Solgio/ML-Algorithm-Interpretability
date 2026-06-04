@@ -7,7 +7,7 @@ from sklearn.model_selection import cross_val_score
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 from pysr import PySRRegressor
-from interface.regressionAlgo import BaseRegressionAlgo
+from src.core.interface.regressionAlgo import BaseRegressionAlgo
 
 class SymbolicRegressor(BaseRegressionAlgo):
     def __init__(self, dataset: str, dataset_path: str, param_grid: dict = None):

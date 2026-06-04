@@ -1,7 +1,7 @@
 import streamlit as st
-from config.datasets_config import DATASETS
-from selector import ALGORITHMS
-from orchestrator import run_pipeline
+from src.core.config.datasets_config import DATASETS
+from src.core.selector import ALGORITHMS
+from src.core.orchestrator import run_pipeline
 
 st.set_page_config(page_title="ML Pipeline Dashboard", layout="centered")
 st.title("Machine Learning Pipeline Orchestrator")

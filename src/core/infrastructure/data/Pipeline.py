@@ -2,10 +2,10 @@ import pandas as pd
 from abc import ABC, abstractmethod
 from typing import Tuple
 import logging
-from .dataLoader import DataLoader
-from .dataValidator import DataValidator
-from .dataProcessor import DataProcessor
-from .dataSplitter import DataSplitter
+from src.core.infrastructure.data.dataLoader import DataLoader
+from src.core.infrastructure.data.dataValidator import DataValidator
+from src.core.infrastructure.data.dataProcessor import DataProcessor
+from src.core.infrastructure.data.dataSplitter import DataSplitter
 
 class DataPipeline:
     """Class responsible for orchestrating the data loading, validation, processing, and splitting steps."""

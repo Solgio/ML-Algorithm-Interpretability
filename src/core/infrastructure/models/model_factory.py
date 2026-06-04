@@ -2,9 +2,9 @@
 import importlib
 import logging
 from typing import Dict, List, Optional, Tuple
-from domain.enums import Algorithm, TaskType
-from domain.value_object import AlgorithmRegistry
-from infrastructure.models.exceptions import ModelRegistrationError, ModelCreationError, ModelNotFoundError
+from src.core.domain.enums import Algorithm, TaskType
+from src.core.domain.value_object import AlgorithmRegistry
+from src.core.infrastructure.models.exceptions import ModelRegistrationError, ModelCreationError, ModelNotFoundError
 
 class ModelFactory:
     """Factory class for creating model instances."""

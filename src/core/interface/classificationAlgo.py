@@ -7,7 +7,7 @@ import shap
 import sklearn
 from abc import ABC, abstractmethod
 from sklearn.metrics import ConfusionMatrixDisplay
-from .baseMLAlgo import BaseMLAlgo
+from src.core.interface.baseMLAlgo import BaseMLAlgo
 
 class BaseClassificationAlgo(BaseMLAlgo):
     @abstractmethod
@@ -115,65 +115,65 @@ class BaseClassificationAlgo(BaseMLAlgo):
     def generate_algorithm_specific_plots(self) -> dict:
         pass
     
-    def SHAP_analysis(self, x_sample, dependence_variable=None):
-        if hasattr(self.model, "predict_proba"):
-            pred_fn = lambda x: self.model.predict_proba(x)[:, 1]
-        elif hasattr(self.model, "decision_function"):
-            pred_fn = lambda x: self.model.decision_function(x)[:, 1] if len(self.model.classes_)>2 else self.model.decision_function(x)
-        else:
-            pred_fn = self.model.predict
-        try:
-            explainer = shap.Explainer(self.model, x_sample)
-            shap_values = explainer(x_sample, check_additivity=False)
-        except TypeError:
-            explainer = shap.Explainer(pred_fn, x_sample)
-            try:
-                shap_values = explainer(x_sample)
-            except TypeError:
-                shap_values = explainer(x_sample)
-            
-        if len(shap_values.shape) == 3:
-            shap_values = shap_values[:, :, 1]
-        print("\nSHAP values calculated successfully!")
-        
-        shap.summary_plot(shap_values, x_sample, plot_type="bar", show=False)
-        summary_path = os.path.join(self.PLOT_DIR, "shap_summary.png")
-        plt.savefig(summary_path)
-        plt.close()
-        
-        if dependence_variable is not None:
-            sample_ind = 20
-            shap.partial_dependence_plot(
-                dependence_variable,
-                pred_fn,
-                x_sample,
-                model_expected_value=True,
-                feature_expected_value=True,
-                ice=False,
-                shap_values=shap_values[sample_ind : sample_ind + 1, :],
-                show=False
-            )
-            pdp_path = os.path.join(self.PLOT_DIR, f"partial_dependence_{dependence_variable}_sample_{sample_ind}.png")
-            plt.savefig(pdp_path)
-            plt.close()
-        
-        values_to_plot = shap_values.values if hasattr(shap_values, 'values') else shap_values
-        
-        shap.dependence_plot(
-            dependence_variable,
-            values_to_plot,
-            x_sample,
-            show=False
-        )
-        effect_plot_path = os.path.join(self.PLOT_DIR, f"effect_plot_{dependence_variable}.png")
-        plt.savefig(effect_plot_path)
-        plt.close()
-        
-        return {
-            "shap_summary": summary_path,
-            "partial_dependence": pdp_path,
-            "effect_plot": effect_plot_path
-        }
+    #def SHAP_analysis(self, x_sample, dependence_variable=None):
+    #    if hasattr(self.model, "predict_proba"):
+    #        pred_fn = lambda x: self.model.predict_proba(x)[:, 1]
+    #    elif hasattr(self.model, "decision_function"):
+    #        pred_fn = lambda x: self.model.decision_function(x)[:, 1] if len(self.model.classes_)>2 else self.model.decision_function(x)
+    #    else:
+    #        pred_fn = self.model.predict
+    #    try:
+    #        explainer = shap.Explainer(self.model, x_sample)
+    #        shap_values = explainer(x_sample, check_additivity=False)
+    #    except TypeError:
+    #        explainer = shap.Explainer(pred_fn, x_sample)
+    #        try:
+    #            shap_values = explainer(x_sample)
+    #        except TypeError:
+    #            shap_values = explainer(x_sample)
+    #        
+    #    if len(shap_values.shape) == 3:
+    #        shap_values = shap_values[:, :, 1]
+    #    print("\nSHAP values calculated successfully!")
+    #    
+    #    shap.summary_plot(shap_values, x_sample, plot_type="bar", show=False)
+    #    summary_path = os.path.join(self.PLOT_DIR, "shap_summary.png")
+    #    plt.savefig(summary_path)
+    #    plt.close()
+    #    
+    #    if dependence_variable is not None:
+    #        sample_ind = 20
+    #        shap.partial_dependence_plot(
+    #            dependence_variable,
+    #            pred_fn,
+    #            x_sample,
+    #            model_expected_value=True,
+    #            feature_expected_value=True,
+    #            ice=False,
+    #            shap_values=shap_values[sample_ind : sample_ind + 1, :],
+    #            show=False
+    #        )
+    #        pdp_path = os.path.join(self.PLOT_DIR, f"partial_dependence_{dependence_variable}_sample_{sample_ind}.png")
+    #        plt.savefig(pdp_path)
+    #        plt.close()
+    #    
+    #    values_to_plot = shap_values.values if hasattr(shap_values, 'values') else shap_values
+    #    
+    #    shap.dependence_plot(
+    #        dependence_variable,
+    #        values_to_plot,
+    #        x_sample,
+    #        show=False
+    #    )
+    #    effect_plot_path = os.path.join(self.PLOT_DIR, f"effect_plot_{dependence_variable}.png")
+    #    plt.savefig(effect_plot_path)
+    #    plt.close()
+    #    
+    #    return {
+    #        "shap_summary": summary_path,
+    #        "partial_dependence": pdp_path,
+    #        "effect_plot": effect_plot_path
+    #    }
     
 
     def export_results(self) -> dict:
