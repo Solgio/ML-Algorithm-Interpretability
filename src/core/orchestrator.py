@@ -303,7 +303,7 @@ def run_pipeline(config: dict) -> dict:
         except Exception as e:
             log.exception(f"❌ Errore critico durante l'esecuzione di {algo}: {e}")
             traceback.print_exc()
-            print(f"\n Passaggio al prossimo algoritmo...\n")
+            print("\n Passaggio al prossimo algoritmo...\n")
             continue
         
     if analysis_type == AnalysisType.COMPARATIVE and len(results_map) > 1:
