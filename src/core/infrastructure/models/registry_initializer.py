@@ -166,7 +166,7 @@ def initialize_model_registry() -> None:
             "al vertice dell'albero."
         ),
         param_grid={
-            'criterion': ['gini', 'entropy'],
+            'criterion': ['gini', 'entropy', 'log_loss'],
             'max_depth': [None, 5, 20],
             'min_samples_split': [2, 10],
             'min_samples_leaf': [1, 4],
