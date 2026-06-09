@@ -81,6 +81,14 @@ def select_algorithm(task_type: TaskType) -> Algorithm:
             print(f"\n  ✔  Algoritmo selezionato: {selected_algo}")
             return selected_algo
         print(f"  ⚠  Inserisci un numero tra 1 e {len(available_enums)}.")
+        
+def input_user_prompt() -> str:
+    """Chiede all'utente di inserire un prompt personalizzato per l'analisi LLM."""
+    print("\n" + "─" * 50)
+    print("  Inserisci un prompt personalizzato per l'analisi LLM (o lascia vuoto per default):")
+    print("─" * 50)
+    prompt = input("  Prompt: ").strip()
+    return prompt
 
 def select_options() -> dict:
     """Raccoglie opzioni aggiuntive (test_size, SHAP, LLM)."""
@@ -140,6 +148,7 @@ def run_selector() -> dict:
         "dataset_name": dataset_name,
         "dataset_cfg":  dataset_cfg,
         "algorithms": algorithms_to_run,
+        "user_prompt": input_user_prompt(),
         **options,
     }
     
@@ -161,6 +170,8 @@ def run_selector() -> dict:
     print(f"  Test size  : {options['test_size']}")
     print(f"  SHAP       : {'sì' if options['run_shap'] else 'no'}")
     print(f"  LLM        : {'sì' if options['run_llm'] else 'no'}")
+    if config["user_prompt"]:
+        print(f"  Prompt LLM  : {config['user_prompt']}")
     print("═" * 50)
 
     if not _confirm("Avviare la pipeline con questa configurazione?"):

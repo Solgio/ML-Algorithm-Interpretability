@@ -86,7 +86,7 @@ def fetch_model_response(model, role_sistem, prompt_text, base64_image):
         logging.exception(f"Errore durante la chiamata API per {model}-------------------------------------------------------------------------------------: {e}")
         return model, f"Errore: {str(e)}"
     
-def analyze_statistics(metrics_path, coefficients_path, image_path, algo_name, algo_type, dataset_description, algo_prompt):
+def analyze_statistics(metrics_path, coefficients_path, image_path, algo_name, algo_type, dataset_description, user_prompt, algo_prompt):
     logging.info(f"Caricamento metriche da: {metrics_path}")
     raw_metrics = load_metrics(metrics_path)
     logging.info("Metriche caricate e formattate correttamente.")
@@ -102,6 +102,7 @@ def analyze_statistics(metrics_path, coefficients_path, image_path, algo_name, a
         f"# ALGORITMO: {algo_name}\n"
         f"## Tipo di algoritmo: {algo_type}\n"
         f"## Descrizione del dataset: {dataset_description}\n"
+        f"## Aspettative utente: {user_prompt}\n\n"
         f"# DATI NUMERICI:\n{raw_metrics}\n\n"
         f"# COEFFICIENTI: \n{raw_coefficients}\n\n"
         f"# ISTRUZIONI SPECIFICHE: {algo_prompt}\n"
@@ -139,6 +140,7 @@ if __name__ == "__main__":
         algo_name="Linear Regression", 
         algo_type="Regressione", 
         dataset_description="Dataset con informazioni su studenti e i loro stipendi dopo la laurea.", 
+        user_prompt="Mi aspetto che il modello identifichi il cgpa come variabile più importante.",
         algo_prompt="Fornisci un'interpretazione dettagliata dei risultati della regressione lineare, spiegando l'importanza di ogni coefficiente e la qualità del modello."  
         )
     

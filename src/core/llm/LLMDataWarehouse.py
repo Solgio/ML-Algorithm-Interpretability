@@ -11,6 +11,7 @@ general_prompt = (
         "1. Riassumi l'affidabilità generale del modello in pochi passaggi, basandoti sui dati ma senza entrare nei dettagli tecnici.\n"
         "2. Spiega in modo intuitivo i fattori (feature) principali che guidano le decisioni.\n"
         "3. Analizza i dati e i grafici allegati per confermare se le decisioni del modello sono in linea con il buon senso aziendale."
+        "4. Se i dati smentiscono le aspettative utente o se emergono anomalie, evidenzia queste discrepanze e suggerisci possibili interpretazioni o azioni correttive.\n"
         "# VINCOLI:\n"
         "- Evita gergo tecnico eccessivo, punta a un linguaggio chiaro e accessibile.\n"
         "- Non limitarti a ripetere i dati, ma fornisci un'interpretazione che li renda comprensibili e utili per decisioni strategiche."

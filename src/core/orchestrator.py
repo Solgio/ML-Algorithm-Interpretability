@@ -118,6 +118,7 @@ def step_llm(export_results: dict, plot_paths: dict, config: dict):
     algo_name =config["algo_name"]
     algo_type = config["dataset_cfg"]["task"]
     dataset_description = config["dataset_cfg"]["description"]
+    user_prompt = config["user_prompt"]
     algo_prompt = config["algo_info"]["prompt"]
  
     metrics_path      = export_results.get("metrics_path")
@@ -133,6 +134,7 @@ def step_llm(export_results: dict, plot_paths: dict, config: dict):
         algo_name=algo_name,
         algo_type=algo_type,
         dataset_description=dataset_description,
+        user_prompt=user_prompt,
         algo_prompt=algo_prompt,        
     )
  
