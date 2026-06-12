@@ -19,8 +19,8 @@ class DecisionTreeC(BaseClassificationAlgo):
     def fit(self, X_train, y_train, X_test, y_test):
         unique_classes = np.unique(y_train)
         if len(unique_classes) < 2:
-            raise ValueError(f"Dati invalidi: y_train contiene una sola classe {unique_classes}. "
-                         "Controlla il dataset o il caricamento.")
+            raise ValueError(f"Invalid Dataset: y_train contains only one class {unique_classes}. "
+                         "Check the dataset or the loading process.")
         scoring_metric = 'roc_auc_ovr' if len(unique_classes) > 2 else 'roc_auc'
         
         X_train_arr = np.asarray(X_train, dtype=np.float64)
@@ -45,13 +45,13 @@ class DecisionTreeC(BaseClassificationAlgo):
             scores = cross_val_score(pipeline, X_train_arr, y_train_arr, cv=5, scoring=scoring_metric, n_jobs=-1)
             return scores.mean()
         
-        print("Inizio ottimizzazione iperparametri con Optuna (Tree-structured Parzen Estimators)...")
+        print("Starting hyperparameter optimization with Optuna (Tree-structured Parzen Estimators)...")
         optuna.logging.set_verbosity(optuna.logging.WARNING)
         
         study = optuna.create_study(direction='maximize')
         study.optimize(objective, n_trials=30, n_jobs=-1, show_progress_bar=True)
         
-        print(f"Migliori parametri individuati da Optuna: {study.best_params}")
+        print(f"Best parameters found by Optuna: {study.best_params}")
         
         best_p = study.best_params
         self.model = Pipeline([
@@ -82,13 +82,13 @@ class DecisionTreeC(BaseClassificationAlgo):
             max_depth=3,     
             fontsize=10
         )        
-        plt.title("Struttura dell'Albero di Decisione (Classificazione - Primi 3 livelli)")
+        plt.title("Structure of the Decision Tree (Classification - First 3 levels)")
         tree_path = os.path.join(self.PLOT_DIR, "decision_tree_structure.png")
         plt.savefig(tree_path, bbox_inches='tight') 
         plt.close()
         
         plot_paths["decision_tree_structure"] = tree_path
-        print(f"Plot dell'albero salvato in: {tree_path}")
+        print(f"Plot of the tree saved in: {tree_path}")
         
         plt.figure(figsize=(10, 6))
         importances = tree_model.feature_importances_
@@ -131,13 +131,13 @@ class DecisionTreeR(BaseRegressionAlgo):
             scores = cross_val_score(pipeline, X_train_arr, y_train_arr, cv=5, scoring='neg_mean_squared_error', n_jobs=-1)
             return scores.mean()
         
-        print("Inizio ottimizzazione iperparametri con Optuna (Tree-structured Parzen Estimators)...")
+        print("Starting hyperparameter optimization with Optuna (Tree-structured Parzen Estimators)...")
         optuna.logging.set_verbosity(optuna.logging.WARNING)
         
         study = optuna.create_study(direction='maximize')
         study.optimize(objective, n_trials=30, n_jobs=-1, show_progress_bar=True)
         
-        print(f"Migliori parametri individuati da Optuna: {study.best_params}")
+        print(f"Best parameters found by Optuna: {study.best_params}")
         
         best_p = study.best_params
         self.model = Pipeline([
@@ -168,12 +168,12 @@ class DecisionTreeR(BaseRegressionAlgo):
             max_depth=3,     
             fontsize=10
         )        
-        plt.title("Struttura dell'Albero di Decisione (Regresione - Primi 3 livelli)")
+        plt.title("Structure of the Decision Tree (Regression - First 3 levels)")
         tree_path = os.path.join(self.PLOT_DIR, "decision_tree_structure.png")
         plt.savefig(tree_path, bbox_inches='tight') 
         plt.close()
         
-        print(f"Plot dell'albero salvato in: {tree_path}")
+        print(f"Plot of the tree saved in: {tree_path}")
         
         plot_paths["decision_tree_structure"] = tree_path
 

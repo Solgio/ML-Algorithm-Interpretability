@@ -81,7 +81,7 @@ def select_explainer_strategy(algorithm: Algorithm, task_type: TaskType) -> Expl
     if allowed_tasks is not None and task_type not in allowed_tasks:
         allowed_task_names = ", ".join(sorted(task.value for task in allowed_tasks))
         raise ValueError(
-            f"{algorithm} è supportato solo per {allowed_task_names}, non per {task_type.value}"
+            f"{algorithm} is supported only for {allowed_task_names}, not for {task_type.value}"
         )
 
     strategy = _ALGORITHM_STRATEGY_REGISTRY[algorithm]

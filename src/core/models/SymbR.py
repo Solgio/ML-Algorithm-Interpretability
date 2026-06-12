@@ -78,13 +78,13 @@ class SymbolicRegressor(BaseRegressionAlgo):
                 
             return scores.mean()
 
-        print("Inizio ottimizzazione iperparametri con Optuna per Symbolic Regression (PySR)...")
+        print("Starting hyperparameter optimization with Optuna for Symbolic Regression (PySR)...")
         optuna.logging.set_verbosity(optuna.logging.WARNING)
         study = optuna.create_study(direction='maximize')
         
         # PySR is computationally heavy, keep n_trials lower
         study.optimize(objective, n_trials=10, show_progress_bar=True)
-        print(f"Migliori parametri individuati da Optuna: {study.best_params}")
+        print(f"Best parameters found by Optuna: {study.best_params}")
         best_p = study.best_params
         
         # 4. Final Pipeline Model construction

@@ -44,11 +44,11 @@ class XGBoostC(BaseClassificationAlgo):
             scores = cross_val_score(pipeline, X_train, y_train_encoded, cv=5, scoring=scoring_metric, n_jobs=-1)
             return scores.mean()
 
-        print("Inizio ottimizzazione iperparametri con Optuna (Tree-structured Parzen Estimators)...")
+        print("Starting hyperparameter optimization with Optuna (Tree-structured Parzen Estimators)...")
         optuna.logging.set_verbosity(optuna.logging.WARNING)
         study = optuna.create_study(direction='maximize')
         study.optimize(objective, n_trials=30, n_jobs=-1, show_progress_bar=True)
-        print(f"Migliori parametri individuati da Optuna: {study.best_params}")
+        print(f"Best parameters found by Optuna: {study.best_params}")
         best_p = study.best_params
         self.model = Pipeline([
             ('xgb', xgb.XGBClassifier(
@@ -100,7 +100,7 @@ class XGBoostC(BaseClassificationAlgo):
             plt.close()
             plot_paths["tree_visualization"] = tree_path
         except Exception as e:
-            print(f"Impossibile generare la visualizzazione dell'albero. Assicurati che graphviz sia installato. Errore: {e}")
+            print(f"Impossible to generate the tree visualization. Make sure graphviz is installed. Error: {e}")
 
         results = xgb_model.evals_result()
         if results:
@@ -119,7 +119,7 @@ class XGBoostC(BaseClassificationAlgo):
             plt.close()
             plot_paths["learning_curve"] = lc_path
             
-        print(f"Plot specifici XGBoost Classificazione salvati in: {self.PLOT_DIR}")
+        print(f"Specific plots for XGBoost Classification saved in: {self.PLOT_DIR}")
         return plot_paths
 
     #def SHAP_analysis(self, x_sample, dependence_variable):
@@ -177,11 +177,11 @@ class XGBoostR(BaseRegressionAlgo):
             scores = cross_val_score(pipeline, X_train, y_train.values, cv=5, scoring='neg_mean_squared_error', n_jobs=-1)
             return scores.mean()
         
-        print("Inizio ottimizzazione iperparametri con Optuna (Tree-structured Parzen Estimators)...")
+        print("Starting hyperparameter optimization with Optuna (Tree-structured Parzen Estimators)...")
         optuna.logging.set_verbosity(optuna.logging.WARNING)
         study = optuna.create_study(direction='maximize')
         study.optimize(objective, n_trials=30, n_jobs=-1, show_progress_bar=True)
-        print(f"Migliori parametri individuati da Optuna: {study.best_params}")
+        print(f"Best parameters found by Optuna: {study.best_params}")
         best_p = study.best_params
         
         self.model = Pipeline([
@@ -233,9 +233,9 @@ class XGBoostR(BaseRegressionAlgo):
             plt.close()
             plot_paths["tree_visualization"] = tree_path
         except Exception as e:
-            print(f"Impossibile generare la visualizzazione dell'albero. Assicurati che graphviz sia installato. Errore: {e}")
+            print(f"Impossible to generate the tree visualization. Make sure graphviz is installed. Error: {e}")
 
-        print(f"Plot specifici XGBoost Regressione salvati in: {self.PLOT_DIR}")
+        print(f"Specific plots for XGBoost Regression saved in: {self.PLOT_DIR}")
         return plot_paths
 
     #def SHAP_analysis(self, x_sample, dependence_variable):

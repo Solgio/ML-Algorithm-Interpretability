@@ -18,8 +18,8 @@ class RandomForestC(BaseClassificationAlgo):
     def fit(self, X_train, y_train, X_test, y_test):
         unique_classes = np.unique(y_train)
         if len(unique_classes) < 2:
-            raise ValueError(f"Dati invalidi: y_train contiene una sola classe {unique_classes}. "
-                         "Controlla il dataset o il caricamento.")
+            raise ValueError(f"Invalid Dataset: y_train contains only one class {unique_classes}. "
+                         "Check the dataset or the loading process.")
         scoring_metric = 'roc_auc_ovr' if len(unique_classes) > 2 else 'roc_auc'
         X_train_arr = np.asarray(X_train, dtype=np.float64)
         y_train_arr = np.asarray(y_train).ravel()
@@ -52,7 +52,7 @@ class RandomForestC(BaseClassificationAlgo):
         study = optuna.create_study(direction='maximize')
         study.optimize(objective, n_trials=30, n_jobs=-1, show_progress_bar=True)
         
-        print(f"Migliori parametri individuati da Optuna: {study.best_params}")
+        print(f"Best parameters found by Optuna: {study.best_params}")
         
         best_p = study.best_params
         self.model = Pipeline([
@@ -88,7 +88,7 @@ class RandomForestC(BaseClassificationAlgo):
             max_depth=3,     
             fontsize=10
         )        
-        plt.title("Struttura di un Albero (Estratto dalla Random Forest - Primi 3 livelli)")
+        plt.title("Structure of a Tree (Extracted from Random Forest - First 3 levels)")
         tree_path = os.path.join(self.PLOT_DIR, "rf_single_tree_structure.png")
         plt.savefig(tree_path, bbox_inches='tight') 
         plt.close()
@@ -102,8 +102,8 @@ class RandomForestC(BaseClassificationAlgo):
         
         plt.bar(range(top_n), importances[indices][:top_n], align="center", color="teal")
         plt.xticks(range(top_n), [feature_names[i] for i in indices][:top_n], rotation=45, ha='right')
-        plt.title("Random Forest: Feature Importance (Impurità Media)")
-        plt.ylabel("Importanza Relativa")
+        plt.title("Random Forest: Feature Importance (Average Impurity)")
+        plt.ylabel("Relative Importance")
         plt.tight_layout()
         
         imp_path = os.path.join(self.PLOT_DIR, "rf_feature_importance.png")
@@ -111,7 +111,7 @@ class RandomForestC(BaseClassificationAlgo):
         plt.close()
         plot_paths["feature_importance"] = imp_path
 
-        print(f"Plot salvati in: {self.PLOT_DIR}")
+        print(f"Plots saved in: {self.PLOT_DIR}")
         return plot_paths
     
 class RandomForestR(BaseRegressionAlgo):
@@ -145,13 +145,13 @@ class RandomForestR(BaseRegressionAlgo):
             scores = cross_val_score(pipeline, X_train_arr, y_train_arr, cv=5, scoring='neg_mean_squared_error', n_jobs=-1)
             return scores.mean()
         
-        print("Inizio ottimizzazione iperparametri con Optuna (Tree-structured Parzen Estimators)...")
+        print("Starting hyperparameter optimization with Optuna (Tree-structured Parzen Estimators)...")
         optuna.logging.set_verbosity(optuna.logging.WARNING)
         
         study = optuna.create_study(direction='maximize')
         study.optimize(objective, n_trials=30, n_jobs=-1, show_progress_bar=True)
         
-        print(f"Migliori parametri individuati da Optuna: {study.best_params}")
+        print(f"Best parameters found by Optuna: {study.best_params}")
         
         best_p = study.best_params
         self.model = Pipeline([
@@ -199,7 +199,7 @@ class RandomForestR(BaseRegressionAlgo):
         plt.bar(range(top_n), importances[indices][:top_n], align="center", color="coral")
         plt.xticks(range(top_n), [feature_names[i] for i in indices][:top_n], rotation=45, ha='right')
         plt.title("Random Forest Regression: Feature Importance")
-        plt.ylabel("Importanza Relativa (Riduzione MSE)")
+        plt.ylabel("Relative Importance (MSE Reduction)")
         plt.tight_layout()
         
         imp_path = os.path.join(self.PLOT_DIR, "rf_feature_importance.png")
@@ -207,7 +207,7 @@ class RandomForestR(BaseRegressionAlgo):
         plt.close()
         plot_paths["feature_importance"] = imp_path
 
-        print(f"Plot salvati in: {self.PLOT_DIR}")
+        print(f"Plots saved in: {self.PLOT_DIR}")
         return plot_paths
 
 if __name__ == "__main__":
