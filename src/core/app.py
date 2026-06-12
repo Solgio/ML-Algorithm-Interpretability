@@ -2,6 +2,7 @@ import os
 import sys
 import streamlit as st
 import logging
+import threading
 import pandas as pd
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
 from src.core.config.datasets_config import DATASETS
@@ -12,21 +13,41 @@ from src.core.infrastructure.models.registry_initializer import initialize_model
 
 initialize_model_registry()
 
-class StreamlitLogHandler(logging.Handler):
-    def __init__(self, st_container):
+class SmartStreamlitLogHandler(logging.Handler):
+    """
+    Overwrites a single status line for main-thread logs,
+    and batches background-thread logs to be displayed at the end.
+    """
+    def __init__(self, status_container, batch_container):
         super().__init__()
-        self.st_container = st_container
-        self.log_buffer = []
+        self.status_container = status_container
+        self.batch_container = batch_container
+        self.batch_logs = []
+        
+        self.script_thread_id = threading.get_ident()
 
     def emit(self, record):
         msg = self.format(record)
-        self.log_buffer.append(msg)
-        if len(self.log_buffer) > 50:
-            self.log_buffer.pop(0)
-        self.st_container.code("\n".join(self.log_buffer), language="log")
+        
+        if threading.get_ident() == self.script_thread_id:
+            self.status_container.info(f"🔄 **Status:** {msg}")
+        else:
+            self.batch_logs.append(msg)
+    
+    def flush_batch(self):
+        """Called at the end to render the LLM batch."""
+        if self.batch_logs:
+            self.batch_container.code("\n".join(self.batch_logs), language="log")
+            self.batch_logs = []
 
 st.set_page_config(page_title="ML Pipeline Dashboard", layout="wide")
 st.title("Machine Learning Pipeline Orchestrator")
+
+if "is_running" not in st.session_state:
+    st.session_state["is_running"] = False
+
+if "risultati_pipeline" not in st.session_state:
+    st.session_state["risultati_pipeline"] = None
 
 st.header("1. Initial Configuration")
 col1, col2 = st.columns(2)
@@ -104,39 +125,41 @@ if analysis_type == AnalysisType.SINGLE:
 
 st.markdown("---")
 
+def lock_ui():
+    st.session_state["is_running"] = True
+
 col_azioni1, col_azioni2 = st.columns([1, 5])
 
 with col_azioni1:
-    avvia_pipeline = st.button("Start Pipeline", type="primary")
+    avvia_pipeline = st.button("Start Pipeline", type="primary", on_click=lock_ui, disabled=st.session_state["is_running"])
 
 with col_azioni2:
     if st.button("New Analysis / Reset", type="secondary"):
         st.session_state.clear()
         st.rerun()               
 
-if "risultati_pipeline" not in st.session_state:
-    st.session_state["risultati_pipeline"] = None
 
 if avvia_pipeline:
     st.subheader("Execution Console")
     
-    log_container = st.empty()
-    sl_handler = StreamlitLogHandler(log_container)
-    sl_handler.setFormatter(logging.Formatter("%(asctime)s  %(levelname)-8s  %(message)s", datefmt="%H:%M:%S"))
+    status_container = st.empty()
+    batch_container = st.empty()
+    smart_handler = SmartStreamlitLogHandler(status_container, batch_container)
+    smart_handler.setFormatter(logging.Formatter("%(asctime)s  %(levelname)-8s  %(message)s", datefmt="%H:%M:%S"))
     root_logger = logging.getLogger()
-    root_logger.addHandler(sl_handler)
-    
-    progress_bar = st.progress(0, text="Initialization in progress...")
+    root_logger.addHandler(smart_handler)
 
     try:
         st.session_state["risultati_pipeline"] = run_pipeline(config)
-        progress_bar.progress(100, text="Execution complete!")
         st.success("Pipeline finished successfully.")
+        status_container.empty()
     except Exception as e:
-        progress_bar.empty()
         st.error(f"A critical error occurred: {e}")
     finally:
-        root_logger.removeHandler(sl_handler)
+        smart_handler.flush_batch()
+        root_logger.removeHandler(smart_handler)
+        st.session_state["is_running"] = False
+        st.rerun()
 
 if st.session_state["risultati_pipeline"] is not None:
     risultati = st.session_state["risultati_pipeline"]
@@ -151,7 +174,7 @@ if st.session_state["risultati_pipeline"] is not None:
         
         if metrics_data:
             df_metrics = pd.DataFrame(metrics_data).T
-            st.dataframe(df_metrics, use_container_width=True)
+            st.dataframe(df_metrics, width='stretch')
     else:
         algo_key = str(algorithms_to_run[0])
         if algo_key in risultati and "export" in risultati[algo_key]:
