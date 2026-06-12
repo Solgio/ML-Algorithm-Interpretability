@@ -9,7 +9,7 @@ base_model_path = "src.core.models."
 def initialize_model_registry() -> None:
     """Initialize the model registry with predefined algorithms."""
     
-    logger.info("Inizializzazione ModelFactory registry...")
+    logger.info("Initializing ModelFactory registry...")
     
     # Linear Regression
     ModelFactory.register(AlgorithmRegistry(
@@ -17,13 +17,13 @@ def initialize_model_registry() -> None:
         task_type=TaskType.REGRESSION,
         module_path=base_model_path + "LR",
         class_name="LinearRegression",
-        description="Regressione lineare OLS (sklearn)",
+        description="OLS Linear Regression (sklearn)",
         prompt=(
-            "Questo modello ha un'altissima trasparenza intrinseca e i suoi parametri "
-            "sono interpretabili direttamente. Spiega l'impatto (magnitudo) e la direzione "
-            "(segno positivo o negativo) dei coefficienti principali. Descrivi come l'aumento "
-            "unitario di un fattore causa una variazione proporzionale nella previsione finale, "
-            "ma avverti che si tratta di correlazioni e non di leggi causali assolute."
+            "This model has very high intrinsic transparency and its parameters "
+            "are directly interpretable. Explain the impact (magnitude) and direction "
+            "(positive or negative sign) of the main coefficients. Describe how the "
+            "unit increase of a factor causes a proportional variation in the final prediction, "
+            "but warn that these are correlations and not absolute causal laws."
         ),
     ))
     
@@ -33,13 +33,13 @@ def initialize_model_registry() -> None:
         task_type=TaskType.REGRESSION,
         module_path=base_model_path + "DecTree",
         class_name="DecisionTreeR",
-        description="Decision tree per regressione (sklearn)",
+        description="Decision Tree for regression (sklearn)",
         prompt=(
-            "Questo modello possiede un'elevata tracciabilità locale basata su una "
-            "spiegabilità strutturale. Spiega le decisioni come una sequenza di regole logiche "
-            "'se... allora' (cammino decisionale) che rispecchiano fedelmente il ragionamento umano. "
-            "Utilizza la feature importance globale per evidenziare qual è il criterio di sbarramento "
-            "fondamentale al vertice dell'albero."
+            "This model possesses high local traceability based on structural "
+            "explainability. Explain decisions as a sequence of 'if... then' logical rules "
+            "(decision path) that faithfully reflect human reasoning. Use global "
+            "feature importance to highlight the fundamental splitting criterion "
+            "at the top of the tree."
         ),
         param_grid={
             'criterion': ['squared_error', 'friedman_mse', 'absolute_error', 'poisson'],
@@ -56,13 +56,13 @@ def initialize_model_registry() -> None:
         task_type=TaskType.REGRESSION,
         module_path=base_model_path + "RandForest",
         class_name="RandomForestR",
-        description="Random Forest per regressione (sklearn)",
+        description="Random Forest for regression (sklearn)",
         prompt=(
-            "Questo modello è un 'Ensemble' con trasparenza media, che richiede l'uso della "
-            "feature importance (spiegabilità post-hoc) per essere compreso. Spiega che l'algoritmo "
-            "crea molti scenari paralleli e prende la decisione a maggioranza. I fattori principali "
-            "identificati rappresentano gli argomenti che hanno convinto la maggioranza, compensando "
-            "eventuali errori dei singoli."
+            "This model is an 'Ensemble' with medium transparency, requiring the use of "
+            "feature importance (post-hoc explainability) to be understood. Explain that the algorithm "
+            "creates many parallel scenarios and makes decisions by majority. The main factors "
+            "identified represent the arguments that convinced the majority, compensating "
+            "for any errors of individuals."
         ),
         param_grid={
             'n_estimators': [100, 200],
@@ -82,13 +82,13 @@ def initialize_model_registry() -> None:
         task_type=TaskType.REGRESSION,
         module_path=base_model_path + "XGBoost",
         class_name="XGBoostR",
-        description="XGBoost per regressione",
+        description="XGBoost for regression",
         prompt=(
-            "Questo modello ha una bassa trasparenza intrinseca (modello opaco) e si affida a "
-            "spiegazioni post-hoc. Spiega che l'algoritmo procede per passaggi successivi, "
-            "concentrandosi progressivamente sui casi più difficili. Usa l'importanza delle feature "
-            "per illustrare quali variabili sono state più utili a correggere gli errori durante "
-            "questo processo di apprendimento."
+            "This model has low intrinsic transparency (opaque model) and relies on "
+            "post-hoc explanations. Explain that the algorithm proceeds in successive steps, "
+            "focusing progressively on the most difficult cases. Use feature importance "
+            "to illustrate which variables were most useful in correcting errors during "
+            "this learning process."
         ),
         param_grid={
             'n_estimators': [100, 300],
@@ -106,7 +106,7 @@ def initialize_model_registry() -> None:
         task_type=TaskType.REGRESSION,
         module_path=base_model_path + "SymbR",
         class_name="SymbolicRegressor",
-        description="Simbolic Regressor (pysr)",
+        description="Symbolic Regressor (pysr)",
         
     ))
     # Logistic Regression
@@ -115,12 +115,12 @@ def initialize_model_registry() -> None:
         task_type=TaskType.CLASSIFICATION,
         module_path=base_model_path + "LogR",
         class_name="LogisticRegression",
-        description="Regressione logistica (sklearn)",
+        description="Logistic Regression (sklearn)",
         prompt=(
-            "Questo modello offre una spiegabilità di tipo probabilistico. Non parlare di logaritmi, "
-            "ma spiega come l'aumento di una specifica variabile moltiplichi le probabilità (odds ratio) "
-            "che un evento si verifichi. Commenta la sicurezza del modello ricordando che probabilità "
-            "molto vicine allo 0 o al 100 indicano alta confidenza."
+            "This model offers a probabilistic type of explainability. Do not talk about logarithms, "
+            "but explain how the increase of a specific variable multiplies the probabilities (odds ratio) "
+            "of an event occurring. Comment on the model's certainty by remembering that probabilities "
+            "very close to 0 or 100 indicate high confidence."
         ),
         param_grid={
             'C': [0.1, 1, 10],
@@ -137,10 +137,10 @@ def initialize_model_registry() -> None:
         class_name="SVM",
         description="Support Vector Machine (sklearn.svm.SVC)",
         prompt=(
-            "Questo è un modello opaco con bassa trasparenza. Spiega che l'algoritmo ignora i casi "
-            "ovvi e cerca la linea di demarcazione ottimale concentrandosi solo sulle istanze limite, "
-            "ovvero quelle più ambigue (i vettori di supporto). Usa le feature più importanti per spiegare "
-            "quali 'coordinate' definiscono questo confine critico."
+            "This is an opaque model with low transparency. Explain that the algorithm ignores "
+            "obvious cases and searches for the optimal boundary line by focusing only on borderline "
+            "instances, i.e., the most ambiguous ones (support vectors). Use the most important features "
+            "to explain which 'coordinates' define this critical boundary."
         ),
         param_grid={
             'C': [0.1, 1, 10, 100],
@@ -157,13 +157,13 @@ def initialize_model_registry() -> None:
         task_type=TaskType.CLASSIFICATION,
         module_path=base_model_path + "DecTree",
         class_name="DecisionTreeC",
-        description="Decision tree per classificazione (sklearn)",
+        description="Decision Tree for classification (sklearn)",
         prompt=(
-            "Questo modello possiede un'elevata tracciabilità locale basata su una spiegabilità "
-            "strutturale. Spiega le decisioni come una sequenza di regole logiche 'se... allora' "
-            "(cammino decisionale) che rispecchiano fedelmente il ragionamento umano. Utilizza la "
-            "feature importance globale per evidenziare qual è il criterio di sbarramento fondamentale "
-            "al vertice dell'albero."
+            "This model possesses high local traceability based on structural "
+            "explainability. Explain decisions as a sequence of 'if... then' logical rules "
+            "(decision path) that faithfully reflect human reasoning. Use global "
+            "feature importance to highlight the fundamental splitting criterion "
+            "at the top of the tree."
         ),
         param_grid={
             'criterion': ['gini', 'entropy', 'log_loss'],
@@ -180,13 +180,13 @@ def initialize_model_registry() -> None:
         task_type=TaskType.CLASSIFICATION,
         module_path=base_model_path + "RandForest",
         class_name="RandomForestC",
-        description="Random Forest per classificazione (sklearn)",
+        description="Random Forest for classification (sklearn)",
         prompt=(
-            "Questo modello è un 'Ensemble' con trasparenza media, che richiede l'uso della "
-            "feature importance (spiegabilità post-hoc) per essere compreso. Spiega che l'algoritmo "
-            "crea molti scenari paralleli e prende la decisione a maggioranza. I fattori principali "
-            "identificati rappresentano gli argomenti che hanno convinto la maggioranza, compensando "
-            "eventuali errori dei singoli."
+            "This model is an 'Ensemble' with medium transparency, requiring the use of "
+            "feature importance (post-hoc explainability) to be understood. Explain that the algorithm "
+            "creates many parallel scenarios and makes decisions by majority. The main factors "
+            "identified represent the arguments that convinced the majority, compensating "
+            "for any errors of individuals."
         ),
         param_grid={
             'n_estimators': [100, 200],
@@ -206,13 +206,13 @@ def initialize_model_registry() -> None:
         task_type=TaskType.CLASSIFICATION,
         module_path=base_model_path + "XGBoost",
         class_name="XGBoostC",
-        description="XGBoost per classificazione",
+        description="XGBoost for classification",
         prompt=(
-            "Questo modello ha una bassa trasparenza intrinseca (modello opaco) e si affida a "
-            "spiegazioni post-hoc. Spiega che l'algoritmo procede per passaggi successivi, "
-            "concentrandosi progressivamente sui casi più difficili. Usa l'importanza delle feature "
-            "per illustrare quali variabili sono state più utili a correggere gli errori durante "
-            "questo processo di apprendimento."
+            "This model has low intrinsic transparency (opaque model) and relies on "
+            "post-hoc explanations. Explain that the algorithm proceeds in successive steps, "
+            "focusing progressively on the most difficult cases. Use feature importance "
+            "to illustrate which variables were most useful in correcting errors during "
+            "this learning process."
         ),
         param_grid={
             'n_estimators': [100, 300],
@@ -224,4 +224,4 @@ def initialize_model_registry() -> None:
         }
     ))
     
-    logger.info(f"✓ Registry inizializzato con {len(ModelFactory.get_registry())} algoritmi")
+    logger.info(f"✓ Registry initialized with {len(ModelFactory.get_registry())} algorithms")

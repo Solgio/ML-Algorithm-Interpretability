@@ -27,7 +27,7 @@ def _load_model(config: dict):
     dataset_path = config["dataset_cfg"]["path"]
     
     try:
-        log.info(f"Creazione modello: {algorithm} ({task_type})")
+        log.info(f"Creating model: {algorithm} ({task_type})")
         
         model = ModelFactory.create(
             algorithm=algorithm,
@@ -36,20 +36,20 @@ def _load_model(config: dict):
             dataset_path=dataset_path
         )
         
-        log.info(f"✓ Modello creato: {type(model).__name__}")
+        log.info(f"✓ Model created: {type(model).__name__}")
         return model
     
     except ModelNotFoundError as e:
-        log.exception(f"Algoritmo non trovato: {e}")
-        print(f"\n✗ ERRORE: {e}")
+        log.exception(f"Algorithm not found: {e}")
+        print(f"\n✗ ERROR: {e}")
         sys.exit(1)
     except ModelCreationError as e:
-        log.exception(f"Errore creazione modello: {e}")
-        print(f"\n✗ ERRORE: {e}")
+        log.exception(f"Error creating model: {e}")
+        print(f"\n✗ ERROR: {e}")
         sys.exit(1)
  
 def step_load_data(model, dataset_cfg: dict, test_size: float):
-    log.info("━━  STEP 1: Caricamento dati")
+    log.info("━━  STEP 1: Loading data")
     X_train, X_test, y_train, y_test = model.import_data(
         drop_columns=dataset_cfg["drop_columns"],
         objective_column=dataset_cfg["objective_column"],
@@ -62,47 +62,47 @@ def step_load_data(model, dataset_cfg: dict, test_size: float):
 def step_fit(model, X_train, y_train, X_test, y_test):
     log.info("━━  STEP 2: Training")
     model.fit(X_train, y_train, X_test, y_test)
-    log.info("    Modello addestrato.")
+    log.info("    Model trained.")
  
  
 def step_plots(model, dataset_cfg: dict):
-    log.info("━━  STEP 3: Generazione plot")
+    log.info("━━  STEP 3: Plot generation")
     binary_features = dataset_cfg.get("binary_categorical_features", [])
     paths = model.generate_plots(binary_features=binary_features)
     algorithm_specific_paths = model.generate_algorithm_specific_plots()
     paths.update(algorithm_specific_paths)
-    log.info(f"    Plot salvati: {list(paths.values())}")
+    log.info(f"    Plots saved: {list(paths.values())}")
     return paths
  
  
 def step_shap(model, dataset_cfg: dict):
-    log.info("━━  STEP 4: Analisi SHAP")
+    log.info("━━  STEP 4: SHAP analysis")
     dependence_var = dataset_cfg.get("shap_dependence_variable")
     if dependence_var is None:
-        log.warning("    'shap_dependence_variable' non definita nel config — SHAP saltato.")
+        log.warning("    'shap_dependence_variable' not defined in config — SHAP skipped.")
         return {}
  
     x_sample = model.X.sample(n=min(200, len(model.X)), random_state=42)
     result = model.explain_with_shap(x_sample=x_sample, dependence_variable=dependence_var[0])
     plot_paths = getattr(result, 'plot_paths', {}) if result is not None else {}
-    log.info(f"    SHAP plot salvati: {list(plot_paths.values())}")
+    log.info(f"    SHAP plots saved: {list(plot_paths.values())}")
     return result
  
  
 def step_export(model) -> dict:
-    log.info("━━  STEP 5: Export risultati")
+    log.info("━━  STEP 5: Results export")
     results = model.export_results()
-    log.info(f"    Metriche  : {results['metrics']}")
+    log.info(f"    Metrics   : {results['metrics']}")
     log.info(f"    Output dir: {results['plot_dir']}")
     return results
  
  
 def step_llm(export_results: dict, plot_paths: dict, config: dict):
-    log.info("━━  STEP 6: Analisi LLM")
+    log.info("━━  STEP 6: LLM analysis")
     try:
         from src.core.llm.LLMRequestManager import analyze_statistics
     except ImportError as e:
-        log.exception(f"    Impossibile importare 'test.py'. Assicurati che sia nella stessa cartella.{e}")
+        log.exception(f"    Impossible to import 'test.py'. Ensure it's in the same folder.{e}")
         return {}
  
     output_dir = export_results.get("plot_dir")
@@ -113,7 +113,7 @@ def step_llm(export_results: dict, plot_paths: dict, config: dict):
         image_paths.extend(list(p_dir.glob("*.png")))
        
     if not image_paths:
-        log.warning("    Nessuna immagine trovata nella directory di output — l'analisi LLM procederà solo con i dati testuali.")
+        log.warning("    No images found in output directory — LLM analysis will proceed with textual data only.")
  
     algo_name =config["algo_name"]
     algo_type = config["dataset_cfg"]["task"]
@@ -124,7 +124,7 @@ def step_llm(export_results: dict, plot_paths: dict, config: dict):
     metrics_path      = export_results.get("metrics_path")
     coefficients_path = export_results.get("coefficients_path")
     if not metrics_path:
-        log.warning("    metrics_path mancante — analisi LLM saltata.")
+        log.warning("    metrics_path missing — LLM analysis skipped.")
         return {}
  
     risultati = analyze_statistics(
@@ -139,7 +139,7 @@ def step_llm(export_results: dict, plot_paths: dict, config: dict):
     )
  
     print("\n" + "═" * 60)
-    print("   RISULTATI ANALISI LLM")
+    print("   LLM ANALYSIS RESULTS")
     print("═" * 60)
     for modello, risposta in risultati.items():
         print(f"\n[{modello}]\n{risposta}\n{'─' * 60}")
@@ -149,16 +149,16 @@ def step_llm(export_results: dict, plot_paths: dict, config: dict):
    
     try:
         with open(report_path, "w", encoding="utf-8") as f:
-            f.write("# Report Analisi Interpretativa LLM\n\n")
+            f.write("# LLM Interpretative Analysis Report\n\n")
            
             for modello, risposta in risultati.items():
-                f.write(f"## Modello: `{modello}`\n\n")
+                f.write(f"## Model: `{modello}`\n\n")
                 f.write(f"{risposta}\n\n")
                 f.write("---\n\n")
                
-        log.info(f"    ✔ Report LLM salvato con successo in: {report_path}")
+        log.info(f"    ✔ LLM Report saved successfully in: {report_path}")
     except Exception as e:
-        log.exception(f"    Errore durante il salvataggio del report LLM: {e}")
+        log.exception(f"    Error during LLM report saving: {e}")
  
     return risultati
  
@@ -184,7 +184,7 @@ class BasePipeline(ABC):
         run_llm = config.get("run_llm", False)
  
         log.info("═" * 60)
-        log.info(f"  Pipeline avviata: {config['algo_name']} su '{dataset_name}'")
+        log.info(f"  Pipeline started: {config['algo_name']} on '{dataset_name}'")
         log.info("═" * 60)
  
         # primitive operations implemented by subclass
@@ -213,7 +213,7 @@ class BasePipeline(ABC):
             llm_results = self.llm(export_res, all_plot_paths, config)
  
         log.info("═" * 60)
-        log.info("  Pipeline completata con successo.")
+        log.info("  Pipeline completed successfully.")
         log.info("═" * 60)
  
         return {
@@ -290,7 +290,7 @@ def run_pipeline(config: dict) -> dict:
     algorithms = config.get("algorithms", [config.get("algo_enum")])
     
     print("\n" + "█" * 60)
-    print(f"  AVVIO WORKFLOW: {analysis_type.value.upper()} su dataset '{config['dataset_name']}'")
+    print(f"  STARTING WORKFLOW: {analysis_type.value.upper()} on dataset '{config['dataset_name']}'")
     print("█" * 60)
 
     for algo in algorithms:
@@ -303,14 +303,14 @@ def run_pipeline(config: dict) -> dict:
             pipeline_output = pipeline.run(local_config)
             results_map[str(algo)] = pipeline_output
         except Exception as e:
-            log.exception(f"❌ Errore critico durante l'esecuzione di {algo}: {e}")
+            log.exception(f"❌ Critical error during the execution of {algo}: {e}")
             traceback.print_exc()
-            print("\n Passaggio al prossimo algoritmo...\n")
+            print("\n Passing to the next algorithm...\n")
             continue
         
     if analysis_type == AnalysisType.COMPARATIVE and len(results_map) > 1:
         print("\n" + "═" * 60)
-        print("   CONFRONTO FINALE METRICHE")
+        print("   FINAL METRIC COMPARISON")
         print("═" * 60)
         for algo_name, out in results_map.items():
             metrics = out["export"].get("metrics", {})
@@ -331,9 +331,9 @@ if __name__ == "__main__":
         config = run_selector()
         run_pipeline(config)
     except KeyboardInterrupt:
-        print("\n\n  Interrotto dall'utente.")
+        print("\n\n  Interrupted by user.")
         sys.exit(0)
     except Exception:
-        log.error("Errore critico nella pipeline:")
+        log.error("Critical error in the pipeline:")
         traceback.print_exc()
         sys.exit(1)

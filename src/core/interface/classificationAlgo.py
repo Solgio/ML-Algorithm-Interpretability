@@ -36,7 +36,7 @@ class BaseClassificationAlgo(BaseMLAlgo):
                 auc = sklearn.metrics.roc_auc_score(self.y, y_proba, multi_class='ovr')
             print(f"AUC: {auc:.4f}")
         else:
-            print("AUC: Non calcolabile (il modello non supporta predict_proba)")
+            print("AUC: Not calculable (model does not support predict_proba)")
             
         specificity = None
         if len(self.model.classes_) == 2:
@@ -84,7 +84,7 @@ class BaseClassificationAlgo(BaseMLAlgo):
                 plt.close()
                 plot_paths["roc_curve"] = roc_path        
         else:
-            print(f"Avviso: {self.model_name} non supporta predict_proba. ROC Curve saltata.")
+            print(f"Warning: {self.model_name} does not support predict_proba. ROC Curve skipped.")
     
         dc = self.df.drop(columns=binary_features, errors='ignore')
         
@@ -189,7 +189,7 @@ class BaseClassificationAlgo(BaseMLAlgo):
         else:
             weights = [0] * len(self.X.columns)
             
-        coef_df = pd.DataFrame({'Feature': self.X.columns, 'Peso/Coefficiente': weights})
+        coef_df = pd.DataFrame({'Feature': self.X.columns, 'Weight/Coefficient': weights})
         coef_csv_path = os.path.join(self.PLOT_DIR, 'coefficienti_pesi.csv')
         coef_df.to_csv(coef_csv_path, index=False)
         
@@ -205,7 +205,7 @@ class BaseClassificationAlgo(BaseMLAlgo):
         with open(metriche_json_path, 'w') as f:
             json.dump(metriche, f)
         
-        print(f"Dati esportati con successo in: {self.PLOT_DIR}")
+        print(f"Data successfully exported to: {self.PLOT_DIR}")
         
         return {
             "metrics": metriche,

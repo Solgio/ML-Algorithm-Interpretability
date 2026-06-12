@@ -26,7 +26,7 @@ def load_metrics(file_path):
     elif path.suffix == '.csv':
         df = pd.read_csv(path)
         return df.to_string(index=False)
-    return "Nessuna metrica testuale disponibile."
+    return "No textual metrics available."
 
 def load_coefficients(file_path):
     path = Path(file_path)
@@ -36,23 +36,23 @@ def load_coefficients(file_path):
     elif path.suffix == '.csv':
         df = pd.read_csv(path)
         return df.to_string(index=False)
-    return "Nessun coefficiente testuale disponibile."
+    return "No textual coefficients available."
 
 def encode_image(image_path):
     encoded_images = []
     
     for img_path in image_path:
         logging.info(f"Start encoding image at path: {img_path}")
-        """Codifica l'immagine in base64 gestendo i percorsi in modo sicuro."""
+        """Encode the image in base64, handling paths safely."""
         path = Path(img_path)
         if not path.exists():
-            raise FileNotFoundError(f"File non trovato: {img_path}")
+            raise FileNotFoundError(f"File not found: {img_path}")
         with open(path, "rb") as image_file:
             encoded_images.append(base64.b64encode(image_file.read()).decode("utf-8"))
     return encoded_images
     
 def fetch_model_response(model, role_sistem, prompt_text, base64_image):
-    """Funzione helper per eseguire la singola chiamata API."""
+    """Helper function to perform a single API call."""
     logging.info(f"Testing model with image support: {model}")
     message_content = [{
         "type": "text",
@@ -83,13 +83,13 @@ def fetch_model_response(model, role_sistem, prompt_text, base64_image):
         return model, response.choices[0].message.content
     
     except Exception as e:
-        logging.exception(f"Errore durante la chiamata API per {model}-------------------------------------------------------------------------------------: {e}")
-        return model, f"Errore: {str(e)}"
+        logging.exception(f"Error during API call for {model}-------------------------------------------------------------------------------------: {e}")
+        return model, f"Error: {str(e)}"
     
 def analyze_statistics(metrics_path, coefficients_path, image_path, algo_name, algo_type, dataset_description, user_prompt, algo_prompt):
-    logging.info(f"Caricamento metriche da: {metrics_path}")
+    logging.info(f"Loading metrics from: {metrics_path}")
     raw_metrics = load_metrics(metrics_path)
-    logging.info("Metriche caricate e formattate correttamente.")
+    logging.info("Metrics loaded and formatted correctly.")
     
     raw_coefficients = load_coefficients(coefficients_path)
     
@@ -98,14 +98,14 @@ def analyze_statistics(metrics_path, coefficients_path, image_path, algo_name, a
     logging.info("Image encoded successfully, preparing prompt for LLM.")
 
     prompt_text = (
-        f"Contesto analisi:\n\n"
-        f"# ALGORITMO: {algo_name}\n"
-        f"## Tipo di algoritmo: {algo_type}\n"
-        f"## Descrizione del dataset: {dataset_description}\n"
-        f"## Aspettative utente: {user_prompt}\n\n"
-        f"# DATI NUMERICI:\n{raw_metrics}\n\n"
-        f"# COEFFICIENTI: \n{raw_coefficients}\n\n"
-        f"# ISTRUZIONI SPECIFICHE: {algo_prompt}\n"
+        f"Analysis context:\n\n"
+        f"# ALGORITHM: {algo_name}\n"
+        f"## Algorithm type: {algo_type}\n"
+        f"## Dataset description: {dataset_description}\n"
+        f"## User expectations: {user_prompt}\n\n"
+        f"# NUMERICAL DATA:\n{raw_metrics}\n\n"
+        f"# COEFFICIENTS: \n{raw_coefficients}\n\n"
+        f"# SPECIFIC INSTRUCTIONS: {algo_prompt}\n"
         f"{general_prompt}\n"
     )
     
@@ -123,8 +123,8 @@ def analyze_statistics(metrics_path, coefficients_path, image_path, algo_name, a
                 model_name, content = future.result()
                 results[model_name] = content
             except Exception as e:
-                logging.exception(f"Eccezione per il modello {model_name}: {e}")
-                results[model_name] = f"Errore: {str(e)}"
+                logging.exception(f"Exception for model {model_name}: {e}")
+                results[model_name] = f"Error: {str(e)}"
 
     return results
 
@@ -138,12 +138,12 @@ if __name__ == "__main__":
         COEFFICIENTS_PATH, 
         IMAGE_PATH, 
         algo_name="Linear Regression", 
-        algo_type="Regressione", 
-        dataset_description="Dataset con informazioni su studenti e i loro stipendi dopo la laurea.", 
-        user_prompt="Mi aspetto che il modello identifichi il cgpa come variabile più importante.",
-        algo_prompt="Fornisci un'interpretazione dettagliata dei risultati della regressione lineare, spiegando l'importanza di ogni coefficiente e la qualità del modello."  
+        algo_type="Regression", 
+        dataset_description="Dataset with information about students and their salaries after graduation.", 
+        user_prompt="I expect the model to identify cgpa as the most important variable.",
+        algo_prompt="Provide a detailed interpretation of the linear regression results, explaining the importance of each coefficient and the model quality."  
         )
     
-    print("\n--- RISULTATI DEL TESTING ---")
+    print("\n--- TESTING RESULTS ---")
     for modello, risposta in risultati.items():
         print(f"\n[{modello}]\n{risposta}\n{'-'*50}")

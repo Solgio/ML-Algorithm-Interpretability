@@ -80,8 +80,8 @@ class SHAPAnalyzerAdapter:
                     return algorithm
 
         raise ValueError(
-            f"Impossibile mappare dinamicamente il modello '{type(base_model).__name__}' a un algoritmo noto. "
-            f"Registra un alias esplicito in SHAPAnalyzerAdapter._MODEL_ALIASES."
+            f"Impossible to dynamically map model '{type(base_model).__name__}' to a known algorithm. "
+            f"Register an explicit alias in SHAPAnalyzerAdapter._MODEL_ALIASES."
         )
 
     def _candidate_model_class_names(self, model: object) -> Iterable[str]:

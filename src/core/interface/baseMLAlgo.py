@@ -72,7 +72,7 @@ class BaseMLAlgo(ABC):
     def explain_with_shap(self, x_sample: pd.DataFrame, 
                      dependence_variable: str):
         """Execute SHAP analysis """
-        logging.info("Inizio SHAP analysis...")
+        logging.info("Starting SHAP analysis...")
     
         try:
             task_type = self._get_task_type()
@@ -88,15 +88,15 @@ class BaseMLAlgo(ABC):
             result = adapter.explain(x_sample, dependence_variable)
             # result is an ExplainerResult; extract plot paths for logging
             plot_paths = getattr(result, 'plot_paths', {})
-            logging.info(f"✓ SHAP completato. Plot: {list(plot_paths.keys())}")
+            logging.info(f"✓ SHAP complete. Plots: {list(plot_paths.keys())}")
             return result
             
         except Exception as e:
-            logging.exception(f"Errore SHAP: {e}")
+            logging.exception(f"SHAP Error: {e}")
             return {}
 
     def _get_task_type(self) -> TaskType:
-        """Determina il task type della classe"""
+        """Determine the task type of the class"""
         base_class_names = [cls.__name__ for cls in self.__class__.__mro__]
 
         if 'BaseClassificationAlgo' in base_class_names:

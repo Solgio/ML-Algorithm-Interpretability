@@ -23,8 +23,8 @@ class LogisticRegression(BaseClassificationAlgo):
     def fit(self, X_train, y_train, X_test, y_test):
         unique_classes = np.unique(y_train)
         if len(unique_classes) < 2:
-            raise ValueError(f"Dati invalidi: y_train contiene una sola classe {unique_classes}. "
-                             "Controlla il dataset o il caricamento.")
+            raise ValueError(f"Invalid data: y_train contains only one class {unique_classes}. "
+                             "Check the dataset or loading.")
         scoring_metric = 'roc_auc_ovr' if len(unique_classes) > 2 else 'roc_auc'
         
         X_train_arr = np.asarray(X_train, dtype=np.float64)
@@ -70,13 +70,13 @@ class LogisticRegression(BaseClassificationAlgo):
             scores = cross_val_score(pipeline, X_train_arr, y_train_arr, cv=5, scoring=scoring_metric, n_jobs=-1)
             return scores.mean()
             
-        print("Inizio ottimizzazione iperparametri con Optuna (Logistic Regression)...")
+        print("Starting hyperparameter optimization with Optuna (Logistic Regression)...")
         optuna.logging.set_verbosity(optuna.logging.WARNING)
         
         study = optuna.create_study(direction='maximize')
         study.optimize(objective, n_trials=30, show_progress_bar=True)
         
-        print(f"Migliori parametri individuati da Optuna: {study.best_params}")
+        print(f"Best parameters found by Optuna: {study.best_params}")
         
         best_p = study.best_params
         final_solver = best_p.get('solver', 'lbfgs')

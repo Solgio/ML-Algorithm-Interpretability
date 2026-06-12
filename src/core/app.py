@@ -28,57 +28,63 @@ class StreamlitLogHandler(logging.Handler):
 st.set_page_config(page_title="ML Pipeline Dashboard", layout="wide")
 st.title("Machine Learning Pipeline Orchestrator")
 
-st.header("1. Configurazione Iniziale")
+st.header("1. Initial Configuration")
 col1, col2 = st.columns(2)
 
 with col1:
     dataset_names = list(DATASETS.keys())
-    selected_dataset = st.selectbox("Scegli un dataset:", dataset_names, index=0)
+    selected_dataset = st.selectbox("Choose a dataset:", dataset_names, index=0)
     dataset_cfg = DATASETS[selected_dataset]
     task_type = dataset_cfg["task"]
-    st.info(f"**Task:** {task_type}  \n**Descrizione:** {dataset_cfg['description']}")
+    st.info(f"**Task:** {task_type}  \n**Description:** {dataset_cfg['description']}")
 
 with col2:
-    tipo_analisi = st.radio("Tipo di Esecuzione:", ["Singolo Modello", "Comparativa (Tutti i modelli)"])
-    is_comparative = tipo_analisi == "Comparativa (Tutti i modelli)"
+    tipo_analisi = st.radio("Execution Type:", ["Single Model", "Comparative (All models)"])
+    is_comparative = tipo_analisi == "Comparative (All models)"
     analysis_type = AnalysisType.COMPARATIVE if is_comparative else AnalysisType.SINGLE
 
-st.header("2. Selezione Algoritmo")
+st.header("2. Algorithm Selection")
 disponibili_algos = ModelFactory.list_algorithms(task_type)
 
 if not disponibili_algos:
-    st.error(f"Nessun algoritmo configurato per il task: {task_type}")
+    st.error(f"No algorithm configured for task: {task_type}")
     st.stop()
 
 algorithms_to_run = []
 
 if is_comparative:
     selected_comparative_algos = st.multiselect(
-        "Scegli gli algoritmi da confrontare:", 
+        "Choose algorithms to compare:", 
         options=disponibili_algos, 
         default=disponibili_algos 
     )
     
     if not selected_comparative_algos:
-        st.warning("⚠ Seleziona almeno un algoritmo per avviare il confronto.")
+        st.warning("⚠ Select at least one algorithm to start the comparison.")
         st.stop()
 
-    st.success(f"Verranno addestrati e confrontati in sequenza: **{', '.join(selected_comparative_algos)}**")
+    st.success(f"Will be trained and compared in sequence: **{', '.join(selected_comparative_algos)}**")
     
     for algo_name in selected_comparative_algos:
         algorithms_to_run.append(Algorithm(algo_name.lower().replace(" ", "_")))
         
 else:
-    selected_algo_name = st.selectbox("Scegli l'algoritmo da addestrare:", disponibili_algos, index=0)
+    selected_algo_name = st.selectbox("Choose algorithm to train:", disponibili_algos, index=0)
     algo_enum = Algorithm(selected_algo_name.lower().replace(" ", "_"))
     algorithms_to_run.append(algo_enum)
-    st.caption(f"*Descrizione modello:* {ModelFactory.get_description(algo_enum, task_type)}")
+    st.caption(f"*Model description:* {ModelFactory.get_description(algo_enum, task_type)}")
 
-st.header("3. Parametri e Opzioni")
-with st.expander("Configurazioni di esecuzione", expanded=True):
-    test_size = st.slider("Dimensione del Test Set (proporzione):", min_value=0.1, max_value=0.5, value=0.2, step=0.05)
-    run_shap = st.checkbox("Esegui analisi SHAP interpretativa", value=False)
-    run_llm = st.checkbox("Genera report finale tramite LLM", value=False)
+st.header("3. Parameters and Options")
+with st.expander("Execution Configurations", expanded=True):
+    test_size = st.slider("Test Set size (proportion):", min_value=0.1, max_value=0.5, value=0.2, step=0.05)
+    run_shap = st.checkbox("Execute interpretive SHAP analysis", value=False)
+    run_llm = st.checkbox("Generate final report via LLM", value=False)
+
+    user_prompt = None
+    if run_llm:
+        user_prompt_input = st.text_input("Enter a custom prompt for the LLM analysis (or leave empty for default):")
+        if user_prompt_input.strip():
+            user_prompt = user_prompt_input.strip()
 
 config = {
     "analysis_type": analysis_type,
@@ -88,6 +94,7 @@ config = {
     "test_size":    test_size,
     "run_shap":     run_shap,
     "run_llm":      run_llm,
+    "user_prompt":  user_prompt,
 }
 
 if analysis_type == AnalysisType.SINGLE:
@@ -100,10 +107,10 @@ st.markdown("---")
 col_azioni1, col_azioni2 = st.columns([1, 5])
 
 with col_azioni1:
-    avvia_pipeline = st.button("Avvia Pipeline", type="primary")
+    avvia_pipeline = st.button("Start Pipeline", type="primary")
 
 with col_azioni2:
-    if st.button("Nuova Analisi / Reset", type="secondary"):
+    if st.button("New Analysis / Reset", type="secondary"):
         st.session_state.clear()
         st.rerun()               
 
@@ -111,7 +118,7 @@ if "risultati_pipeline" not in st.session_state:
     st.session_state["risultati_pipeline"] = None
 
 if avvia_pipeline:
-    st.subheader("Console di Esecuzione")
+    st.subheader("Execution Console")
     
     log_container = st.empty()
     sl_handler = StreamlitLogHandler(log_container)
@@ -119,22 +126,22 @@ if avvia_pipeline:
     root_logger = logging.getLogger()
     root_logger.addHandler(sl_handler)
     
-    progress_bar = st.progress(0, text="Inizializzazione in corso...")
+    progress_bar = st.progress(0, text="Initialization in progress...")
 
     try:
         st.session_state["risultati_pipeline"] = run_pipeline(config)
-        progress_bar.progress(100, text="Esecuzione completata!")
-        st.success("Pipeline terminata con successo.")
+        progress_bar.progress(100, text="Execution complete!")
+        st.success("Pipeline finished successfully.")
     except Exception as e:
         progress_bar.empty()
-        st.error(f"Si è verificato un errore critico: {e}")
+        st.error(f"A critical error occurred: {e}")
     finally:
         root_logger.removeHandler(sl_handler)
 
 if st.session_state["risultati_pipeline"] is not None:
     risultati = st.session_state["risultati_pipeline"]
     
-    st.header("Metriche di Performance")
+    st.header("Performance Metrics")
     
     if is_comparative:
         metrics_data = {}
@@ -151,7 +158,7 @@ if st.session_state["risultati_pipeline"] is not None:
             st.json(risultati[algo_key]["export"]["metrics"])
 
     if run_llm:
-        st.header("Analisi Interpretativa LLM")
+        st.header("Interpretive LLM Analysis")
         for algo, out in risultati.items():
             if "llm_results" in out and out["llm_results"]:
                 with st.expander(f"Report LLM - {algo}", expanded=not is_comparative):

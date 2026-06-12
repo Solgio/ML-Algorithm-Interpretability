@@ -6,7 +6,7 @@ from src.core.domain.enums import TaskType
 DATASETS = {
     "Student Salary Dataset": {
         "task": TaskType.REGRESSION,
-        "description": "Dataset che raccoglie una serie di metriche relative a studenti universitari e alle loro skills, esperienze lavorative, caratteristiche e risultati in test. L'obiettivo è prevedere quale sarà lo stipendio di un neolaureato in base a queste caratteristiche.",
+        "description": "Dataset that collects a series of metrics relating to university students and their skills, work experiences, characteristics, and test results. The goal is to predict what a new graduate's salary will be based on these characteristics.",
         "source": url_student_dataset,
         "path": path_student_dataset,
         "drop_columns": ['placed', 'student_id'],
@@ -16,7 +16,7 @@ DATASETS = {
     },
     "Student Company Type Dataset": {
         "task": TaskType.CLASSIFICATION,
-        "description": "Dataset che raccoglie una serie di metriche relative a studenti universitari e alle loro skills, esperienze lavorative, caratteristiche e risultati in test. L'obiettivo è prevedere quale in quale tipo di azienda un neolaureato verrà collocato in base a queste caratteristiche.",
+        "description": "Dataset that collects a series of metrics relating to university students and their skills, work experiences, characteristics, and test results. The goal is to predict what type of company a new graduate will be placed in based on these characteristics.",
         "source": url_student_dataset,
         "path": path_student_dataset,
         "drop_columns": ['salary_lpa', 'placed', 'student_id', 'job_role'],
@@ -26,7 +26,7 @@ DATASETS = {
     },
     "Student Placed-Not Placed Dataset": {
         "task": TaskType.CLASSIFICATION,
-        "description": "Dataset che raccoglie una serie di metriche relative a studenti universitari e alle loro skills, esperienze lavorative, caratteristiche e risultati in test. L'obiettivo è prevedere se un neolaureato sarà collocato in un'azienda in base a queste caratteristiche.",
+        "description": "Dataset that collects a series of metrics relating to university students and their skills, work experiences, characteristics, and test results. The goal is to predict whether a new graduate will be placed in a company based on these characteristics.",
         "source": url_student_dataset,
         "path": path_student_dataset,
         "drop_columns": ['salary_lpa', 'student_id', 'company_type', 'job_role'],
@@ -46,7 +46,7 @@ DATASETS = {
     },
     "Nasa Asteroid Dataset": {
         "task": TaskType.CLASSIFICATION,
-        "description": "Dataset che raccoglie una serie di metriche relative a studenti universitari e alle loro skills, esperienze lavorative, caratteristiche e risultati in test. L'obiettivo è prevedere se un neolaureato sarà collocato in un'azienda in base a queste caratteristiche.",
+        "description": "Dataset containing metrics about asteroids. The goal is to predict if an asteroid is hazardous.",
         "source": url_student_dataset,
         "path": path_student_dataset,
         "drop_columns": ['id', 'name', 'absolute_magnitude_h', 'relative_velocity_km_per_sec', 'miss_distance_kilometers', 'orbiting_body'],

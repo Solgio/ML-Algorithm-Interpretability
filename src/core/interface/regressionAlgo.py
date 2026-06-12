@@ -116,7 +116,7 @@ class BaseRegressionAlgo(BaseMLAlgo):
         else:
             weights = [0] * len(self.X.columns)
             
-        coef_df = pd.DataFrame({'Feature': self.X.columns, 'Peso/Coefficiente': weights})
+        coef_df = pd.DataFrame({'Feature': self.X.columns, 'Weight/Coefficient': weights})
         coef_csv_path = os.path.join(self.PLOT_DIR, 'coefficienti_pesi.csv')
         coef_df.to_csv(coef_csv_path, index=False)
         
@@ -131,7 +131,7 @@ class BaseRegressionAlgo(BaseMLAlgo):
         with open(metriche_json_path, 'w') as f:
             json.dump(metriche, f)
         
-        print(f"Dati esportati con successo in: {self.PLOT_DIR}")
+        print(f"Data successfully exported to: {self.PLOT_DIR}")
         
         return {
             "metrics": metriche,

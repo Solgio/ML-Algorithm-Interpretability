@@ -22,8 +22,8 @@ class SVM(BaseClassificationAlgo):
     def fit(self, X_train, y_train, X_test, y_test):
         unique_classes = np.unique(y_train)
         if len(unique_classes) < 2:
-            raise ValueError(f"Dati invalidi: y_train contiene una sola classe {unique_classes}. "
-                         "Controlla il dataset o il caricamento.")
+            raise ValueError(f"Invalid data: y_train contains only one class {unique_classes}. "
+                         "Check the dataset or loading.")
         scoring_metric = 'roc_auc_ovr' if len(unique_classes) > 2 else 'roc_auc'
         X_train_arr = np.asarray(X_train, dtype=np.float64)
         y_train_arr = np.asarray(y_train).ravel()
