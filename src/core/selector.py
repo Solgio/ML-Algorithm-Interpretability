@@ -163,23 +163,23 @@ def run_selector() -> dict:
 
     # Riepilogo
     print("\n" + "═" * 50)
-    print("   RIEPILOGO CONFIGURAZIONE")
+    print("   Configuration Summary")
     print("═" * 50)
-    print(f"  Tipo analisi : {analysis_type.value.title()}")
+    print(f"  Analysis type : {analysis_type.value.title()}")
     print(f"  Dataset    : {dataset_name}")
     if analysis_type == AnalysisType.SINGLE:
-        print(f"  Algoritmo   : {algorithms_to_run[0]}")
+        print(f"  Algorithm   : {algorithms_to_run[0]}")
     else:
-        print(f"  Algoritmi   : {', '.join([str(a) for a in algorithms_to_run])}")
+        print(f"  Algorithms   : {', '.join([str(a) for a in algorithms_to_run])}")
     print(f"  Test size  : {options['test_size']}")
-    print(f"  SHAP       : {'sì' if options['run_shap'] else 'no'}")
-    print(f"  LLM        : {'sì' if options['run_llm'] else 'no'}")
+    print(f"  SHAP       : {'yes' if options['run_shap'] else 'no'}")
+    print(f"  LLM        : {'yes' if options['run_llm'] else 'no'}")
     if config["user_prompt"]:
         print(f"  Prompt LLM  : {config['user_prompt']}")
     print("═" * 50)
 
-    if not _confirm("Avviare la pipeline con questa configurazione?"):
-        print("\n  Pipeline annullata.\n")
+    if not _confirm("Start the pipeline with this configuration?"):
+        print("\n  Pipeline cancelled.\n")
         raise SystemExit(0)
 
     return config
