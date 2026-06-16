@@ -34,16 +34,36 @@ DATASETS = {
         "binary_categorical_features": ['student_id', 'branch', 'company_type', 'job_role', 'dsa_skill', 'ml_skill', 'web_dev_skill', 'placed'],
         "shap_dependence_variable": ["cgpa"]
     },
-    "Atelier Dataset": {
+    "Heart Disease Dataset": {
         "task": TaskType.CLASSIFICATION,
-        "description": "...",
-        "source": "...",
-        "path": "src/data/atelier/prodotti_atelier.csv",
-        "drop_columns": ['codice_cliente', 'nome_cliente'],
-        "objective_column": "is_cloud",
-        "binary_categorical_features": ['is_cloud', 'codice_ateco', 'provincia', 'mercato'],
-        "shap_dependence_variable": ["dipendenti"]
+        "description": "Dataset containing medical metrics about patients. The goal is to predict if a patient has heart disease.",
+        "source": "https://www.kaggle.com/datasets/ronitf/heart-disease-uci",
+        "path": "src/data/heart/heart.csv",
+        "drop_columns": [],
+        "objective_column": "HeartDisease",
+        "binary_categorical_features": ['Sex', 'ChestPainType', 'FastingBS', 'ExerciseAngina', 'Oldpeak', 'ST_Slope', 'HeartDisease'],
+        "shap_dependence_variable": ["Cholesterol"]
     },
+    "Life Expectancy Dataset": {
+        "task": TaskType.REGRESSION,
+        "description": "Dataset containing various metrics about countries. The goal is to predict the life expectancy of a country based on these characteristics.",
+        "source": "https://www.kaggle.com/datasets/kumarajarshi/life-expectancy-who",
+        "path": "src/data/life_exp/LifeExpectancy.csv",
+        "drop_columns": ['Status', 'Year'],
+        "objective_column": "Life expectancy ",
+        "binary_categorical_features": ['Country', 'Status' ],
+        "shap_dependence_variable": ["Alcohol"]
+    },
+    #"Atelier Dataset": {
+    #    "task": TaskType.CLASSIFICATION,
+    #    "description": "...",
+    #    "source": "...",
+    #    "path": "src/data/atelier/prodotti_atelier.csv",
+    #    "drop_columns": ['codice_cliente', 'nome_cliente'],
+    #    "objective_column": "is_cloud",
+    #    "binary_categorical_features": ['is_cloud', 'codice_ateco', 'provincia', 'mercato'],
+    #    "shap_dependence_variable": ["dipendenti"]
+    #},
     "Nasa Asteroid Dataset": {
         "task": TaskType.CLASSIFICATION,
         "description": "Dataset containing metrics about asteroids. The goal is to predict if an asteroid is hazardous.",
