@@ -54,27 +54,4 @@ DATASETS = {
         "binary_categorical_features": ['Country', 'Status' ],
         "shap_dependence_variable": ["Alcohol"]
     },
-    #"Atelier Dataset": {
-    #    "task": TaskType.CLASSIFICATION,
-    #    "description": "...",
-    #    "source": "...",
-    #    "path": "src/data/atelier/prodotti_atelier.csv",
-    #    "drop_columns": ['codice_cliente', 'nome_cliente'],
-    #    "objective_column": "is_cloud",
-    #    "binary_categorical_features": ['is_cloud', 'codice_ateco', 'provincia', 'mercato'],
-    #    "shap_dependence_variable": ["dipendenti"]
-    #},
-    "Nasa Asteroid Dataset": {
-        "task": TaskType.CLASSIFICATION,
-        "description": "Dataset containing metrics about asteroids. The goal is to predict if an asteroid is hazardous.",
-        "source": url_student_dataset,
-        "path": path_student_dataset,
-        "drop_columns": ['id', 'name', 'absolute_magnitude_h', 'relative_velocity_km_per_sec', 'miss_distance_kilometers', 'orbiting_body'],
-        "objective_column": "hazardous",
-        "binary_categorical_features": ['hazardous'],
-        "shap_dependence_variable": ["estimated_diameter_min"]
-    }
-    
-    
-    
 }
