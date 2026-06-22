@@ -49,6 +49,17 @@ ALGORITHMS = {
             'gamma': [0, 0.2]
             }
         },
+        "Symbolic Regression": {
+            "module": "models.SymbR",
+            "class": "SymbolicRegressor",
+            "description": "Symbolic Regression (PySR)",
+            "prompt": "This model is a symbolic regression model that generates interpretable mathematical expressions. Explain the resulting equation in terms of its components, highlighting how each variable contributes to the prediction. Discuss the trade-off between model complexity and accuracy, and how the model captures underlying relationships in the data.",
+            "param_grid": {
+                'niterations': [100, 500],
+                'maxsize': [10, 50],
+                'parsimony': [0.01, 1.0]
+            }
+        }
     },
     "Classification": {
         "Logistic Regression": {

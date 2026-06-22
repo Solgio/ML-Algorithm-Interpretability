@@ -8,10 +8,11 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 from pysr import PySRRegressor
 from src.core.interface.regressionAlgo import BaseRegressionAlgo
+from sympy.printing.dot import dotprint
+import graphviz
 
 class SymbolicRegressor(BaseRegressionAlgo):
     def __init__(self, dataset: str, dataset_path: str, param_grid: dict = None):
-        # Default parameter grid for PySR if none is provided
         if param_grid is None:
             param_grid = {
                 'niterations': [5, 40],
@@ -30,11 +31,8 @@ class SymbolicRegressor(BaseRegressionAlgo):
         
         new_columns = []
         for col in df.columns:
-            # Replace any non-alphanumeric character (except existing underscores) with an underscore
             sanitized = re.sub(r'[^a-zA-Z0-9_]', '_', str(col))
-            # Collapse consecutive underscores into a single one for neatness
             sanitized = re.sub(r'_+', '_', sanitized)
-            # Drop any trailing or leading underscores
             sanitized = sanitized.strip('_')
             new_columns.append(sanitized)
             
@@ -43,19 +41,16 @@ class SymbolicRegressor(BaseRegressionAlgo):
         return df_clean
 
     def fit(self, X_train, y_train, X_test, y_test):
-        # SANITIZATION: Fix column names right before training to comply with PySR rules
         X_train = self._sanitize_column_names(X_train)
         X_test = self._sanitize_column_names(X_test)
         
         def objective(trial):
-            # 1. Suggest parameters
             params = {
                 'niterations': trial.suggest_int('niterations', self.param_grid['niterations'][0], self.param_grid['niterations'][1]),
                 'maxsize': trial.suggest_int('maxsize', self.param_grid['maxsize'][0], self.param_grid['maxsize'][1]),
                 'parsimony': trial.suggest_float('parsimony', self.param_grid['parsimony'][0], self.param_grid['parsimony'][1], log=True)
             }
             
-            # 2. Build the Pipeline (Scaling + PySR)
             scaler = StandardScaler().set_output(transform="pandas") if hasattr(StandardScaler, "set_output") else StandardScaler()
             
             pipeline = Pipeline([
@@ -70,7 +65,6 @@ class SymbolicRegressor(BaseRegressionAlgo):
                 ))
             ], memory=None)
             
-            # 3. Cross-Validation
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore")
                 scores = cross_val_score(pipeline, X_train, y_train.values if hasattr(y_train, 'values') else y_train, 
@@ -82,12 +76,10 @@ class SymbolicRegressor(BaseRegressionAlgo):
         optuna.logging.set_verbosity(optuna.logging.WARNING)
         study = optuna.create_study(direction='maximize')
         
-        # PySR is computationally heavy, keep n_trials lower
         study.optimize(objective, n_trials=10, show_progress_bar=True)
         print(f"Best parameters found by Optuna: {study.best_params}")
         best_p = study.best_params
         
-        # 4. Final Pipeline Model construction
         final_scaler = StandardScaler().set_output(transform="pandas") if hasattr(StandardScaler, "set_output") else StandardScaler()
         
         self.model = Pipeline([
@@ -111,9 +103,46 @@ class SymbolicRegressor(BaseRegressionAlgo):
         return self.model.predict(self.X)
     
     def generate_algorithm_specific_plots(self) -> dict:
-        # PySR does not have built-in feature importance, but we can visualize the discovered equations
+        import matplotlib.pyplot as plt
+        pysr_model = self.model.named_steps['pysr']
+        df = pysr_model.equations_
+        
         equation_path = os.path.join(self.PLOT_DIR, "pysr_equation.txt")
         with open(equation_path, "w") as f:
-            f.write(str(self.model.named_steps['pysr'].equations_))
+            f.write(str(df))
+            
+        pareto_path = os.path.join(self.PLOT_DIR, "pysr_pareto_front.png")
+        plt.figure(figsize=(9, 5))
+        plt.plot(df['complexity'], df['loss'], marker='o', linestyle='-', color='b', label='Pareto Frontier')
         
-        return {"pysr_equation": equation_path}
+        try:
+            best_idx = pysr_model.pick_best_index()
+            chosen_row = df.iloc[best_idx]
+            plt.scatter(chosen_row['complexity'], chosen_row['loss'], color='red', s=150, zorder=5, label='Chosen Model')
+        except Exception:
+            pass 
+            
+        plt.xlabel('Complexity (Number of Nodes)')
+        plt.ylabel('Loss')
+        plt.title('PySR Pareto Frontier: Complexity vs. Loss')
+        plt.yscale('log')
+        plt.grid(True, which="both", ls="--", alpha=0.5)
+        plt.legend()
+        plt.tight_layout()
+        
+        plt.savefig(pareto_path)
+        plt.close()
+        
+        try:
+            best_expr = pysr_model.sympy()
+            dot_graph_data = dotprint(best_expr)
+            tree_path = os.path.join(self.PLOT_DIR, "pysr_expression_tree")
+            src = graphviz.Source(dot_graph_data)
+            src.render(tree_path, format='png', cleanup=True)
+
+            tree_png_path = f"{tree_path}.png"
+        except Exception as e:
+            print(f"Could not render equation tree: {e}")
+            tree_png_path = None
+        
+        return {"pysr_equation": equation_path, "pysr_pareto_front": pareto_path, "pysr_expression_tree": tree_png_path}

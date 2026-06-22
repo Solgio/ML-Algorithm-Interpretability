@@ -27,7 +27,7 @@ class SHAPAnalyzerAdapter:
         "XGBRegressor": Algorithm.XGBOOST_REGRESSOR,
         "XGBoostC": Algorithm.XGBOOST_CLASSIFIER,
         "XGBoostR": Algorithm.XGBOOST_REGRESSOR,
-        "SymbolicRegressor": Algorithm.SYMBOLIC_REGRESSOR,
+        "PySRRegressor": Algorithm.SYMBOLIC_REGRESSOR,
     }
     
     def __init__(self, model, x_train: pd.DataFrame, plot_dir: str, task_type: TaskType):
