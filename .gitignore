@@ -1,4 +1,5 @@
 .env
 .venv
 output/
+.Stage
 __pycache__

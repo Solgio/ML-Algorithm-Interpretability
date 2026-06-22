@@ -1,0 +1,57 @@
+url_student_dataset = "https://www.kaggle.com/datasets/spscientist/students-placement-dataset"
+path_student_dataset = "src/data/student-salary/student_placement_salary_elite_v2.csv"
+
+from src.core.domain.enums import TaskType
+
+DATASETS = {
+    "Student Salary Dataset": {
+        "task": TaskType.REGRESSION,
+        "description": "Dataset that collects a series of metrics relating to university students and their skills, work experiences, characteristics, and test results. The goal is to predict what a new graduate's salary will be based on these characteristics.",
+        "source": url_student_dataset,
+        "path": path_student_dataset,
+        "drop_columns": ['placed', 'student_id'],
+        "objective_column": "salary_lpa",
+        "binary_categorical_features": ['student_id', 'branch', 'company_type', 'job_role', 'dsa_skill', 'ml_skill', 'web_dev_skill', 'placed'],
+        "shap_dependence_variable": ["cgpa"]
+    },
+    "Student Company Type Dataset": {
+        "task": TaskType.CLASSIFICATION,
+        "description": "Dataset that collects a series of metrics relating to university students and their skills, work experiences, characteristics, and test results. The goal is to predict what type of company a new graduate will be placed in based on these characteristics.",
+        "source": url_student_dataset,
+        "path": path_student_dataset,
+        "drop_columns": ['salary_lpa', 'placed', 'student_id', 'job_role'],
+        "objective_column": "company_type",
+        "binary_categorical_features": ['student_id', 'branch', 'company_type', 'job_role', 'dsa_skill', 'ml_skill', 'web_dev_skill', 'placed'],
+        "shap_dependence_variable": ["cgpa"]
+    },
+    "Student Placed-Not Placed Dataset": {
+        "task": TaskType.CLASSIFICATION,
+        "description": "Dataset that collects a series of metrics relating to university students and their skills, work experiences, characteristics, and test results. The goal is to predict whether a new graduate will be placed in a company based on these characteristics.",
+        "source": url_student_dataset,
+        "path": path_student_dataset,
+        "drop_columns": ['salary_lpa', 'student_id', 'company_type', 'job_role'],
+        "objective_column": "placed",
+        "binary_categorical_features": ['student_id', 'branch', 'company_type', 'job_role', 'dsa_skill', 'ml_skill', 'web_dev_skill', 'placed'],
+        "shap_dependence_variable": ["cgpa"]
+    },
+    "Heart Disease Dataset": {
+        "task": TaskType.CLASSIFICATION,
+        "description": "Dataset containing medical metrics about patients. The goal is to predict if a patient has heart disease.",
+        "source": "https://www.kaggle.com/datasets/ronitf/heart-disease-uci",
+        "path": "src/data/heart/heart.csv",
+        "drop_columns": [],
+        "objective_column": "HeartDisease",
+        "binary_categorical_features": ['Sex', 'ChestPainType', 'FastingBS', 'ExerciseAngina', 'Oldpeak', 'ST_Slope', 'HeartDisease'],
+        "shap_dependence_variable": ["Cholesterol"]
+    },
+    "Life Expectancy Dataset": {
+        "task": TaskType.REGRESSION,
+        "description": "Dataset containing various metrics about countries. The goal is to predict the life expectancy of a country based on these characteristics.",
+        "source": "https://www.kaggle.com/datasets/kumarajarshi/life-expectancy-who",
+        "path": "src/data/life_exp/LifeExpectancy.csv",
+        "drop_columns": ['Status', 'Year'],
+        "objective_column": "Life expectancy ",
+        "binary_categorical_features": ['Country', 'Status' ],
+        "shap_dependence_variable": ["Alcohol"]
+    },
+}
