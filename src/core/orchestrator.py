@@ -3,13 +3,18 @@ import logging
 import sys   
 import traceback
 from pathlib import Path
+from dotenv import load_dotenv
 from abc import ABC, abstractmethod
 from src.core.domain.enums import Algorithm, AnalysisType, TaskType
 from src.core.infrastructure.models.model_factory import ModelFactory
 from src.core.infrastructure.models.exceptions import ModelNotFoundError, ModelCreationError
 
 from src.core.infrastructure.models.registry_initializer import initialize_model_registry
- 
+current_dir = Path(__file__).resolve().parent
+project_root = current_dir.parents[1]
+env_path = project_root / '.env'
+load_dotenv(dotenv_path=env_path)
+
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s  %(levelname)-8s  %(message)s",
