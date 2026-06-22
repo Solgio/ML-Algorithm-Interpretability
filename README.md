@@ -1,4 +1,4 @@
-# ML Algorithm Interpretability
+# ![XAI Analysis pipeline, a ML algorithm interpretability project](/img/longLogo.png)
 
 ![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)
 ![Python](https://img.shields.io/badge/python-3.12%2B-3776AB.svg?logo=python&logoColor=white)
