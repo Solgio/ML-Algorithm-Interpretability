@@ -42,7 +42,7 @@ def initialize_model_registry() -> None:
             "at the top of the tree."
         ),
         param_grid={
-            'criterion': ['squared_error', 'friedman_mse', 'absolute_error', 'poisson'],
+            'criterion': ['squared_error', 'absolute_error', 'poisson'],
             'max_depth': [None, 5, 10, 20],
             'min_samples_split': [2, 10],
             'min_samples_leaf': [1, 4],
@@ -71,7 +71,7 @@ def initialize_model_registry() -> None:
             'min_samples_leaf': [1, 4],
             'max_features': ['sqrt', 'log2'],
             'ccp_alpha': [0.0, 0.1],
-            'criterion': ['squared_error', 'absolute_error', 'friedman_mse', 'poisson'],
+            'criterion': ['squared_error', 'absolute_error', 'poisson'],
             'min_impurity_decrease': [0.0, 0.1]
         }
     ))
