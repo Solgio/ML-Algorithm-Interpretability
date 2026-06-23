@@ -1,10 +1,12 @@
 import importlib
 import logging
+import os
 import sys   
 import traceback
 from pathlib import Path
 from dotenv import load_dotenv
 from abc import ABC, abstractmethod
+from dotenv import load_dotenv
 from src.core.domain.enums import Algorithm, AnalysisType, TaskType
 from src.core.infrastructure.models.model_factory import ModelFactory
 from src.core.infrastructure.models.exceptions import ModelNotFoundError, ModelCreationError
@@ -105,9 +107,12 @@ def step_export(model) -> dict:
 def step_llm(export_results: dict, plot_paths: dict, config: dict):
     log.info("━━  STEP 6: LLM analysis")
     try:
-        from src.core.llm.LLMRequestManager import analyze_statistics
+        from src.core.llm.services import OpenAILLMService
+        from src.core.llm.strategies import AlgorithmWiseStrategy
+        from src.core.llm.orchestrator_context import LLMOrchestrator
+        from src.core.llm.LLMDataWarehouse import model_list_img_supp
     except ImportError as e:
-        log.exception(f"    Impossible to import 'test.py'. Ensure it's in the same folder.{e}")
+        log.exception(f"    Failed to import LLM components: {e}")
         return {}
  
     output_dir = export_results.get("plot_dir")
@@ -132,16 +137,24 @@ def step_llm(export_results: dict, plot_paths: dict, config: dict):
         log.warning("    metrics_path missing — LLM analysis skipped.")
         return {}
  
-    risultati = analyze_statistics(
-        metrics_path=metrics_path,
-        coefficients_path=coefficients_path or metrics_path,
-        image_path=image_paths,
-        algo_name=algo_name,
-        algo_type=algo_type,
-        dataset_description=dataset_description,
-        user_prompt=user_prompt,
-        algo_prompt=algo_prompt,        
-    )
+    task = {
+        "algo_name": algo_name,
+        "algo_type": algo_type,
+        "dataset_description": dataset_description,
+        "user_prompt": user_prompt,
+        "algo_prompt": algo_prompt,
+        "metrics_path": metrics_path,
+        "coefficients_path": coefficients_path or metrics_path,
+        "image_paths": image_paths
+    }
+    
+    models = config.get("selected_llms") if config.get("selected_llms") is not None else model_list_img_supp
+    import os
+    print("API KEY FOUND:", os.getenv("OPENAI_API_KEY") is not None)
+    llm_service = OpenAILLMService()
+    orchestrator = LLMOrchestrator(AlgorithmWiseStrategy(), llm_service)
+    results = orchestrator.run([task], models)
+    risultati = results.get(algo_name, {})
  
     print("\n" + "═" * 60)
     print("   LLM ANALYSIS RESULTS")
@@ -293,6 +306,9 @@ def run_pipeline(config: dict) -> dict:
     results_map={}
     
     algorithms = config.get("algorithms", [config.get("algo_enum")])
+    run_llm = config.get("run_llm", False)
+    llm_execution_mode = config.get("llm_execution_mode", "algorithm_wise")
+    selected_llms = config.get("selected_llms")
     
     print("\n" + "█" * 60)
     print(f"  STARTING WORKFLOW: {analysis_type.value.upper()} on dataset '{config['dataset_name']}'")
@@ -304,6 +320,10 @@ def run_pipeline(config: dict) -> dict:
         local_config["algo_name"] = str(algo)
         local_config["algo_info"] = ModelFactory.get_all_info(algo, config["dataset_cfg"]["task"])
         
+        # If running LLM-wise, suppress LLM execution during individual pipeline runs
+        if llm_execution_mode == "llm_wise":
+            local_config["run_llm"] = False
+        
         try:
             pipeline_output = pipeline.run(local_config)
             results_map[str(algo)] = pipeline_output
@@ -312,6 +332,70 @@ def run_pipeline(config: dict) -> dict:
             traceback.print_exc()
             print("\n Passing to the next algorithm...\n")
             continue
+        
+    # Batch LLM-wise execution after all ML models are trained and analyzed
+    if run_llm and llm_execution_mode == "llm_wise" and results_map:
+        log.info("━━  BATCH STEP: LLM-wise analysis")
+        tasks = []
+        for algo in algorithms:
+            algo_str = str(algo)
+            if algo_str not in results_map:
+                continue
+            out = results_map[algo_str]
+            export_results = out["export"]
+            
+            output_dir = export_results.get("plot_dir")
+            image_paths = []
+            if output_dir:
+                p_dir = Path(output_dir)
+                image_paths.extend(list(p_dir.glob("*.png")))
+                
+            tasks.append({
+                "algo_name": algo_str,
+                "algo_type": config["dataset_cfg"]["task"],
+                "dataset_description": config["dataset_cfg"]["description"],
+                "user_prompt": config["user_prompt"],
+                "algo_prompt": ModelFactory.get_all_info(algo, config["dataset_cfg"]["task"])["prompt"],
+                "metrics_path": export_results.get("metrics_path"),
+                "coefficients_path": export_results.get("coefficients_path") or export_results.get("metrics_path"),
+                "image_paths": image_paths
+            })
+            
+        try:
+            from src.core.llm.services import OpenAILLMService
+            from src.core.llm.strategies import LLMWiseStrategy
+            from src.core.llm.orchestrator_context import LLMOrchestrator
+            
+            llm_service = OpenAILLMService()
+            orchestrator = LLMOrchestrator(LLMWiseStrategy(), llm_service)
+            risultati_batch = orchestrator.run(tasks, selected_llms)
+            
+            # Map results back to each algorithm output
+            for algo_str, out in results_map.items():
+                if algo_str in risultati_batch:
+                    out["llm_results"] = risultati_batch[algo_str]
+                    
+                    print("\n" + "═" * 60)
+                    print(f"   LLM ANALYSIS RESULTS FOR {algo_str}")
+                    print("═" * 60)
+                    for modello, risposta in risultati_batch[algo_str].items():
+                        print(f"\n[{modello}]\n{risposta}\n{'─' * 60}")
+                        
+                    output_dir = out["export"].get("plot_dir", ".")
+                    report_path = Path(output_dir) / "LLM_Analysis_Report.md"
+                    
+                    try:
+                        with open(report_path, "w", encoding="utf-8") as f:
+                            f.write(f"# LLM Interpretative Analysis Report for {algo_str}\n\n")
+                            for modello, risposta in risultati_batch[algo_str].items():
+                                f.write(f"## Model: `{modello}`\n\n")
+                                f.write(f"{risposta}\n\n")
+                                f.write("---\n\n")
+                        log.info(f"    ✔ LLM Report saved successfully in: {report_path}")
+                    except Exception as e:
+                        log.exception(f"    Error during LLM report saving: {e}")
+        except Exception as e:
+            log.exception(f"❌ Critical error during the batch LLM execution: {e}")
         
     if analysis_type == AnalysisType.COMPARATIVE and len(results_map) > 1:
         print("\n" + "═" * 60)

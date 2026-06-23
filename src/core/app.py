@@ -102,10 +102,31 @@ with st.expander("Execution Configurations", expanded=True):
     run_llm = st.checkbox("Generate final report via LLM", value=False)
 
     user_prompt = None
+    llm_execution_mode = "algorithm_wise"
+    selected_llms = None
     if run_llm:
         user_prompt_input = st.text_input("Enter a custom prompt for the LLM analysis (or leave empty for default):")
         if user_prompt_input.strip():
             user_prompt = user_prompt_input.strip()
+            
+        from src.core.llm.LLMDataWarehouse import model_list_img_supp
+        selected_llms = st.multiselect(
+            "Select LLM models to run:",
+            options=model_list_img_supp,
+            default=model_list_img_supp,
+            help="Select which models will evaluate the results."
+        )
+        
+        if not selected_llms:
+            st.warning("⚠ Please select at least one LLM model to generate reports.")
+            
+        llm_execution_mode = st.radio(
+            "LLM Execution Mode:",
+            options=["llm_wise", "algorithm_wise"],
+            index=0,
+            format_func=lambda x: "LLM-wise (Mounts each LLM once to evaluate all algorithms - RECOMMENDED)" if x == "llm_wise" else "Algorithm-wise (Evaluates all LLMs for one algorithm before moving to the next)",
+            help="LLM-wise mode reduces GPU memory swapping overhead significantly when running multiple algorithms."
+        )
 
 config = {
     "analysis_type": analysis_type,
@@ -114,8 +135,10 @@ config = {
     "algorithms": algorithms_to_run,
     "test_size":    test_size,
     "run_shap":     run_shap,
-    "run_llm":      run_llm,
+    "run_llm":      run_llm and bool(selected_llms),
     "user_prompt":  user_prompt,
+    "llm_execution_mode": llm_execution_mode,
+    "selected_llms": selected_llms,
 }
 
 if analysis_type == AnalysisType.SINGLE:

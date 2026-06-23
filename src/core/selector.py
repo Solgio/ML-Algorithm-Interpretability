@@ -91,7 +91,7 @@ def input_user_prompt() -> str:
     return prompt
 
 def select_options() -> dict:
-    """Collects additional options (test_size, SHAP, LLM)."""
+    """Collects additional options (test_size, SHAP, LLM, LLM execution mode, LLM model list)."""
     print(f"\n{'─'*50}")
     print("  Advanced options")
     print(f"{'─'*50}")
@@ -112,10 +112,44 @@ def select_options() -> dict:
     run_shap = _confirm("Run SHAP analysis?")
     run_llm  = _confirm("Start LLM analysis at the end?")
 
+    llm_execution_mode = "algorithm_wise"
+    selected_llms = None
+
+    if run_llm:
+        # Choose execution mode
+        options_mode = [
+            "LLM-wise (Mounts each LLM once to evaluate all algorithms - RECOMMENDED)",
+            "Algorithm-wise (Evaluates all LLMs for one algorithm at a time)"
+        ]
+        idx = _print_menu("Select LLM Execution Mode", options_mode)
+        llm_execution_mode = "llm_wise" if idx == 0 else "algorithm_wise"
+
+        # Choose LLMs (either run all, or choose subset)
+        from src.core.llm.LLMDataWarehouse import model_list_img_supp
+        print("\n  Available LLM models:")
+        for i, model in enumerate(model_list_img_supp, start=1):
+            print(f"    [{i}] {model}")
+            
+        print("  Select models by typing comma-separated numbers (e.g. 1,3) or leave empty to select all:")
+        choice = input("  Models choice: ").strip()
+        if choice:
+            selected_indices = []
+            for part in choice.split(","):
+                part = part.strip()
+                if part.isdigit():
+                    num = int(part)
+                    if 1 <= num <= len(model_list_img_supp):
+                        selected_indices.append(num - 1)
+            selected_llms = [model_list_img_supp[idx] for idx in selected_indices] if selected_indices else model_list_img_supp
+        else:
+            selected_llms = model_list_img_supp
+
     return {
         "test_size": test_size,
         "run_shap": run_shap,
         "run_llm": run_llm,
+        "llm_execution_mode": llm_execution_mode,
+        "selected_llms": selected_llms,
     }
 
 
@@ -174,6 +208,9 @@ def run_selector() -> dict:
     print(f"  Test size  : {options['test_size']}")
     print(f"  SHAP       : {'yes' if options['run_shap'] else 'no'}")
     print(f"  LLM        : {'yes' if options['run_llm'] else 'no'}")
+    if options["run_llm"]:
+        print(f"  LLM Mode   : {options['llm_execution_mode']}")
+        print(f"  LLM Models : {', '.join(options['selected_llms'])}")
     if config["user_prompt"]:
         print(f"  Prompt LLM  : {config['user_prompt']}")
     print("═" * 50)
