@@ -143,7 +143,18 @@ Launch the Streamlit web interface:
 ```bash
 streamlit run src/core/app.py
 ```
-
+or
+```bash
+uv run streamlillt run src/core/app.py
+```
+If you prefer the CLI version use:
+```bash
+python3 -m src.core.orchestrator
+```
+or 
+```bash
+uv run python3 -m src.core.orchestrator
+``` 
 ### Step 4: Run Tests
 
 Execute the unit test suite to verify the pipeline logic:
