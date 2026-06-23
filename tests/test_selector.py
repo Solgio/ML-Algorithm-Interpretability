@@ -30,7 +30,7 @@ def test_print_menu_retries_until_valid(monkeypatch, capsys):
     idx = selector._print_menu("Menu", ["a", "b", "c"])
 
     assert idx == 1
-    assert "Inserisci un numero" in capsys.readouterr().out
+    assert "Please enter a number between" in capsys.readouterr().out
 
 
 def test_select_analysis_type_both_branches(monkeypatch):
@@ -56,7 +56,7 @@ def test_select_algorithm_no_available_algorithms(monkeypatch):
         selector.select_algorithm(TaskType.CLASSIFICATION)
         assert False, "Expected ValueError"
     except ValueError as exc:
-        assert "Nessun algoritmo disponibile" in str(exc)
+        assert "No algorithm available for task" in str(exc)
 
 
 def test_select_algorithm_retries_and_returns_valid_choice(monkeypatch):
@@ -74,7 +74,13 @@ def test_select_options_retries_invalid_then_accepts(monkeypatch):
     monkeypatch.setattr("builtins.input", lambda prompt='': next(inputs))
 
     options = selector.select_options()
-    assert options == {"test_size": 0.3, "run_shap": True, "run_llm": False}
+    assert options == {
+        "test_size": 0.3,
+        "run_shap": True,
+        "run_llm": False,
+        "llm_execution_mode": "algorithm_wise",
+        "selected_llms": None,
+    }
 
 
 def test_run_selector_single_and_comparative(monkeypatch):

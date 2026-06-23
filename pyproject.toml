@@ -25,3 +25,7 @@ dependencies = [
     "sympy>=1.14.0",
     "xgboost>=3.3.0",
 ]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+

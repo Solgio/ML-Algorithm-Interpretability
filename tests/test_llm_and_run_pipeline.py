@@ -10,13 +10,12 @@ from src.core import orchestrator
 def test_step_llm_invokes_analyze_and_writes_report(monkeypatch, tmp_path):
     called = {}
 
-    def fake_analyze_statistics(metrics_path, coefficients_path, image_path, algo_name, algo_type, dataset_description, algo_prompt):
+    def fake_run(self, tasks, models):
         called['invoked'] = True
-        return {"model1": "analysis text"}
+        return {"a": {"model1": "analysis text"}}
     monkeypatch.setenv("OPENAI_API_KEY", "fake-test-key-123")
 
-    import src.core.llm.LLMRequestManager as mgr
-    monkeypatch.setattr(mgr, 'analyze_statistics', fake_analyze_statistics)
+    monkeypatch.setattr("src.core.llm.orchestrator_context.LLMOrchestrator.run", fake_run)
 
     out_dir = tmp_path / "out"
     out_dir.mkdir()
@@ -33,6 +32,7 @@ def test_step_llm_invokes_analyze_and_writes_report(monkeypatch, tmp_path):
         "algo_name": "a",
         "dataset_cfg": {"task": "classification", "description": "desc"},
         "algo_info": {"prompt": "p"},
+        "user_prompt": None,
     }
 
     res = orchestrator.step_llm(export_results, {}, config)

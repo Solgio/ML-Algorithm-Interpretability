@@ -161,6 +161,10 @@ Execute the unit test suite to verify the pipeline logic:
 ```bash
 pytest
 ```
+or 
+```bash
+uv run pytest
+```
 To run tests with code coverage analysis:
 ```bash
 pytest --cov=src

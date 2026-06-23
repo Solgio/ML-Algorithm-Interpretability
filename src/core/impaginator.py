@@ -11,7 +11,7 @@ def generate_markdown_docs(project_name="LR_Salary"):
         return
     
     output_file = f"DOCUMENTATION_{project_name}.md"
-    output_dir = os.path.join("..\\output\\md_prompting", project_name)
+    output_dir = os.path.join("..", "output", "md_prompting", project_name)
 
 
     with open(json_path, 'r') as f:
@@ -46,7 +46,10 @@ def generate_markdown_docs(project_name="LR_Salary"):
         f.write("## 3. Visual and Diagnostic Analysis\n")
         f.write("Below are the diagnostic charts exported automatically during the model run.\n\n")
         
-        immagini = [img for img in os.listdir(output_dir) if img.endswith(".png")]
+        if os.path.exists(output_dir):
+            immagini = [img for img in os.listdir(output_dir) if img.endswith(".png")]
+        else:
+            immagini = []
         
         if immagini:
             for img in sorted(immagini):
@@ -114,19 +117,21 @@ def generate_markdown_docs(project_name="LR_Salary"):
 #    print(f"Documentazione creata con successo in: {output_file}")
 
 def load_metrics(project_name):
-    output_dir = os.path.join("..\\output", project_name)
+    output_dir = os.path.join("..", "output", project_name)
     
     json_path = os.path.join(output_dir, "metriche.json")
     
     if not os.path.exists(json_path):
         print(f"Error: Data not found in {output_dir}. Run the Notebook first to export files.")
+        return None
+    return json_path
 
 def load_coefficients(project_name):
-    output_dir = os.path.join("..\\output", project_name)
+    output_dir = os.path.join("..", "output", project_name)
     csv_path = os.path.join(output_dir, "coefficienti.csv")
     if not os.path.exists(csv_path):
         print(f"Error: Data not found in {output_dir}. Run the Notebook first to export files.")
-        return
+        return None
     return csv_path
 
 if __name__ == "__main__":

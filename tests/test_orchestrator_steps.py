@@ -137,55 +137,50 @@ def test_step_llm_import_error_returns_empty_dict(monkeypatch):
     original_import = builtins.__import__
 
     def fake_import(name, globals=None, locals=None, fromlist=(), level=0):
-        if name == "src.core.llm.LLMRequestManager":
+        if "src.core.llm.services" in name:
             raise ImportError("missing")
         return original_import(name, globals, locals, fromlist, level)
 
     monkeypatch.setattr(builtins, "__import__", fake_import)
 
     export_results = {"plot_dir": ".", "metrics_path": "metrics.json", "coefficients_path": "coeff.json"}
-    config = {"algo_name": "a", "dataset_cfg": {"task": "classification", "description": "d"}, "algo_info": {"prompt": "p"}}
+    config = {"algo_name": "a", "dataset_cfg": {"task": "classification", "description": "d"}, "algo_info": {"prompt": "p"}, "user_prompt": None}
 
     assert orchestrator.step_llm(export_results, {}, config) == {}
 
 
 def test_step_llm_missing_metrics_path_returns_empty_dict(monkeypatch):
-    import src.core.llm.LLMRequestManager as mgr
-
-    monkeypatch.setattr(mgr, "analyze_statistics", lambda *args, **kwargs: {"m": "ok"})
+    monkeypatch.setattr("src.core.llm.orchestrator_context.LLMOrchestrator.run", lambda self, tasks, models: {"a": {"m": "ok"}})
 
     export_results = {"plot_dir": ".", "metrics_path": None, "coefficients_path": None}
-    config = {"algo_name": "a", "dataset_cfg": {"task": "classification", "description": "d"}, "algo_info": {"prompt": "p"}}
+    config = {"algo_name": "a", "dataset_cfg": {"task": "classification", "description": "d"}, "algo_info": {"prompt": "p"}, "user_prompt": None}
 
     assert orchestrator.step_llm(export_results, {}, config) == {}
 
 
 def test_step_llm_empty_image_dir_still_runs(monkeypatch, tmp_path):
-    import src.core.llm.LLMRequestManager as mgr
-
     called = {}
 
-    def fake_analyze_statistics(**kwargs):
-        called["image_path"] = kwargs["image_path"]
-        return {"m": "ok"}
+    def fake_run(self, tasks, models):
+        called["image_paths"] = tasks[0]["image_paths"]
+        return {"a": {"m": "ok"}}
 
-    monkeypatch.setattr(mgr, "analyze_statistics", fake_analyze_statistics)
+    monkeypatch.setattr("src.core.llm.orchestrator_context.LLMOrchestrator.run", fake_run)
 
     out_dir = tmp_path / "plots"
     out_dir.mkdir()
     export_results = {"plot_dir": str(out_dir), "metrics_path": str(tmp_path / "metrics.json"), "coefficients_path": str(tmp_path / "coeff.json")}
-    config = {"algo_name": "a", "dataset_cfg": {"task": "classification", "description": "d"}, "algo_info": {"prompt": "p"}}
+    config = {"algo_name": "a", "dataset_cfg": {"task": "classification", "description": "d"}, "algo_info": {"prompt": "p"}, "user_prompt": None}
 
     result = orchestrator.step_llm(export_results, {}, config)
     assert result == {"m": "ok"}
-    assert called["image_path"] == []
+    assert called["image_paths"] == []
 
 
 def test_step_llm_report_write_failure_is_handled(monkeypatch, tmp_path):
     import builtins
-    import src.core.llm.LLMRequestManager as mgr
 
-    monkeypatch.setattr(mgr, "analyze_statistics", lambda **kwargs: {"m": "ok"})
+    monkeypatch.setattr("src.core.llm.orchestrator_context.LLMOrchestrator.run", lambda self, tasks, models: {"a": {"m": "ok"}})
 
     original_open = builtins.open
 
@@ -199,7 +194,7 @@ def test_step_llm_report_write_failure_is_handled(monkeypatch, tmp_path):
     out_dir = tmp_path / "plots"
     out_dir.mkdir()
     export_results = {"plot_dir": str(out_dir), "metrics_path": str(tmp_path / "metrics.json"), "coefficients_path": str(tmp_path / "coeff.json")}
-    config = {"algo_name": "a", "dataset_cfg": {"task": "classification", "description": "d"}, "algo_info": {"prompt": "p"}}
+    config = {"algo_name": "a", "dataset_cfg": {"task": "classification", "description": "d"}, "algo_info": {"prompt": "p"}, "user_prompt": None}
 
     result = orchestrator.step_llm(export_results, {}, config)
     assert result == {"m": "ok"}

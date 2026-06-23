@@ -7,67 +7,108 @@ from types import SimpleNamespace
 import pandas as pd
 import pytest
 
+from src.core.llm import LLMRequestManager as llm_mgr
+from src.core.llm.interfaces import LLMService, OrchestrationStrategy
+from src.core.llm.services import DataPreparationService, PromptBuilder, OpenAILLMService
+from src.core.llm.strategies import AlgorithmWiseStrategy, LLMWiseStrategy
+from src.core.llm.orchestrator_context import LLMOrchestrator
+
 os.environ.setdefault("OPENAI_API_KEY", "test-key-for-coverage")
 
-from src.core.llm import LLMRequestManager as llm_mgr
 
+# --- DataPreparationService Tests ---
 
 @pytest.mark.parametrize(
-    "factory,expected",
+    "suffix,content,expected_assertion",
     [
-        (lambda p: p.with_suffix(".json"), '{\n  "a": 1\n}'),
-        (lambda p: p.with_suffix(".csv"), "a\n1"),
-        (lambda p: p.with_suffix(".txt"), "Nessuna metrica testuale disponibile."),
+        (".json", '{"a": 1}', lambda res: "a" in res and "1" in res),
+        (".csv", "a\n1", lambda res: "a" in res and "1" in res),
+        (".txt", "plain text", lambda res: "No textual metrics available." in res),
     ],
 )
-def test_load_metrics_branches(tmp_path, factory, expected):
-    target = factory(tmp_path / "metrics")
-    if target.suffix == ".json":
-        target.write_text(json.dumps({"a": 1}))
-    elif target.suffix == ".csv":
+def test_load_metrics_branches(tmp_path, suffix, content, expected_assertion):
+    target = tmp_path / f"metrics{suffix}"
+    if suffix == ".json":
+        target.write_text(content)
+    elif suffix == ".csv":
         pd.DataFrame({"a": [1]}).to_csv(target, index=False)
-
-    result = llm_mgr.load_metrics(target)
-    if target.suffix == ".csv":
-        assert "a" in result and "1" in result
     else:
-        assert expected in result
+        target.write_text(content)
+
+    result = DataPreparationService.load_metrics(str(target))
+    assert expected_assertion(result)
+
+
+def test_load_metrics_missing_and_empty():
+    assert DataPreparationService.load_metrics(None) == "No metrics path provided."
+    assert DataPreparationService.load_metrics("") == "No metrics path provided."
+    assert DataPreparationService.load_metrics("non_existent_file.json") == "Metrics file not found."
 
 
 @pytest.mark.parametrize(
-    "factory,expected",
+    "suffix,content,expected_assertion",
     [
-        (lambda p: p.with_suffix(".json"), '{\n  "b": 2\n}'),
-        (lambda p: p.with_suffix(".csv"), "b\n2"),
-        (lambda p: p.with_suffix(".txt"), "Nessun coefficiente testuale disponibile."),
+        (".json", '{"b": 2}', lambda res: "b" in res and "2" in res),
+        (".csv", "b\n2", lambda res: "b" in res and "2" in res),
+        (".txt", "plain text", lambda res: "No textual coefficients available." in res),
     ],
 )
-def test_load_coefficients_branches(tmp_path, factory, expected):
-    target = factory(tmp_path / "coefficients")
-    if target.suffix == ".json":
-        target.write_text(json.dumps({"b": 2}))
-    elif target.suffix == ".csv":
+def test_load_coefficients_branches(tmp_path, suffix, content, expected_assertion):
+    target = tmp_path / f"coefficients{suffix}"
+    if suffix == ".json":
+        target.write_text(content)
+    elif suffix == ".csv":
         pd.DataFrame({"b": [2]}).to_csv(target, index=False)
-
-    result = llm_mgr.load_coefficients(target)
-    if target.suffix == ".csv":
-        assert "b" in result and "2" in result
     else:
-        assert expected in result
+        target.write_text(content)
+
+    result = DataPreparationService.load_coefficients(str(target))
+    assert expected_assertion(result)
 
 
-def test_encode_image_success_and_missing(tmp_path):
-    image = tmp_path / "image.bin"
+def test_load_coefficients_missing_and_empty():
+    assert DataPreparationService.load_coefficients(None) == "No coefficients path provided."
+    assert DataPreparationService.load_coefficients("") == "No coefficients path provided."
+    assert DataPreparationService.load_coefficients("non_existent_file.json") == "Coefficients file not found."
+
+
+def test_encode_images_success_and_missing(tmp_path):
+    image = tmp_path / "image.png"
     image.write_bytes(b"abc")
 
-    encoded = llm_mgr.encode_image([image])
+    encoded = DataPreparationService.encode_images([str(image)])
     assert encoded == [base64.b64encode(b"abc").decode("utf-8")]
 
     with pytest.raises(FileNotFoundError):
-        llm_mgr.encode_image([tmp_path / "missing.png"])
+        DataPreparationService.encode_images([str(tmp_path / "missing.png")])
 
 
-def test_fetch_model_response_success_and_error(monkeypatch):
+# --- PromptBuilder Tests ---
+
+def test_prompt_builder():
+    prompt = PromptBuilder.build_prompt(
+        algo_name="LR",
+        algo_type="regression",
+        dataset_description="desc",
+        user_prompt="user expect",
+        algo_prompt="algo instruct",
+        raw_metrics="metrics raw",
+        raw_coefficients="coefficients raw",
+        general_prompt="general instruct"
+    )
+    assert "ALGORITHM: LR" in prompt
+    assert "Algorithm type: regression" in prompt
+    assert "Dataset description: desc" in prompt
+    assert "User expectations: user expect" in prompt
+    assert "metrics raw" in prompt
+    assert "coefficients raw" in prompt
+    assert "algo instruct" in prompt
+    assert "general instruct" in prompt
+
+
+# --- OpenAILLMService Tests ---
+
+def test_openai_llm_service_success_and_error(monkeypatch):
     class FakeResponse:
         choices = [SimpleNamespace(message=SimpleNamespace(content="ok"))]
 
@@ -76,110 +117,183 @@ def test_fetch_model_response_success_and_error(monkeypatch):
             completions=SimpleNamespace(create=lambda **kwargs: FakeResponse())
         )
     )
-    monkeypatch.setattr(llm_mgr, "client", fake_client)
-
-    model, content = llm_mgr.fetch_model_response("m", "system", "prompt", ["img"])
-    assert model == "m"
+    
+    service = OpenAILLMService(client=fake_client)
+    content = service.generate_response("m", "system", "prompt", ["img"])
     assert content == "ok"
 
     def raise_error(**kwargs):
         raise RuntimeError("boom")
 
-    monkeypatch.setattr(
-        llm_mgr,
-        "client",
-        SimpleNamespace(chat=SimpleNamespace(completions=SimpleNamespace(create=raise_error))),
+    service_error = OpenAILLMService(
+        client=SimpleNamespace(
+            chat=SimpleNamespace(completions=SimpleNamespace(create=raise_error))
+        )
     )
-    model, content = llm_mgr.fetch_model_response("m2", "system", "prompt", [])
-    assert model == "m2"
-    assert "Errore:" in content
+    content_error = service_error.generate_response("m2", "system", "prompt", [])
+    assert "Error: boom" in content_error
 
 
-def test_analyze_statistics_uses_executor_and_collects_results(monkeypatch, tmp_path):
+# --- Strategies and Orchestrator Tests ---
+
+class MockLLMService(LLMService):
+    def __init__(self):
+        self.calls = []
+
+    def generate_response(self, model, system_prompt, user_prompt, images=None):
+        self.calls.append((model, system_prompt, user_prompt, images))
+        return f"resp-{model}"
+
+
+def test_algorithm_wise_strategy(tmp_path):
     metrics = tmp_path / "metrics.json"
-    coefficients = tmp_path / "coefficients.json"
-    image = tmp_path / "plot.png"
     metrics.write_text(json.dumps({"acc": 1.0}))
-    coefficients.write_text(json.dumps({"coef": 2.0}))
-    image.write_bytes(b"png")
-
-    monkeypatch.setattr(llm_mgr, "model_list_img_supp", ["model-a"])
-    monkeypatch.setattr(llm_mgr, "fetch_model_response", lambda *args, **kwargs: ("model-a", "result"))
-
-    class FakeFuture:
-        def __init__(self, value):
-            self._value = value
-
-        def result(self):
-            return self._value
-
-    class FakeExecutor:
-        def __init__(self, max_workers):
-            self.max_workers = max_workers
-
-        def __enter__(self):
-            return self
-
-        def __exit__(self, exc_type, exc, tb):
-            return False
-
-        def submit(self, fn, *args, **kwargs):
-            return FakeFuture(("model-a", "result"))
-
-    monkeypatch.setattr(llm_mgr.concurrent.futures, "ThreadPoolExecutor", FakeExecutor)
-    monkeypatch.setattr(llm_mgr.concurrent.futures, "as_completed", lambda futures: list(futures.keys()))
-
-    results = llm_mgr.analyze_statistics(
-        metrics_path=metrics,
-        coefficients_path=coefficients,
-        image_path=[image],
-        algo_name="algo",
-        algo_type="classification",
-        dataset_description="desc",
-        algo_prompt="prompt",
-    )
-
-    assert results == {"model-a": "result"}
+    
+    task = {
+        "algo_name": "LR",
+        "algo_type": "regression",
+        "dataset_description": "desc",
+        "user_prompt": "user expect",
+        "algo_prompt": "algo instruct",
+        "metrics_path": str(metrics),
+        "coefficients_path": str(metrics),
+        "image_paths": []
+    }
+    
+    service = MockLLMService()
+    strategy = AlgorithmWiseStrategy()
+    results = strategy.execute([task], ["model-a", "model-b"], service)
+    
+    assert results == {"LR": {"model-a": "resp-model-a", "model-b": "resp-model-b"}}
+    assert len(service.calls) == 2
+    assert service.calls[0][0] == "model-a"
+    assert service.calls[1][0] == "model-b"
 
 
-def test_analyze_statistics_handles_future_exception(monkeypatch, tmp_path):
+def test_llm_wise_strategy(tmp_path):
     metrics = tmp_path / "metrics.json"
-    coefficients = tmp_path / "coefficients.json"
-    image = tmp_path / "plot.png"
     metrics.write_text(json.dumps({"acc": 1.0}))
-    coefficients.write_text(json.dumps({"coef": 2.0}))
-    image.write_bytes(b"png")
+    
+    task1 = {
+        "algo_name": "LR",
+        "algo_type": "regression",
+        "dataset_description": "desc",
+        "user_prompt": "user expect",
+        "algo_prompt": "algo instruct",
+        "metrics_path": str(metrics),
+        "coefficients_path": str(metrics),
+        "image_paths": []
+    }
+    task2 = {
+        "algo_name": "SVM",
+        "algo_type": "classification",
+        "dataset_description": "desc2",
+        "user_prompt": None,
+        "algo_prompt": "algo instruct2",
+        "metrics_path": str(metrics),
+        "coefficients_path": str(metrics),
+        "image_paths": []
+    }
+    
+    service = MockLLMService()
+    strategy = LLMWiseStrategy()
+    results = strategy.execute([task1, task2], ["model-a"], service)
+    
+    assert results == {
+        "LR": {"model-a": "resp-model-a"},
+        "SVM": {"model-a": "resp-model-a"}
+    }
+    assert len(service.calls) == 2
+    assert service.calls[0][0] == "model-a"
+    assert "ALGORITHM: LR" in service.calls[0][2]
+    assert service.calls[1][0] == "model-a"
+    assert "ALGORITHM: SVM" in service.calls[1][2]
 
-    monkeypatch.setattr(llm_mgr, "model_list_img_supp", ["model-a"])
 
-    class FailingFuture:
-        def result(self):
-            raise RuntimeError("boom")
+def test_llm_orchestrator():
+    class DummyStrategy(OrchestrationStrategy):
+        def execute(self, tasks, models, llm_service):
+            return {"strategy": type(self).__name__}
 
-    class FakeExecutor:
-        def __init__(self, max_workers):
-            self.max_workers = max_workers
+    strategy = DummyStrategy()
+    service = MockLLMService()
+    orchestrator = LLMOrchestrator(strategy, service)
+    
+    assert orchestrator.strategy is strategy
+    assert orchestrator.llm_service is service
+    
+    new_strategy = DummyStrategy()
+    new_service = MockLLMService()
+    orchestrator.strategy = new_strategy
+    orchestrator.llm_service = new_service
+    assert orchestrator.strategy is new_strategy
+    assert orchestrator.llm_service is new_service
+    
+    assert orchestrator.run([], []) == {"strategy": "DummyStrategy"}
 
-        def __enter__(self):
-            return self
 
-        def __exit__(self, exc_type, exc, tb):
-            return False
+# --- Legacy Facade Tests ---
 
-        def submit(self, fn, *args, **kwargs):
-            return FailingFuture()
-
-    monkeypatch.setattr(llm_mgr.concurrent.futures, "ThreadPoolExecutor", FakeExecutor)
-    monkeypatch.setattr(llm_mgr.concurrent.futures, "as_completed", lambda futures: list(futures.keys()))
-
-    results = llm_mgr.analyze_statistics(
-        metrics_path=metrics,
-        coefficients_path=coefficients,
-        image_path=[image],
-        algo_name="algo",
-        algo_type="classification",
+def test_legacy_facade_analyze_statistics(monkeypatch, tmp_path):
+    metrics = tmp_path / "metrics.json"
+    metrics.write_text(json.dumps({"acc": 1.0}))
+    
+    called_run = []
+    class MockOrchestrator:
+        def __init__(self, strategy, service):
+            pass
+        def run(self, tasks, models):
+            called_run.append((tasks, models))
+            return {"LR": {"model-a": "facade-response"}}
+            
+    monkeypatch.setattr("src.core.llm.LLMRequestManager.LLMOrchestrator", MockOrchestrator)
+    
+    res = llm_mgr.analyze_statistics(
+        metrics_path=str(metrics),
+        coefficients_path=None,
+        image_path=[],
+        algo_name="LR",
+        algo_type="regression",
         dataset_description="desc",
-        algo_prompt="prompt",
+        user_prompt="user expect",
+        algo_prompt="algo instruct",
+        model_list=["model-a"]
     )
+    
+    assert res == {"model-a": "facade-response"}
+    assert len(called_run) == 1
+    assert called_run[0][0][0]["algo_name"] == "LR"
+    assert called_run[0][1] == ["model-a"]
 
-    assert results == {"model-a": "Errore: boom"}
+
+def test_legacy_facade_analyze_statistics_llm_wise(monkeypatch, tmp_path):
+    metrics = tmp_path / "metrics.json"
+    metrics.write_text(json.dumps({"acc": 1.0}))
+    
+    called_run = []
+    class MockOrchestrator:
+        def __init__(self, strategy, service):
+            pass
+        def run(self, tasks, models):
+            called_run.append((tasks, models))
+            return {"LR": {"model-a": "facade-response"}}
+            
+    monkeypatch.setattr("src.core.llm.LLMRequestManager.LLMOrchestrator", MockOrchestrator)
+    
+    tasks = [{
+        "algo_name": "LR",
+        "algo_type": "regression",
+        "dataset_description": "desc",
+        "user_prompt": "user expect",
+        "algo_prompt": "algo instruct",
+        "metrics_path": str(metrics),
+        "coefficients_path": None,
+        "image_paths": None
+    }]
+    
+    res = llm_mgr.analyze_statistics_llm_wise(tasks, ["model-a"])
+    
+    assert res == {"LR": {"model-a": "facade-response"}}
+    assert len(called_run) == 1
+    assert called_run[0][0][0]["algo_name"] == "LR"
+    assert called_run[0][1] == ["model-a"]
