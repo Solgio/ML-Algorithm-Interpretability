@@ -130,66 +130,6 @@ class SVM(BaseClassificationAlgo):
         plt.close()
         
         return plot_paths
-    
-    #def SHAP_analysis(self, x_sample, dependence_variable):
-    #    if hasattr(self.model, "predict_proba"):
-    #        pred_fn = lambda x: self.model.predict_proba(x)[:, 1]
-    #    elif hasattr(self.model, "decision_function"):
-    #        pred_fn = lambda x: self.model.decision_function(x)[:, 1] if len(self.model.classes_)>2 else self.model.decision_function(x)
-    #    else:
-    #        pred_fn = self.model.predict
-    #        
-    #    print("\nInizio calcolo SHAP ottimizzato per SVM (potrebbe richiedere qualche secondo)...")
-    #
-    #    background_sample = shap.sample(x_sample, 20)
-    #    x_eval_sample = x_sample.iloc[:100] if hasattr(x_sample, 'iloc') else x_sample[:100]
-    #    explainer = shap.Explainer(pred_fn, background_sample)
-    #    
-    #    shap_values = explainer(x_eval_sample)
-    #        
-    #    if len(shap_values.shape) == 3:
-    #        shap_values = shap_values[:, :, 1]
-    #        
-    #    print("SHAP values calcolati con successo in formato ridotto!")
-    #    
-    #    shap.summary_plot(shap_values, x_eval_sample, plot_type="bar", show=False)
-    #    summary_path = os.path.join(self.PLOT_DIR, "shap_summary.png")
-    #    plt.savefig(summary_path, bbox_inches="tight")
-    #    plt.close()
-    #    
-    #    sample_ind = min(20, len(x_eval_sample) - 1)
-    #    
-    #    shap.partial_dependence_plot(
-    #        dependence_variable,
-    #        pred_fn,
-    #        x_eval_sample,
-    #        model_expected_value=True,
-    #        feature_expected_value=True,
-    #        ice=False,
-    #        shap_values=shap_values[sample_ind : sample_ind + 1, :],
-    #        show=False
-    #    )
-    #    pdp_path = os.path.join(self.PLOT_DIR, f"partial_dependence_{dependence_variable}_sample_{sample_ind}.png")
-    #    plt.savefig(pdp_path, bbox_inches="tight")
-    #    plt.close()
-    #    
-    #    values_to_plot = shap_values.values if hasattr(shap_values, 'values') else shap_values
-    #    
-    #    shap.dependence_plot(
-    #        dependence_variable,
-    #        values_to_plot,
-    #        x_eval_sample,
-    #        show=False
-    #    )
-    #    effect_plot_path = os.path.join(self.PLOT_DIR, f"effect_plot_{dependence_variable}.png")
-    #    plt.savefig(effect_plot_path, bbox_inches="tight")
-    #    plt.close()
-    #    
-    #    return {
-    #        "shap_summary": summary_path,
-    #        "partial_dependence": pdp_path,
-    #        "effect_plot": effect_plot_path
-    #    }
 
 if __name__ == "__main__":
     default_dataset = "Student Placed-Not Placed Dataset"

@@ -122,33 +122,6 @@ class XGBoostC(BaseClassificationAlgo):
         print(f"Specific plots for XGBoost Classification saved in: {self.PLOT_DIR}")
         return plot_paths
 
-    #def SHAP_analysis(self, x_sample, dependence_variable):
-    #    xgb_model = self.model.named_steps['xgb'] if isinstance(self.model, Pipeline) else self.model
-    #    explainer = shap.TreeExplainer(xgb_model)
-    #    shap_values = explainer(x_sample)
-    #    print("\nSHAP values (TreeExplainer) calcolati con successo!")
-    #    
-    #    shap.summary_plot(shap_values, x_sample, show=False)
-    #    summary_path = os.path.join(self.PLOT_DIR, "shap_summary_xgb.png")
-    #    plt.savefig(summary_path, bbox_inches='tight')
-    #    plt.close()
-    #    
-    #    sample_ind = 0
-    #    plt.figure(figsize=(10, 6))
-    #    if len(shap_values.shape) == 3:
-    #        shap.plots.waterfall(shap_values[sample_ind, :, 1], show=False)
-    #    else:
-    #        shap.plots.waterfall(shap_values[sample_ind], show=False)
-    #        
-    #    local_exp_path = os.path.join(self.PLOT_DIR, f"shap_local_explanation_sample_{sample_ind}.png")
-    #    plt.savefig(local_exp_path, bbox_inches='tight')
-    #    plt.close()
-#
-    #    return {
-    #        "shap_summary": summary_path,
-    #        "local_explanation": local_exp_path
-    #    }
-
 
 class XGBoostR(BaseRegressionAlgo):
     def __init__(self, dataset: str, dataset_path: str, param_grid: dict = None):
@@ -237,30 +210,6 @@ class XGBoostR(BaseRegressionAlgo):
 
         print(f"Specific plots for XGBoost Regression saved in: {self.PLOT_DIR}")
         return plot_paths
-
-    #def SHAP_analysis(self, x_sample, dependence_variable):
-    #    xgb_model = self.model.named_steps['xgb'] if isinstance(self.model, Pipeline) else self.model
-    #    explainer = shap.TreeExplainer(xgb_model)
-    #    shap_values = explainer(x_sample)
-    #    print("\nSHAP values (TreeExplainer) calcolati con successo!")
-    #    
-    #    shap.summary_plot(shap_values, x_sample, show=False)
-    #    summary_path = os.path.join(self.PLOT_DIR, "shap_summary_xgb_reg.png")
-    #    plt.savefig(summary_path, bbox_inches='tight')
-    #    plt.close()
-    #    
-    #    sample_ind = 0
-    #    plt.figure(figsize=(10, 6))
-    #    shap.plots.waterfall(shap_values[sample_ind], show=False)
-    #        
-    #    local_exp_path = os.path.join(self.PLOT_DIR, f"shap_local_explanation_sample_{sample_ind}_reg.png")
-    #    plt.savefig(local_exp_path, bbox_inches='tight')
-    #    plt.close()
-#
-    #    return {
-    #        "shap_summary": summary_path,
-    #        "local_explanation": local_exp_path
-    #    }
 
 
 if __name__ == "__main__":
