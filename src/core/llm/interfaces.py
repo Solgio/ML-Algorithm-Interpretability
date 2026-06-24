@@ -9,7 +9,7 @@ class LLMService(ABC):
         model: str, 
         system_prompt: str, 
         user_prompt: str, 
-        images: list[str] = None
+        images: list = None
     ) -> str:
         """Query the LLM provider for a response.
         

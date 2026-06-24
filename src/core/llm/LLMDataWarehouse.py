@@ -10,7 +10,7 @@ general_prompt = (
         "# GENERAL INSTRUCTIONS:\n"
         "1. Summarize the overall reliability of the model in a few steps, based on the data but without going into technical details.\n"
         "2. Intuitively explain the main factors (features) driving decisions.\n"
-        "3. Analyze the data and attached graphs to confirm if the model's decisions are in line with business common sense."
+        "3. Analyze the data and attached graphs to confirm if the model's decisions are in line with business common sense. Evaluate if the image show problem in the prediction of the model or if the image conferm the model's prediction. Make a short summary for every image.\n"
         "4. If the data contradicts user expectations or if anomalies emerge, highlight these discrepancies and suggest possible interpretations or corrective actions.\n"
         "# CONSTRAINTS:\n"
         "- Avoid excessive technical jargon, aim for clear and accessible language.\n"

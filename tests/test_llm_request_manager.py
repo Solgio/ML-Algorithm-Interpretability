@@ -297,3 +297,50 @@ def test_legacy_facade_analyze_statistics_llm_wise(monkeypatch, tmp_path):
     assert len(called_run) == 1
     assert called_run[0][0][0]["algo_name"] == "LR"
     assert called_run[0][1] == ["model-a"]
+
+
+def test_openai_llm_service_with_dict_images():
+    class FakeResponse:
+        choices = [SimpleNamespace(message=SimpleNamespace(content="ok"))]
+
+    created_payloads = []
+    class FakeCompletions:
+        def create(self, **kwargs):
+            created_payloads.append(kwargs)
+            return FakeResponse()
+
+    fake_client = SimpleNamespace(
+        chat=SimpleNamespace(
+            completions=FakeCompletions()
+        )
+    )
+    
+    service = OpenAILLMService(client=fake_client)
+    
+    images_input = [
+        {"name": "correlation_matrix.png", "base64": "abc"},
+        {"name": "photo.jpeg", "base64": "def"}
+    ]
+    content = service.generate_response("m", "system", "prompt", images_input)
+    assert content == "ok"
+    assert len(created_payloads) == 1
+    
+    messages = created_payloads[0]["messages"]
+    user_content = messages[1]["content"]
+    
+    # 1 prompt text, plus 2 texts and 2 images = 5 elements total
+    assert len(user_content) == 5
+    assert user_content[0]["text"] == "prompt"
+    
+    # First image assertions
+    assert user_content[1]["type"] == "text"
+    assert "Attached Graph/Plot: correlation_matrix.png" in user_content[1]["text"]
+    assert user_content[2]["type"] == "image_url"
+    assert user_content[2]["image_url"]["url"] == "data:image/png;base64,abc"
+    
+    # Second image assertions
+    assert user_content[3]["type"] == "text"
+    assert "Attached Graph/Plot: photo.jpeg" in user_content[3]["text"]
+    assert user_content[4]["type"] == "image_url"
+    assert user_content[4]["image_url"]["url"] == "data:image/jpeg;base64,def"
+

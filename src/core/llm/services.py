@@ -27,7 +27,7 @@ class OpenAILLMService(LLMService):
         model: str, 
         system_prompt: str, 
         user_prompt: str, 
-        images: list[str] = None
+        images: list = None
     ) -> str:
         logger.info(f"Querying OpenAI-compatible model: {model}")
         
@@ -37,10 +37,23 @@ class OpenAILLMService(LLMService):
         }]
         
         if images:
-            for img_b64 in images:
+            for idx, img in enumerate(images):
+                if isinstance(img, dict) and "name" in img and "base64" in img:
+                    name = img["name"]
+                    img_b64 = img["base64"]
+                else:
+                    name = f"image_{idx + 1}.png"
+                    img_b64 = img
+                
+                message_content.append({
+                    "type": "text",
+                    "text": f"\n[Attached Graph/Plot: {name}]"
+                })
+                
+                mime_type = "image/png" if name.lower().endswith(".png") else "image/jpeg"
                 message_content.append({
                     "type": "image_url",
-                    "image_url": {"url": f"data:image/jpeg;base64,{img_b64}"}
+                    "image_url": {"url": f"data:{mime_type};base64,{img_b64}"}
                 })
                 
         try:

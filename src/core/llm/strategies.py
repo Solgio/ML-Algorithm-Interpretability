@@ -1,4 +1,5 @@
 import logging
+from pathlib import Path
 from src.core.llm.interfaces import OrchestrationStrategy, LLMService
 from src.core.llm.services import DataPreparationService, PromptBuilder
 from src.core.llm.LLMDataWarehouse import role_sistem, general_prompt
@@ -26,6 +27,10 @@ class AlgorithmWiseStrategy(OrchestrationStrategy):
             raw_metrics = DataPreparationService.load_metrics(task["metrics_path"])
             raw_coefficients = DataPreparationService.load_coefficients(task["coefficients_path"])
             base64_images = DataPreparationService.encode_images(task["image_paths"])
+            images_payload = [
+                {"name": Path(p).name, "base64": b}
+                for p, b in zip(task["image_paths"], base64_images)
+            ]
             
             prompt_text = PromptBuilder.build_prompt(
                 algo_name=algo_name,
@@ -44,7 +49,7 @@ class AlgorithmWiseStrategy(OrchestrationStrategy):
                     model=model,
                     system_prompt=role_sistem,
                     user_prompt=prompt_text,
-                    images=base64_images
+                    images=images_payload
                 )
                 results[algo_name][model] = response
                 
@@ -71,6 +76,10 @@ class LLMWiseStrategy(OrchestrationStrategy):
             raw_metrics = DataPreparationService.load_metrics(task["metrics_path"])
             raw_coefficients = DataPreparationService.load_coefficients(task["coefficients_path"])
             base64_images = DataPreparationService.encode_images(task["image_paths"])
+            images_payload = [
+                {"name": Path(p).name, "base64": b}
+                for p, b in zip(task["image_paths"], base64_images)
+            ]
             
             prompt_text = PromptBuilder.build_prompt(
                 algo_name=algo_name,
@@ -86,7 +95,7 @@ class LLMWiseStrategy(OrchestrationStrategy):
             prepared_tasks.append({
                 "algo_name": algo_name,
                 "prompt_text": prompt_text,
-                "images": base64_images
+                "images": images_payload
             })
             
         # Loop outer: models (loads each model once)
