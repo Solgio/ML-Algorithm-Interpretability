@@ -92,10 +92,14 @@ class BaseClassificationAlgo(BaseMLAlgo):
         
         plt.figure(figsize=(16, 16))
         correlation_matrix = dc_numeric.corr(method='pearson')
-        sns.heatmap(correlation_matrix, annot=True, cmap='coolwarm', linewidths=0.5)
-        plt.title('Correlation Matrix')
-        corr_path = os.path.join(self.PLOT_DIR, "correlation_matrix.png")
-        plt.savefig(corr_path)
+        g = sns.clustermap(dc_numeric.corr(), 
+                   cmap='coolwarm', 
+                   annot=False, 
+                   figsize=(20, 20), 
+                   dendrogram_ratio=0.1)
+        g.figure.suptitle('Clustered Correlation Matrix')
+        corr_path = os.path.join(self.PLOT_DIR, "clustered_correlation_matrix.png")
+        g.savefig(corr_path)
         plt.close()
         plot_paths["correlation_matrix"] = corr_path
         
@@ -113,68 +117,7 @@ class BaseClassificationAlgo(BaseMLAlgo):
         
     @abstractmethod
     def generate_algorithm_specific_plots(self) -> dict:
-        pass
-    
-    #def SHAP_analysis(self, x_sample, dependence_variable=None):
-    #    if hasattr(self.model, "predict_proba"):
-    #        pred_fn = lambda x: self.model.predict_proba(x)[:, 1]
-    #    elif hasattr(self.model, "decision_function"):
-    #        pred_fn = lambda x: self.model.decision_function(x)[:, 1] if len(self.model.classes_)>2 else self.model.decision_function(x)
-    #    else:
-    #        pred_fn = self.model.predict
-    #    try:
-    #        explainer = shap.Explainer(self.model, x_sample)
-    #        shap_values = explainer(x_sample, check_additivity=False)
-    #    except TypeError:
-    #        explainer = shap.Explainer(pred_fn, x_sample)
-    #        try:
-    #            shap_values = explainer(x_sample)
-    #        except TypeError:
-    #            shap_values = explainer(x_sample)
-    #        
-    #    if len(shap_values.shape) == 3:
-    #        shap_values = shap_values[:, :, 1]
-    #    print("\nSHAP values calculated successfully!")
-    #    
-    #    shap.summary_plot(shap_values, x_sample, plot_type="bar", show=False)
-    #    summary_path = os.path.join(self.PLOT_DIR, "shap_summary.png")
-    #    plt.savefig(summary_path)
-    #    plt.close()
-    #    
-    #    if dependence_variable is not None:
-    #        sample_ind = 20
-    #        shap.partial_dependence_plot(
-    #            dependence_variable,
-    #            pred_fn,
-    #            x_sample,
-    #            model_expected_value=True,
-    #            feature_expected_value=True,
-    #            ice=False,
-    #            shap_values=shap_values[sample_ind : sample_ind + 1, :],
-    #            show=False
-    #        )
-    #        pdp_path = os.path.join(self.PLOT_DIR, f"partial_dependence_{dependence_variable}_sample_{sample_ind}.png")
-    #        plt.savefig(pdp_path)
-    #        plt.close()
-    #    
-    #    values_to_plot = shap_values.values if hasattr(shap_values, 'values') else shap_values
-    #    
-    #    shap.dependence_plot(
-    #        dependence_variable,
-    #        values_to_plot,
-    #        x_sample,
-    #        show=False
-    #    )
-    #    effect_plot_path = os.path.join(self.PLOT_DIR, f"effect_plot_{dependence_variable}.png")
-    #    plt.savefig(effect_plot_path)
-    #    plt.close()
-    #    
-    #    return {
-    #        "shap_summary": summary_path,
-    #        "partial_dependence": pdp_path,
-    #        "effect_plot": effect_plot_path
-    #    }
-    
+        pass    
 
     def export_results(self) -> dict:
         metrics = self.calculate_metrics()

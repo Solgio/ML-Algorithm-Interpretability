@@ -50,12 +50,16 @@ class BaseRegressionAlgo(BaseMLAlgo):
     
     def generate_plots(self, binary_features: list=[]) -> dict:
         dc=self.df.drop(columns=binary_features, errors='ignore')
-        correlation_matrix = dc.corr(method='pearson')
-        plt.figure(figsize=(16, 16))
-        sns.heatmap(correlation_matrix, annot=True, cmap='coolwarm', linewidths=0.5)
-        plt.title('Correlation Matrix')
-        corr_path = os.path.join(self.PLOT_DIR, "correlation_matrix.png")
-        plt.savefig(corr_path)
+        dc_numeric = dc.select_dtypes(include=[np.number])
+        correlation_matrix = dc_numeric.corr(method='pearson')
+        g = sns.clustermap(dc_numeric.corr(), 
+                   cmap='coolwarm', 
+                   annot=False, 
+                   figsize=(20, 20), 
+                   dendrogram_ratio=0.1)
+        g.figure.suptitle('Clustered Correlation Matrix')
+        corr_path = os.path.join(self.PLOT_DIR, "clustered_correlation_matrix.png")
+        g.savefig(corr_path)
         plt.close()
         
         return {"correlation_matrix": corr_path}
@@ -64,47 +68,6 @@ class BaseRegressionAlgo(BaseMLAlgo):
     def generate_algorithm_specific_plots(self) -> dict:
         pass
     
-    #def SHAP_analysis(self, x_sample, dependence_variable=None):
-    #    try:
-    #        explainer = shap.Explainer(self.model, x_sample)
-    #        shap_values = explainer(x_sample)
-    #        print("\nSHAP values calculated successfully!")
-    #    except Exception:
-    #        pred_fn = self.model.predict
-    #        explainer = shap.Explainer(pred_fn, x_sample)
-    #        shap_values = explainer(x_sample)
-    #    shap.summary_plot(shap_values, x_sample, plot_type="bar", show=False)
-    #    summary_path = os.path.join(self.PLOT_DIR, "shap_summary.png")
-    #    plt.savefig(summary_path)
-    #    plt.close()
-    #    
-    #    if dependence_variable is not None:
-    #        sample_ind = 20
-    #        shap.partial_dependence_plot(
-    #            dependence_variable,
-    #            self.model.predict,
-    #            x_sample,
-    #            model_expected_value=True,
-    #            feature_expected_value=True,
-    #            ice=True,
-    #            shap_values=shap_values[sample_ind : sample_ind + 1, :],
-    #            show=False
-    #        )
-    #        pdp_path = os.path.join(self.PLOT_DIR, f"partial_dependence_{dependence_variable}_sample_{sample_ind}.png")
-    #        plt.savefig(pdp_path)
-    #        plt.close()
-    #        #shap.plots.beeswarm(shap_values)
-    #    
-    #    shap.plots.heatmap(shap_values, show=False)
-    #    heatmap_path = os.path.join(self.PLOT_DIR, "shap_heatmap.png")
-    #    plt.savefig(heatmap_path)
-    #    plt.close()
-    #    
-    #    return {
-    #        "shap_summary": summary_path,
-    #        "partial_dependence": pdp_path,
-    #        "shap_heatmap": heatmap_path
-    #    }
     
     def export_results(self) -> dict:
         metrics=self.calculate_metrics()
